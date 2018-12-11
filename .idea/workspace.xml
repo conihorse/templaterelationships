@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="0cdb1174-beab-46b7-9b44-b8a21fa9fb1e" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.anticipated_cooperation.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.anticipated_cooperation.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.exam_lesion.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.exam_lesion.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.exam_skin.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.exam_skin.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.exam_wound.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.exam_wound.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.intraoperative_monitoring.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.intraoperative_monitoring.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.issue.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.issue.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.mode_of_transportation.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.mode_of_transportation.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.neurophysiology_eeg_add_on.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.neurophysiology_eeg_add_on.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.neurophysiology_emg_add_on.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.neurophysiology_emg_add_on.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.specimen.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.specimen.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.specimen_container.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.specimen_container.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.translation_requirements.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/cluster/openEHR-EHR-CLUSTER.translation_requirements.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/action/openEHR-EHR-ACTION.snowgrey.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/action/openEHR-EHR-ACTION.snowgrey.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/action/openEHR-EHR-ACTION.snowwhite.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/action/openEHR-EHR-ACTION.snowwhite.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/evaluation/openEHR-EHR-EVALUATION.adverse_reaction_risk.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/evaluation/openEHR-EHR-EVALUATION.adverse_reaction_risk.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/evaluation/openEHR-EHR-EVALUATION.littlemermaid.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/evaluation/openEHR-EHR-EVALUATION.littlemermaid.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/evaluation/openEHR-EHR-EVALUATION.littlemerman.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/evaluation/openEHR-EHR-EVALUATION.littlemerman.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/evaluation/openEHR-EHR-EVALUATION.problem_diagnosis.v1.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/evaluation/openEHR-EHR-EVALUATION.problem_diagnosis.v1.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.aladdin.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.aladdin.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.ali.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.ali.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.dalmatians.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.dalmatians.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.gcd.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.gcd.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.katrinawilldelete.v1.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.katrinawilldelete.v1.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.request-lab_test.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.request-lab_test.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.request.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.request.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.spots.v0.adl" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/entry/instruction/openEHR-EHR-INSTRUCTION.spots.v0.adl" />
+      <change beforePath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/readme.txt" afterPath="$PROJECT_DIR$/archetypes_2017_09_09-17_10_59/readme.txt" />
+      <change beforePath="$PROJECT_DIR$/russiandoll.go" afterPath="$PROJECT_DIR$/russiandoll.go" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/evaluation/Allergy Template.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/evaluation/Allergy Template.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation C1.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation C1.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation C2.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation C2.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation M1.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation M1.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation M2.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation M2.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation R1.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation R1.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation R2.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation R2.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation R3.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Goals of Care Designation R3.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Pattern Neurophysiology Order.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/entry/instruction/Pattern Neurophysiology Order.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/BambiCKT.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/BambiCKT.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/FrozenOI.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/FrozenOI.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/JungleBookOS.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/JungleBookOS.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/MoanaOI.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/MoanaOI.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/OSS COPD Order Set fake.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/OSS COPD Order Set fake.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/PeterPanOS.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/PeterPanOS.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/TangledOI.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/TangledOI.oet" />
+      <change beforePath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/ZootopiaOI.oet" afterPath="$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/ZootopiaOI.oet" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_TABLE_DETAILS" value="true" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <expand />
+    <select />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="awesomeProject" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file leaf-file-name="russiandoll.go" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/russiandoll.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1139">
+              <caret line="124" column="0" lean-forward="false" selection-start-line="124" selection-start-column="0" selection-end-line="124" selection-end-column="0" />
+              <folding>
+                <element signature="e#14#87#0" expanded="true" />
+                <element signature="n#!!block;n#FindRootTemplateID#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>8fbfd8f4596d</find>
+    </findStrings>
+  </component>
+  <component name="GOROOT" path="/usr/lib/go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GoLibraries">
+    <option name="urls">
+      <list>
+        <option value="file://$PROJECT_DIR$/../../.." />
+      </list>
+    </option>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$USER_HOME$/output.txt" />
+        <option value="$PROJECT_DIR$/../k8sp/graphviz/graphviz.go" />
+        <option value="$PROJECT_DIR$/russiandoll.go" />
+      </list>
+    </option>
+  </component>
+  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+    <sorting>DEFINITION_ORDER</sorting>
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="1257" />
+    <option name="y" value="427" />
+    <option name="width" value="1526" />
+    <option name="height" value="953" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+      <manualOrder />
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope" />
+      <pane id="Scratches" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="awesomeProject" type="b2602c69:ProjectViewProjectNode" />
+              <item name="awesomeProject" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="awesomeProject" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../k8sp/graphviz/graphviz.go" />
+    <property name="DefaultGoTemplateProperty" value="Go File" />
+    <property name="configurable.Global.GOPATH.is.expanded" value="true" />
+    <property name="configurable.Project.GOPATH.is.expanded" value="true" />
+    <property name="configurable.Module.GOPATH.is.expanded" value="true" />
+    <property name="GO_FMT" value="false" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="russiandoll.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" show_console_on_std_out="true" show_console_on_std_err="true">
+      <output_file path="output.txt" is_save="true" />
+      <module name="awesomeProject" />
+      <working_directory value="$PROJECT_DIR$/templates_2017_09_09-17_10_47" />
+      <go_parameters value="-i" />
+      <parameters value="--directory ./" />
+      <kind value="FILE" />
+      <filePath value="$PROJECT_DIR$/russiandoll.go" />
+      <package value="github.com/awesomeProject" />
+      <directory value="$PROJECT_DIR$/" />
+    </configuration>
+    <recent_temporary>
+      <list size="1">
+        <item index="0" class="java.lang.String" itemvalue="Go Application.russiandoll.go" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false">
+    <option name="remove_strategy" value="false" />
+  </component>
+  <component name="TodoView" selected-index="1">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="1257" y="427" width="1526" height="953" extended-state="0" />
+    <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24322493" sideWeight="0.48694664" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3286334" sideWeight="0.49364576" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.021871204" sideWeight="0.21563342" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.18423855" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2733189" sideWeight="0.48649722" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.44256347" sideWeight="0.78436655" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25677508" sideWeight="0.476731" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2646421" sideWeight="0.49364576" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19459888" sideWeight="0.523269" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19414316" sideWeight="0.48988286" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329718" sideWeight="0.700213" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="RECENTLY_FILTERED_USER_GROUPS">
+                <collection />
+              </option>
+              <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+                <collection />
+              </option>
+              <option name="COLUMN_ORDER">
+                <list>
+                  <option value="0" />
+                  <option value="1" />
+                  <option value="2" />
+                  <option value="3" />
+                </list>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="initial load" />
+    <option name="LAST_COMMIT_MESSAGE" value="initial load" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/russiandoll.go</url>
+          <line>203</line>
+          <option name="timeStamp" value="28" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/russiandoll.go</url>
+          <line>121</line>
+          <option name="timeStamp" value="32" />
+        </line-breakpoint>
+      </breakpoints>
+      <breakpoints-dialog>
+        <breakpoints-dialog />
+      </breakpoints-dialog>
+      <option name="time" value="33" />
+    </breakpoint-manager>
+    <watches-manager />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/russiandoll.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#87#0" expanded="true" />
+            <element signature="n#!!block;n#FindRootTemplateID#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/ZootopiaOI.oet">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="14" lean-forward="false" selection-start-line="2" selection-start-column="6" selection-end-line="2" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/OSS COPD Order Set fake.oet">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="18" column="17" lean-forward="true" selection-start-line="18" selection-start-column="17" selection-end-line="18" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/russiandoll.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#87#0" expanded="true" />
+            <element signature="n#!!block;n#FindRootTemplateID#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/russiandoll.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#87#0" expanded="true" />
+            <element signature="n#!!block;n#FindRootTemplateID#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/russiandoll.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#87#0" expanded="true" />
+            <element signature="n#!!block;n#FindRootTemplateID#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/russiandoll.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#87#0" expanded="true" />
+            <element signature="n#!!block;n#FindRootTemplateID#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/russiandoll.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#87#0" expanded="true" />
+            <element signature="n#!!block;n#FindRootTemplateID#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/russiandoll.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#87#0" expanded="true" />
+            <element signature="n#!!block;n#FindRootTemplateID#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/go/src/runtime/asm_amd64.s">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="258">
+          <caret line="2336" column="0" lean-forward="false" selection-start-line="2336" selection-start-column="0" selection-end-line="2336" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/BambiCKT.oet">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/go/src/os/file.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="182">
+          <caret line="245" column="36" lean-forward="false" selection-start-line="245" selection-start-column="36" selection-end-line="245" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/go/src/builtin/builtin.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="393">
+          <caret line="253" column="5" lean-forward="false" selection-start-line="253" selection-start-column="5" selection-end-line="253" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/ZootopiaOI.oet">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="14" lean-forward="false" selection-start-line="2" selection-start-column="6" selection-end-line="2" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/OSS COPD Order Set fake.oet">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="18" column="17" lean-forward="false" selection-start-line="18" selection-start-column="17" selection-end-line="18" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/JungleBookOS.oet">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-816">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates_2017_09_09-17_10_47/section/MoanaOI.oet">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="13" column="14" lean-forward="true" selection-start-line="13" selection-start-column="14" selection-end-line="13" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/go/src/runtime/panic.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="9724">
+          <caret line="576" column="0" lean-forward="false" selection-start-line="576" selection-start-column="0" selection-end-line="576" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/go/src/log/log.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5474">
+          <caret line="329" column="0" lean-forward="false" selection-start-line="329" selection-start-column="0" selection-end-line="329" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/go/src/strings/strings.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8415">
+          <caret line="498" column="5" lean-forward="false" selection-start-line="498" selection-start-column="5" selection-end-line="498" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/output.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/go/src/net/http/server.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="1917" column="0" lean-forward="false" selection-start-line="1917" selection-start-column="0" selection-end-line="1917" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../k8sp/graphviz/graphviz.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="27" column="0" lean-forward="true" selection-start-line="27" selection-start-column="0" selection-end-line="27" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/russiandoll.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1139">
+          <caret line="124" column="0" lean-forward="false" selection-start-line="124" selection-start-column="0" selection-end-line="124" selection-end-column="0" />
+          <folding>
+            <element signature="e#14#87#0" expanded="true" />
+            <element signature="n#!!block;n#FindRootTemplateID#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

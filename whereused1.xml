@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <template>
+        <filename>
+            1-1
+        </filename>
+        <cid>
+            a
+        </cid>
+        <contained-in>
+            <template>            
+                <filename>
+                    2-1
+                </filename>
+                <cid>
+                    21
+                </cid>
+                <contained-in>
+                    <template>
+                        <filename>
+                            3-1
+                        </filename>
+                        <cid>
+                            31
+                        </cid>
+                    </template>
+                </contained-in>
+            </template>                
+            <template>            
+                <filename>
+                    2-2
+                </filename>
+                <cid>
+                    22
+                </cid>
+            </template>
+            
+        </contained-in>
+    </template>
+
+    
+    
+    
+    

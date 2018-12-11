@@ -1,0 +1,101 @@
+<templateFileSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.openehr.org/v1">
+   <cid>1175.132.9053</cid>
+   <versionAsset>2</versionAsset>
+   <templateName>Diner Kit</templateName>
+   <templateId>ae2164d4-ae31-463a-b6ee-565e920a59f6</templateId>
+   <rootArchetypeId>openEHR-EHR-SECTION.adhoc.v1</rootArchetypeId>
+   <creationTime>07-Nov-2018</creationTime>
+   <modificationTime>06-Dec-2018</modificationTime>
+   <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.9053_2</directLink>
+   <logMessage>Version Bump so that updates to the Menu Morning template are incorporated</logMessage>
+   <ckmResource>
+      <cid>1175.132.9055</cid>
+      <versionAsset>1</versionAsset>
+      <resourceMainId>4177e6c7-b2e8-4f2d-8216-d9795f215405</resourceMainId>
+      <resourceMainDisplayName>Sodas</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2018-11-07T14:06:08-0700</creationTime>
+      <modificationTime>2018-11-07T14:06:08-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.9055_1</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.132.9056</cid>
+      <versionAsset>1</versionAsset>
+      <resourceMainId>147749ce-b25b-4be2-9dd4-661cc54a6aa7</resourceMainId>
+      <resourceMainDisplayName>Drinks Menu</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2018-11-07T14:06:46-0700</creationTime>
+      <modificationTime>2018-11-07T14:06:46-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.9056_1</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.132.9051</cid>
+      <versionAsset>1</versionAsset>
+      <resourceMainId>99fdd22a-bfbb-4799-b6d7-a53c4e5cb7f1</resourceMainId>
+      <resourceMainDisplayName>Bacon, Eggs &amp; Hash Browns</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2018-11-07T09:10:16-0700</creationTime>
+      <modificationTime>2018-11-07T09:10:16-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.9051_1</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.132.9052</cid>
+      <versionAsset>2</versionAsset>
+      <resourceMainId>c5a34cc5-cc9b-4964-8479-1cf336dd7d57</resourceMainId>
+      <resourceMainDisplayName>Menu Morning</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2018-11-07T09:11:02-0700</creationTime>
+      <modificationTime>2018-11-07T14:31:31-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.9052_2</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.132.9054</cid>
+      <versionAsset>1</versionAsset>
+      <resourceMainId>6f28715f-d054-4dd9-802d-fb84560df17a</resourceMainId>
+      <resourceMainDisplayName>Coffees</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2018-11-07T14:05:38-0700</creationTime>
+      <modificationTime>2018-11-07T14:05:38-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.9054_1</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.132.9050</cid>
+      <versionAsset>1</versionAsset>
+      <resourceMainId>b74c7141-7fb7-4c4c-be0d-e3aed7610cc7</resourceMainId>
+      <resourceMainDisplayName>Boiled Egg and Cheese</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2018-11-07T09:09:42-0700</creationTime>
+      <modificationTime>2018-11-07T09:09:42-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.9050_1</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.108.281</cid>
+      <versionAsset>4</versionAsset>
+      <resourceMainId>openEHR-EHR-INSTRUCTION.service_request.v1</resourceMainId>
+      <resourceMainDisplayName>Service request</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2018-04-20T11:07:41-0600</creationTime>
+      <modificationTime>2018-10-02T10:59:50-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.281_4</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.108.275</cid>
+      <versionAsset>3</versionAsset>
+      <resourceMainId>openEHR-EHR-CLUSTER.service_request_information.v1</resourceMainId>
+      <resourceMainDisplayName>Service request information</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2018-03-23T14:21:30-0600</creationTime>
+      <modificationTime>2018-04-20T15:34:51-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.275_3</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.108.90</cid>
+      <versionAsset>3</versionAsset>
+      <resourceMainId>openEHR-EHR-SECTION.adhoc.v1</resourceMainId>
+      <resourceMainDisplayName>Ad hoc heading</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2017-04-12T20:15:16-0600</creationTime>
+      <modificationTime>2018-05-24T09:42:13-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.90_3</directLink>
+   </ckmResource>
+</templateFileSet>

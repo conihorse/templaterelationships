@@ -1,0 +1,151 @@
+<html>
+  <head>
+  
+  
+<style>
+
+    div {
+        display: block;
+    }
+    #wrapper {
+        width: 100%;
+        height:100%;
+    }
+    #search {
+        float:left;
+        width: 25%;
+        height: 20%;
+
+        z-index: -1;
+    }
+    #table {
+        float:left;
+        width: 25%;
+        height: 100%;
+
+        overflow-y: auto;
+    }
+    #detail {
+        float: right;
+        width: 75%;
+        height: 99%;
+    }
+
+
+/*------------------------------------------------------------------ */
+
+div {
+    display: block;
+}
+/*This is not important*/
+body{
+        font-family:Arial, Helvetica, sans-serif;
+        /*background: url(background.jpg);*/
+        margin:10 ;
+        /*width:520px;*/
+}
+a:{
+        color: #666;
+        font-weight: bold;
+        text-decoration:none;
+    }
+a:link {
+        color: #666;
+        font-weight: bold;
+        text-decoration:none;
+}
+a:visited {
+        color: #666;
+        font-weight:bold;
+        text-decoration:none;
+}
+a:active,
+a:hover {
+        color: #bd5a35;
+        text-decoration:underline;
+}
+
+p {
+    border-style:solid;
+    padding: 5;
+    background-color: rgba(204, 98, 141, 0.11);
+}
+
+
+#myInput {
+  background-image: url('searchicon.png');
+  background-position: 10px 10px;
+  background-repeat: no-repeat;
+  width: 100%;
+  font-size: 16px;
+  padding: 12px 20px 12px 40px;
+  border: 1px solid #ddd;
+  margin-bottom: 12px;
+}
+
+#myTable {
+  border-collapse: collapse;
+  width: 100%;
+  border: 1px solid #ddd;
+
+  overflow-y: visible;
+  font-size: 16px;
+}
+
+#myTable th, #myTable td {
+  text-align: left;
+  padding: 12px;
+        color: #666;
+        font-weight: bold;
+        text-decoration:none;    
+}
+    
+td:hover{ 
+    cursor: pointer;
+    cursor: hand;
+    }
+
+    iframe{border: 0}
+    
+#myTable tr {
+  border-bottom: 1px solid #ddd;
+}
+
+#myTable tr.header, #myTable tr:hover {
+  background-color: #f1f1f1;
+}
+</style>
+  
+    <title></title>
+    <meta content="">
+    <style></style>
+  </head>
+  <body>
+  
+<iframe name="right_side" src="" width="100%"  height="50%" frameBorder="0"></iframe>  
+  
+      <div id="wrapper">
+        <div id = "table">
+            <h3>Dependency Viewer Experiment</h3>
+
+
+            <table id="myTable">
+            <th>link
+            <tr><a href="http://localhost:8081/section/TangledOI.oet" target="right_side">tangledx</a></tr>
+            </th>
+            <a href="http://ckcm:5959/?dot=http://localhost:8081/section/ZootopiaOI.oet" target="right_side">ZootopiaOI</a>
+            <a href="http://ckcm:5959/?dot=http://localhost:8081/section/TangledOI.oet,http://localhost:8081/section/ZootopiaOI.oet" target="right_side">tangled and ZootopiaOI </a>            
+            
+            </table> 
+        </div>
+
+        <div id="detail" ></div>        
+        
+    </div>
+  
+  
+  
+  
+  
+  </body>
+</html>

@@ -12,11 +12,12 @@
             "remotePath": "",
             "port": 2345,
             "host": "127.0.0.1",
-            "program": "${fileDirname}",
+            //"program": "${fileDirname}",
+            "program": "${workspaceRoot}",
             "env": {},
             "args": [],
             //"cwd": "./templates_2017_09_09-17_10_47/",
-            "cwd": "/home/coni/node/Dropbox/AHS/CMIO Office/Clinical Content/Repository/TD Repositories/JB/t/",
+            "cwd": "./",
             "showLog": true
         }
     ]
