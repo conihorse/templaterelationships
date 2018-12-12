@@ -44,51 +44,67 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	param1 := strings.Trim(params[0], "/") // child template internal id
-	param2 := params[1] // child template name
-	param3 := params[2] // ticket
+	param0 := strings.Trim(params[0], "/") // operation type
+	param1 := params[1]
+	param2 := params[2] 
+	param3 := params[3] 
 
-	if param1 == "favicon.ico" {
+	var templateID string;
+	var templateName string;
+	var changesetFolder string;
+
+	if param0 == "favicon.ico" {
 		return
 	}
 
-	relationset = []string{}    // used to store the relationships between files
-	relationsetXML = []string{} // used to store the relationships between files
+	switch	{
+		case param0 == "report":
+			templateID = param1 // child template internal id
+			templateName = param2 // child template name			
+			fmt.Fprintf(w, "<?xml version='1.0' encoding='UTF-8'?>")
+			// fmt.Fprintf(w, "<?xml-stylesheet type='text/xsl' href='/GENERIC.xsl'?>")
+			
+		case param0 == "retrieve":
 
-	templateID := param1
-	templateName := param2
-	changesetFolder := configuration.ChangesetPath + "/" + param3
-
-	parentsExist := findParentTemplates(templateID, templateName, configuration.MirrorCkmPath)
-	relationset = removeDuplicates(relationset)
-
-	fmt.Fprintf(w, "<?xml version='1.0' encoding='UTF-8'?>")
-	fmt.Fprintf(w, "<?xml-stylesheet type='text/xsl' href='/GENERIC.xsl'?>")
-
-	for v := range relationsetXML {
-		fmt.Fprintf(w, relationsetXML[v])
+			templateID = param1 // child template internal id
+			templateName = param2 // child template name
+			changesetFolder = configuration.ChangesetPath + "/" + param3 // ticket
+		
+		default: 
+			log.Printf("unknown operation type: " + param0 )
+			log.Printf("exiting...")
+			return
 	}
 
+	relationsetXML = []string{} // used to store the relationships between files
+	parentsExist := findParentTemplates(templateID, templateName, configuration.MirrorCkmPath)
+
+	if param0 == "report" {
+		for v := range relationsetXML {
+			fmt.Fprintf(w, relationsetXML[v])
+		}
+	}
 	
 	if checkEnvironment( configuration, changesetFolder ) == false {
 		log.Printf( "Exiting due to environment/config issues...")
 		return
 	}
 
-	if parentsExist {
-		log.Printf("Going to fetch parents....")
-		parseParentsTree(relationsetXML, changesetFolder + "/" + configuration.WorkingFolderPath)
-		status := ""
-		
-		status = moveFiles( changesetFolder, "templates", configuration.WorkingFolderPath)
-		log.Printf(status)
-		fmt.Fprintf(w, "<h3>grabbed" + status + "</h3>")
+	if param0 == "retrieve"	{	
+		if parentsExist {
+			log.Printf("Going to fetch parents....")
+			parseParentsTree(relationsetXML, changesetFolder + "/" + configuration.WorkingFolderPath)
+			status := ""
+			
+			status = moveFiles( changesetFolder, "templates", configuration.WorkingFolderPath)
+			log.Printf(status)
+			fmt.Fprintf(w, "<h3>grabbed" + status + "</h3>")
 
-		status = moveFiles( changesetFolder, "archetypes", configuration.WorkingFolderPath)
-		log.Printf(status)
-		fmt.Fprintf(w, "<h3>grabbed" + status + "</h3>")
+			status = moveFiles( changesetFolder, "archetypes", configuration.WorkingFolderPath)
+			log.Printf(status)
+			fmt.Fprintf(w, "<h3>grabbed" + status + "</h3>")
+		}
 	}
-
 }
 
 func checkEnvironment( config Configuration, ticketdir string ) bool {
@@ -351,7 +367,9 @@ func findParentTemplates(id string, file string, ckmMirror string) bool {
 		if parent != "" {
 			fmt.Println("findParentTemplates parent - " + parent)
 			id = findTemplateID(parent)
-			findParentTemplates(id, directory+"/"+parent, ckmMirror)
+			//findParentTemplates(id, directory+"/"+parent, ckmMirror)
+			trimmedparent := filepath.Base(parent)
+			findParentTemplates(id, trimmedparent, ckmMirror)
 		}
 	}
 
@@ -378,7 +396,7 @@ func grepDir(pattern string, ckmMirror string) string {
 	return stdout
 }
 
-func storeRelationshipXML(parent, child string) {
+/* func storeRelationshipXML(parent, child string) {
 
 	if directory != "" {
 		if parent == "" {
@@ -388,7 +406,7 @@ func storeRelationshipXML(parent, child string) {
 
 	relationsetXML = append(relationsetXML)
 
-}
+} */
 
 func grepFile(file string, pattern string) string {
 
@@ -403,7 +421,7 @@ func grepFile(file string, pattern string) string {
 	stdout := outbuf.String()
 	return stdout
 }
-
+/* 
 func storeRelationship(parent, child string) {
 
 	if directory != "" {
@@ -416,9 +434,9 @@ func storeRelationship(parent, child string) {
 	relation = strings.Replace(relation, ".oet", "", -1)
 	fmt.Println(relation)
 	relationset = append(relationset, relation)
-}
+} */
 
-func removeDuplicates(elements []string) []string {
+/* func removeDuplicates(elements []string) []string {
 	// Use map to record duplicates as we find them.
 	encountered := map[string]bool{}
 	result := []string{}
@@ -435,9 +453,9 @@ func removeDuplicates(elements []string) []string {
 	}
 	// Return the new slice.
 	return result
-}
+} */
 
-func findAllOETfiles(path string) string {
+/* func findAllOETfiles(path string) string {
 
 	cmd := exec.Command("find", path)
 	var outbuf, errbuf bytes.Buffer
@@ -450,7 +468,7 @@ func findAllOETfiles(path string) string {
 	stdout := outbuf.String()
 	return stdout
 
-}
+} */
 
 /* func processAllOETfiles(allfileslist string) {
 
