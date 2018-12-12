@@ -1,18 +1,20 @@
 package main
 
 import (
+	"archive/zip"
 	"bytes"
-	"io"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
-	"io/ioutil"	
-	"aqwari.net/xml/xmltree"	
-	"archive/zip"	
 	"path/filepath"
+	"strings"
+
+	"aqwari.net/xml/xmltree"
+	"github.com/Tkanos/gonfig"
 )
 
 var relationset = []string{}
@@ -20,16 +22,31 @@ var relationsetXML = []string{}
 var relationfile *os.File
 var directory = "."
 
+type Configuration struct {
+	MirrorCkmPath string
+	ChangesetPath string
+	WorkingFolderPath string
+}
 
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	params := strings.Split(r.RequestURI, ",")
 
-	if len(params) < 3 { return }
+	configuration := Configuration{}
+	err := gonfig.GetConf("config.json", &configuration)
+	if err != nil {
+		panic(err)
+	}
 
-	param1 := strings.Trim( params[0], "/" )
-	param2 := params[1]
-	param3 := params[2]
+	log.Printf("ckmpath = " + (string)(configuration.MirrorCkmPath))
+
+	if len(params) < 3 {
+		return
+	}
+
+	param1 := strings.Trim(params[0], "/") // child template internal id
+	param2 := params[1] // child template name
+	param3 := params[2] // ticket
 
 	if param1 == "favicon.ico" {
 		return
@@ -38,12 +55,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	relationset = []string{}    // used to store the relationships between files
 	relationsetXML = []string{} // used to store the relationships between files
 
+	templateID := param1
+	templateName := param2
+	changesetFolder := configuration.ChangesetPath + "/" + param3
 
-	templateID := param1;
-	templateName := param2;
-	ticket := param3;
-
-	parentsExist := findParentTemplates(templateID, templateName)
+	parentsExist := findParentTemplates(templateID, templateName, configuration.MirrorCkmPath)
 	relationset = removeDuplicates(relationset)
 
 	fmt.Fprintf(w, "<?xml version='1.0' encoding='UTF-8'?>")
@@ -53,23 +69,45 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, relationsetXML[v])
 	}
 
-	//ticket := "DAM/CKT-999/"
-
-	if( parentsExist) {
-		log.Printf( "Going to fetch parents....")
-		parseParentsTree(relationsetXML)
-		fmt.Fprintf(w, "<h1>grabbed!</h1>")
-		status := moveFiles(ticket)
-		log.Printf( status )
+	
+	if checkEnvironment( configuration, changesetFolder ) == false {
+		log.Printf( "Exiting due to environment/config issues...")
+		return
 	}
 
-	
+	if parentsExist {
+		log.Printf("Going to fetch parents....")
+		parseParentsTree(relationsetXML, changesetFolder + "/" + configuration.WorkingFolderPath)
+		status := ""
+		
+		status = moveFiles( changesetFolder, "templates", configuration.WorkingFolderPath)
+		log.Printf(status)
+		fmt.Fprintf(w, "<h3>grabbed" + status + "</h3>")
+
+		status = moveFiles( changesetFolder, "archetypes", configuration.WorkingFolderPath)
+		log.Printf(status)
+		fmt.Fprintf(w, "<h3>grabbed" + status + "</h3>")
+	}
 
 }
 
-func moveFiles(ticket string) string {
+func checkEnvironment( config Configuration, ticketdir string ) bool {
 
-	cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", "tempfiles/unzipped/templates", ticket)
+	// check that the dam folder is there
+
+	// check that the ticket folder is inside the dam folder
+
+	// make the working folder inside the ticket, if it's not there...
+
+	os.MkdirAll( ticketdir + "/" + config.WorkingFolderPath, os.ModePerm )
+
+	return true
+}
+
+func moveFiles(changesetFolder, assetType, WorkingFolderPath string) string {
+
+	//cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", "tempfiles/unzipped/templates", changesetFolder)
+	cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", changesetFolder + "/" + WorkingFolderPath + "/unzipped/" + assetType, changesetFolder)
 	var outbuf, errbuf bytes.Buffer
 	cmd.Stdout = &outbuf
 	cmd.Stderr = &errbuf
@@ -79,9 +117,8 @@ func moveFiles(ticket string) string {
 	stdout := outbuf.String()
 	return stdout
 
-//	err := os.Rename( "tempfiles/unzipped/templates", ticket + "/")
+	//	err := os.Rename( "tempfiles/unzipped/templates", ticket + "/")
 	//check(err)
-
 
 }
 
@@ -98,50 +135,48 @@ func ckmGetTemplateFilepackURL(cid string) (filesetURL string) {
 	return ""
 }
 
+func ckmGetCidFromID(id string) (cid string) {
 
-func ckmGetCidFromID ( id string ) ( cid string ) {
-	
-		if data, err := ckmGetContent2("https://ahsckm.ca/ckm/rest/v1/templates/citeable-identifier/" + id ); err != nil {
-			log.Printf("Failed to get XML: %v", err)
-		} else {
-			check(err)
-			log.Println("Received XML:")
-			log.Println(string(data))
-			return string(data)
-		}
-	
-		return ""
+	if data, err := ckmGetContent2("https://ahsckm.ca/ckm/rest/v1/templates/citeable-identifier/" + id); err != nil {
+		log.Printf("Failed to get XML: %v", err)
+	} else {
+		check(err)
+		log.Println("Received XML:")
+		log.Println(string(data))
+		return string(data)
 	}
-	
 
-func parseParentsTree( ParentTree []string ) {
+	return ""
+}
+
+func parseParentsTree(ParentTree []string, TicketWorkingFolderPath string) {
 
 	stringByte := strings.Join(ParentTree, "\x20") // x20 = space and x00 = null
 	root, err := xmltree.Parse([]byte(stringByte))
 	if err != nil {
-	log.Fatal(err)
+		log.Fatal(err)
 	}
 	for _, el := range root.Search("", "id") {
-		
+
 		templateid := (string)(el.Content)
 		// get cid
 
-		cid := ckmGetCidFromID( templateid )
-		log.Printf( "id: " + templateid + " cid: " + cid)
+		cid := ckmGetCidFromID(templateid)
+		log.Printf("id: " + templateid + " cid: " + cid)
 		// get template filepack url
-		
+
 		filepack := ckmGetTemplateFilepackURL(cid)
 		log.Printf("filepack = " + filepack)
 		// retrieve filepack
-		filepackname := "tempfiles/" + cid + ".zip"
+		filepackname := TicketWorkingFolderPath + "/" + cid + ".zip"
 		err := ckmDownloadFile(filepackname, filepack)
 		if err != nil {
 			panic(err)
 		}
-		
+
 		// unpack filepack
-		
-	    err = Unzip(filepackname, "tempfiles/unzipped")
+
+		err = unzip(filepackname, TicketWorkingFolderPath + "/unzipped")
 		if err != nil {
 			panic(err)
 		}
@@ -156,39 +191,38 @@ func check(e error) {
 }
 
 func ckmDownloadFile(filepath string, url string) error {
-		// DownloadFile will download a url to a local file. It's efficient because it will
-		// write as it downloads and not load the whole file into memory.
+	// DownloadFile will download a url to a local file. It's efficient because it will
+	// write as it downloads and not load the whole file into memory.
 
-	
-		// Create the file
-		out, err := os.Create(filepath)
-		if err != nil {
-			return err
-		}
-		defer out.Close()
-	
-		// Get the data
-		resp, err := http.Get(url)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-	
-		// Write the body to file
-		_, err = io.Copy(out, resp.Body)
-		if err != nil {
-			return err
-		}
-	
-		return nil
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
 	}
+	defer out.Close()
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func ckmGetContent2(url string) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	check(err)
 	req.Header.Set("Accept", "text/plain")
 	req.Header.Set("Authorization", "Basic am9uLmJlZWJ5OlBhNTV3b3Jk")
-										
+
 	resp, err := http.DefaultClient.Do(req)
 	check(err)
 	defer resp.Body.Close()
@@ -202,63 +236,63 @@ func ckmGetContent2(url string) ([]byte, error) {
 	return data, nil
 }
 
-func Unzip(src, dest string) error {
-    r, err := zip.OpenReader(src)
-    if err != nil {
-        return err
-    }
-    defer func() {
-        if err := r.Close(); err != nil {
-            panic(err)
-        }
-    }()
+func unzip(src, dest string) error {
+	r, err := zip.OpenReader(src)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := r.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
-    os.MkdirAll(dest, 0755)
+	os.MkdirAll(dest, 0755)
 
-    // Closure to address file descriptors issue with all the deferred .Close() methods
-    extractAndWriteFile := func(f *zip.File) error {
-        rc, err := f.Open()
-        if err != nil {
-            return err
-        }
-        defer func() {
-            if err := rc.Close(); err != nil {
-                panic(err)
-            }
-        }()
+	// Closure to address file descriptors issue with all the deferred .Close() methods
+	extractAndWriteFile := func(f *zip.File) error {
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := rc.Close(); err != nil {
+				panic(err)
+			}
+		}()
 
-        path := filepath.Join(dest, f.Name)
+		path := filepath.Join(dest, f.Name)
 
-        if f.FileInfo().IsDir() {
-            os.MkdirAll(path, f.Mode())
-        } else {
-            os.MkdirAll(filepath.Dir(path), 0755)
-            f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-            if err != nil {
-                return err
-            }
-            defer func() {
-                if err := f.Close(); err != nil {
-                    panic(err)
-                }
-            }()
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(path, f.Mode())
+		} else {
+			os.MkdirAll(filepath.Dir(path), 0755)
+			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err != nil {
+				return err
+			}
+			defer func() {
+				if err := f.Close(); err != nil {
+					panic(err)
+				}
+			}()
 
-            _, err = io.Copy(f, rc)
-            if err != nil {
-                return err
-            }
-        }
-        return nil
-    }
+			_, err = io.Copy(f, rc)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 
-    for _, f := range r.File {
-        err := extractAndWriteFile(f)
-        if err != nil {
-            return err
-        }
-    }
+	for _, f := range r.File {
+		err := extractAndWriteFile(f)
+		if err != nil {
+			return err
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func main() {
@@ -290,7 +324,7 @@ func findTemplateID(path string) string {
 	return templateID
 }
 
-func findParentTemplates(id string, file string) bool {
+func findParentTemplates(id string, file string, ckmMirror string) bool {
 	// find names of templates that contain id
 
 	if id == "" {
@@ -298,16 +332,15 @@ func findParentTemplates(id string, file string) bool {
 		return false
 	}
 
-	var foundfiles = grepDir(id)
+	var foundfiles = grepDir(id, ckmMirror)
 
 	log.Printf("findParentTemplates( " + id + ") parents = (" + foundfiles + ")")
 
 	results := strings.Split(foundfiles, "\n")
 
-	relationsetXML = append(relationsetXML, "<template><filename>"+file+"</filename><id>" + id + "</id><contained-in>")
+	relationsetXML = append(relationsetXML, "<template><filename>"+file+"</filename><id>"+id+"</id><contained-in>")
 
 	parent := ""
-
 
 	for i := range results {
 		result := results[i]
@@ -318,7 +351,7 @@ func findParentTemplates(id string, file string) bool {
 		if parent != "" {
 			fmt.Println("findParentTemplates parent - " + parent)
 			id = findTemplateID(parent)
-			findParentTemplates(id, directory+"/"+parent)
+			findParentTemplates(id, directory+"/"+parent, ckmMirror)
 		}
 	}
 
@@ -326,18 +359,15 @@ func findParentTemplates(id string, file string) bool {
 
 	if len(results) > 1 {
 		return true
-	} 
+	}
 
 	return false
 
 }
 
+func grepDir(pattern string, ckmMirror string) string {
 
-
-
-func grepDir(pattern string) string {
-
-	cmd := exec.Command("grep",  "-r",  "template_id=\""+pattern, "./ckm-mirror")
+	cmd := exec.Command("grep", "-r", "template_id=\""+pattern, ckmMirror)
 	var outbuf, errbuf bytes.Buffer
 	cmd.Stdout = &outbuf
 	cmd.Stderr = &errbuf
@@ -422,7 +452,7 @@ func findAllOETfiles(path string) string {
 
 }
 
-func processAllOETfiles(allfileslist string) {
+/* func processAllOETfiles(allfileslist string) {
 
 	results := strings.Split(allfileslist, "\n")
 
@@ -436,4 +466,4 @@ func processAllOETfiles(allfileslist string) {
 		}
 	}
 
-}
+} */
