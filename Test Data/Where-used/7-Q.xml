@@ -1,0 +1,10 @@
+<template>
+    <filename>Q.oet</filename>
+    <id>Q-id</id>
+    <contained-in>
+        <template>
+            <filename>N.oet</filename>
+            <id>N-id</id>
+        </template>
+    </contained-in>
+</template>

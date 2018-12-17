@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,17 +16,21 @@ import (
 
 	"aqwari.net/xml/xmltree"
 	"github.com/Tkanos/gonfig"
+	"github.com/beevik/etree"
 )
 
 var relationset = []string{}
 var relationsetXML = []string{}
 var relationfile *os.File
 var directory = "."
+var wumChildToParent = make(map[string]string) // where-used map
 
 type Configuration struct {
-	MirrorCkmPath string
-	ChangesetPath string
+	MirrorCkmPath     string
+	ChangesetPath     string
 	WorkingFolderPath string
+	Port              string
+	TestDataPath      string
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -45,35 +50,40 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	param0 := strings.Trim(params[0], "/") // operation type
-	param1 := params[1]
-	param2 := params[2] 
-	param3 := params[3] 
 
-	var templateID string;
-	var templateName string;
-	var changesetFolder string;
+	var templateID string
+	var templateName string
+	var changesetFolder string
 
 	if param0 == "favicon.ico" {
 		return
 	}
 
-	switch	{
-		case param0 == "report":
-			templateID = param1 // child template internal id
-			templateName = param2 // child template name			
-			fmt.Fprintf(w, "<?xml version='1.0' encoding='UTF-8'?>")
-			// fmt.Fprintf(w, "<?xml-stylesheet type='text/xsl' href='/GENERIC.xsl'?>")
-			
-		case param0 == "retrieve":
+	switch {
+	case param0 == "report":
+		templateID = params[1]   // child template internal id
+		templateName = params[2] // child template name
+		fmt.Fprintf(w, "<?xml version='1.0' encoding='UTF-8'?>")
+		// fmt.Fprintf(w, "<?xml-stylesheet type='text/xsl' href='/GENERIC.xsl'?>")
 
-			templateID = param1 // child template internal id
-			templateName = param2 // child template name
-			changesetFolder = configuration.ChangesetPath + "/" + param3 // ticket
-		
-		default: 
-			log.Printf("unknown operation type: " + param0 )
-			log.Printf("exiting...")
-			return
+	case param0 == "retrieve":
+
+		templateID = params[1]                                          // child template internal id
+		templateName = params[2]                                        // child template name
+		changesetFolder = configuration.ChangesetPath + "/" + params[3] // ticket
+
+	case param0 == "testdata":
+
+		//templateID = params[1] // directory name
+		//						templateName = params[2] // child template name
+		//						changesetFolder = configuration.ChangesetPath + "/" + params[3]  // ticket
+
+		loadTestData(configuration.TestDataPath)
+
+	default:
+		log.Printf("unknown operation type: " + param0)
+		log.Printf("exiting...")
+		return
 	}
 
 	relationsetXML = []string{} // used to store the relationships between files
@@ -84,30 +94,33 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, relationsetXML[v])
 		}
 	}
-	
-	if checkEnvironment( configuration, changesetFolder ) == false {
-		log.Printf( "Exiting due to environment/config issues...")
+
+	if checkEnvironment(configuration, changesetFolder) == false {
+		log.Printf("Exiting due to environment/config issues...")
 		return
 	}
 
-	if param0 == "retrieve"	{	
+	if param0 == "retrieve" {
 		if parentsExist {
 			log.Printf("Going to fetch parents....")
-			parseParentsTree(relationsetXML, changesetFolder + "/" + configuration.WorkingFolderPath)
+			parseParentsTree(relationsetXML, changesetFolder+"/"+configuration.WorkingFolderPath)
 			status := ""
-			
-			status = moveFiles( changesetFolder, "templates", configuration.WorkingFolderPath)
-			log.Printf(status)
-			fmt.Fprintf(w, "<h3>grabbed" + status + "</h3>")
 
-			status = moveFiles( changesetFolder, "archetypes", configuration.WorkingFolderPath)
+			status = moveFiles(changesetFolder, "templates", configuration.WorkingFolderPath)
 			log.Printf(status)
-			fmt.Fprintf(w, "<h3>grabbed" + status + "</h3>")
+			fmt.Fprintf(w, "<h3>grabbed"+status+"</h3>")
+
+			status = moveFiles(changesetFolder, "archetypes", configuration.WorkingFolderPath)
+			log.Printf(status)
+			fmt.Fprintf(w, "<h3>grabbed"+status+"</h3>")
 		}
 	}
+
+	mapWhereUsedXML(relationsetXML)
+	printMap()
 }
 
-func checkEnvironment( config Configuration, ticketdir string ) bool {
+func checkEnvironment(config Configuration, ticketdir string) bool {
 
 	// check that the dam folder is there
 
@@ -115,7 +128,7 @@ func checkEnvironment( config Configuration, ticketdir string ) bool {
 
 	// make the working folder inside the ticket, if it's not there...
 
-	os.MkdirAll( ticketdir + "/" + config.WorkingFolderPath, os.ModePerm )
+	os.MkdirAll(ticketdir+"/"+config.WorkingFolderPath, os.ModePerm)
 
 	return true
 }
@@ -123,7 +136,7 @@ func checkEnvironment( config Configuration, ticketdir string ) bool {
 func moveFiles(changesetFolder, assetType, WorkingFolderPath string) string {
 
 	//cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", "tempfiles/unzipped/templates", changesetFolder)
-	cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", changesetFolder + "/" + WorkingFolderPath + "/unzipped/" + assetType, changesetFolder)
+	cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", changesetFolder+"/"+WorkingFolderPath+"/unzipped/"+assetType, changesetFolder)
 	var outbuf, errbuf bytes.Buffer
 	cmd.Stdout = &outbuf
 	cmd.Stderr = &errbuf
@@ -192,7 +205,7 @@ func parseParentsTree(ParentTree []string, TicketWorkingFolderPath string) {
 
 		// unpack filepack
 
-		err = unzip(filepackname, TicketWorkingFolderPath + "/unzipped")
+		err = unzip(filepackname, TicketWorkingFolderPath+"/unzipped")
 		if err != nil {
 			panic(err)
 		}
@@ -250,6 +263,25 @@ func ckmGetContent2(url string) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+func loadTestData(path string) []string {
+
+	var files []string
+
+	root := path
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		files = append(files, path)
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range files {
+		log.Printf(file)
+	}
+
+	return nil
 }
 
 func unzip(src, dest string) error {
@@ -318,7 +350,14 @@ func main() {
 		log.Printf("SERVING /home/coni/node/Dropbox/AHS/CMIO Office/Clinical Content/XSLT/GENERIC.xslt")
 		http.ServeFile(w, r, "/home/coni/node/Dropbox/AHS/CMIO Office/Clinical Content/XSLT/GENERIC.xslt")
 	})
-	http.ListenAndServe(":8081", nil)
+
+	configuration := Configuration{}
+	err := gonfig.GetConf("config.json", &configuration)
+	if err != nil {
+		panic(err)
+	}
+
+	http.ListenAndServe(":"+configuration.Port, nil)
 
 }
 
@@ -396,18 +435,6 @@ func grepDir(pattern string, ckmMirror string) string {
 	return stdout
 }
 
-/* func storeRelationshipXML(parent, child string) {
-
-	if directory != "" {
-		if parent == "" {
-			return
-		}
-	}
-
-	relationsetXML = append(relationsetXML)
-
-} */
-
 func grepFile(file string, pattern string) string {
 
 	cmd := exec.Command("grep", pattern, file)
@@ -421,67 +448,60 @@ func grepFile(file string, pattern string) string {
 	stdout := outbuf.String()
 	return stdout
 }
-/* 
-func storeRelationship(parent, child string) {
 
-	if directory != "" {
-		if parent == "" {
-			return
+func printMap() {
+
+	b, err := json.MarshalIndent(wumChildToParent, "", "  ")
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Print(string(b))
+
+}
+
+func mapTemplate(el *etree.Element) bool {
+
+	// TODO: multiple 'root' templates
+
+	templateid := el.SelectElement("filename")
+
+	log.Printf("filename : " + templateid.Text())
+	e_contained_in := el.SelectElement("contained-in")
+	log.Printf("contained-in : " + e_contained_in.Text())
+
+	e_parent_template := e_contained_in.SelectElement("template")
+
+	if e_parent_template != nil {
+		e_parent_filename := e_parent_template.SelectElement("filename")
+
+		var s_parent_filename = ""
+		s_parent_filename = e_parent_filename.Text()
+
+		if s_parent_filename != "" {
+			log.Printf("contained_filename : " + e_parent_filename.Text())
+
+			_, already := wumChildToParent[templateid.Text()]
+			if !already {
+				wumChildToParent[templateid.Text()] = s_parent_filename
+			}
+
+			mapTemplate(e_parent_template)
 		}
+
 	}
 
-	relation := "\"" + child + "\"" + " -> " + "\"" + parent + "\"" + "\n"
-	relation = strings.Replace(relation, ".oet", "", -1)
-	fmt.Println(relation)
-	relationset = append(relationset, relation)
-} */
+	return true
+}
 
-/* func removeDuplicates(elements []string) []string {
-	// Use map to record duplicates as we find them.
-	encountered := map[string]bool{}
-	result := []string{}
-
-	for v := range elements {
-		if encountered[elements[v]] == true {
-			// Do not add duplicate.
-		} else {
-			// Record this element as an encountered element.
-			encountered[elements[v]] = true
-			// Append to result slice.
-			result = append(result, elements[v])
-		}
-	}
-	// Return the new slice.
-	return result
-} */
-
-/* func findAllOETfiles(path string) string {
-
-	cmd := exec.Command("find", path)
-	var outbuf, errbuf bytes.Buffer
-	cmd.Stdout = &outbuf
-	cmd.Stderr = &errbuf
-
-	log.Printf("Running command and waiting for it to finish...")
-	err := cmd.Run()
-	log.Printf("Command finished with error: %v", err)
-	stdout := outbuf.String()
-	return stdout
-
-} */
-
-/* func processAllOETfiles(allfileslist string) {
-
-	results := strings.Split(allfileslist, "\n")
-
-	for i := range results {
-		aFile := results[i]
-		aFile = strings.TrimSpace(aFile)
-		if strings.HasSuffix(aFile, ".oet") {
-			templateID := findTemplateID(aFile)
-			log.Printf(templateID)
-			findParentTemplates(templateID, aFile)
-		}
+func mapWhereUsedXML(ParentTree []string) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromString(strings.Join(ParentTree, "\x20")); err != nil {
+		panic(err)
 	}
 
-} */
+	root := doc.SelectElement("template")
+	log.Printf("ROOT element:", root.Tag)
+
+	mapTemplate(root)
+
+}

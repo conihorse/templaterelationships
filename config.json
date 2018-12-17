@@ -1,6 +1,7 @@
 {
 	"MirrorCkmPath": 		"ckm-mirror",
 	"ChangesetPath": 		"DAM",
-	"WorkingFolderPath":	"downloads/whereused"
-
+	"WorkingFolderPath":	"downloads/whereused",
+	"Port":					"8081",
+	"TestDataPath":			"./Test Data/Where-used/"
 }

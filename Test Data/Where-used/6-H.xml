@@ -1,0 +1,16 @@
+<template>
+    <filename>H.oet</filename>
+    <id>H-id</id>
+    <contained-in>
+        <template>
+            <filename>I.oet</filename>
+            <id>I-id</id>
+            <contained-in>
+                <template>
+                    <filename>J.oet</filename>
+                    <id>J-id</id>
+                </template>
+            </contained-in>
+        </template>
+    </contained-in>
+</template>

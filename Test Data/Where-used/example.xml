@@ -1,0 +1,23 @@
+<template>
+    <filename>coffee.oet</filename>
+    <id>6f28715f-d054-4dd9-802d-fb84560df17a</id>
+    <contained-in>
+        <template>
+            <filename>Drinks Menu.oet</filename>
+            <id>147749ce-b25b-4be2-9dd4-661cc54a6aa7</id>
+            <contained-in>
+                <template>
+                    <filename>Menu Morning.oet</filename>
+                    <id>c5a34cc5-cc9b-4964-8479-1cf336dd7d57</id>
+                    <contained-in>
+                        <template>
+                            <filename>Diner Kit.oet</filename>
+                            <id>ae2164d4-ae31-463a-b6ee-565e920a59f6</id>
+                            <contained-in/>
+                        </template>
+                    </contained-in>
+                </template>
+            </contained-in>
+        </template>
+    </contained-in>
+</template>
