@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -19,11 +20,22 @@ import (
 	"github.com/beevik/etree"
 )
 
+type childParentRelation struct {
+	ChildName  string
+	ChildId    string
+	ParentName string
+	ParentId   string
+}
+
 var relationset = []string{}
 var relationsetXML = []string{}
 var relationfile *os.File
 var directory = "."
-var wumChildToParent = make(map[string]string) // where-used map
+
+//var relationshipData = make([]string, 10)
+var relationshipData = make(map[string]int) // where-used map
+//var wumChildToParent = make(map[string]string) // where-used map
+var wuaChildToParent = make([]childParentRelation, 0)
 
 type Configuration struct {
 	MirrorCkmPath     string
@@ -79,6 +91,128 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		//						changesetFolder = configuration.ChangesetPath + "/" + params[3]  // ticket
 
 		loadTestData(configuration.TestDataPath)
+		mapWhereUsedXML(relationsetXML)
+		printMap()
+
+		fmt.Fprintf(w, `
+			
+			<html>
+			
+			  <head>
+				<title>cytoscape-dagre.js demo</title>
+			
+				<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+			
+				<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+			
+				<!-- for testing with local version of cytoscape.js -->
+				<!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
+			
+				<script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
+				<script src="https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"></script>
+			
+				<style>
+				  body {
+					font-family: helvetica;
+					font-size: 14px;
+				  }
+			
+				  #cy {
+					width: 1500px;
+					height: 1000px;
+					position: absolute;
+					left: 0;
+					top: 0;
+					z-index: 999;
+				  }
+			
+				  h1 {
+					opacity: 0.5;
+					font-size: 1em;
+				  }
+				</style>
+			
+				<script>
+				  window.addEventListener('DOMContentLoaded', function(){
+			
+					var cy = window.cy = cytoscape({
+					  container: document.getElementById('cy'),
+			
+					  boxSelectionEnabled: false,
+					  autounselectify: true,
+			
+					  layout: {
+						name: 'dagre'
+					  },
+			
+					  style: [
+						{
+						  selector: 'node',
+						  style: {
+							'background-color': '#11479e',
+								   'label': 'data(id)'
+						  }
+						},
+			
+						{
+						  selector: 'edge',
+						  style: {
+							'width': 4,
+							'target-arrow-shape': 'triangle',
+							'line-color': '#9dbaea',
+							'target-arrow-color': '#9dbaea',
+							'curve-style': 'bezier'
+						  }
+						}
+					  ],
+
+					  elements: {
+						nodes: [
+			`)
+		for s := range relationshipData {
+			//{ data: { id: 'n0' } },
+			fmt.Fprintf(w, "              { data: { id: '"+s+"' } },"+"\n")
+
+		}
+		fmt.Fprintf(w, `		],
+						edges: [`)
+
+		for _, r := range wuaChildToParent {
+			//              { data: { source: 'n0', target: 'n1' } },
+			fmt.Fprintf(w, `              { data: { source: '`+r.ChildName+"', target: '"+r.ParentName+"' } } ,"+"\n")
+
+		}
+		/*
+
+		   g.addEdge('cherry', 'apple');
+		   g.addEdge('strawberry', 'cherry');
+		   g.addEdge('strawberry', 'apple');
+		   g.addEdge('strawberry', 'tomato');
+		   g.addEdge('tomato', 'apple');
+		   g.addEdge('cherry', 'kiwi');
+		   g.addEdge('tomato', 'kiwi');
+		*/
+		fmt.Fprintf(w, `
+								]
+							}
+						});
+				
+					  });
+					</script>
+				  </head>
+				
+				  <body>
+					<h1>cytoscape-dagre demo</h1>
+				
+					<div id="cy"></div>
+				
+				  </body>
+				
+				</html>
+				
+			 
+			   `)
+		return
 
 	default:
 		log.Printf("unknown operation type: " + param0)
@@ -116,8 +250,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	mapWhereUsedXML(relationsetXML)
-	printMap()
 }
 
 func checkEnvironment(config Configuration, ticketdir string) bool {
@@ -271,14 +403,21 @@ func loadTestData(path string) []string {
 
 	root := path
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		files = append(files, path)
+
+		if filepath.Ext(info.Name()) == ".xml" {
+			files = append(files, path)
+		}
 		return nil
 	})
 	if err != nil {
 		panic(err)
 	}
 	for _, file := range files {
-		log.Printf(file)
+		log.Printf("testdata: " + file)
+		testdata, err := readLines(file)
+		if err == nil {
+			mapWhereUsedXML(testdata)
+		}
 	}
 
 	return nil
@@ -406,7 +545,6 @@ func findParentTemplates(id string, file string, ckmMirror string) bool {
 		if parent != "" {
 			fmt.Println("findParentTemplates parent - " + parent)
 			id = findTemplateID(parent)
-			//findParentTemplates(id, directory+"/"+parent, ckmMirror)
 			trimmedparent := filepath.Base(parent)
 			findParentTemplates(id, trimmedparent, ckmMirror)
 		}
@@ -451,7 +589,7 @@ func grepFile(file string, pattern string) string {
 
 func printMap() {
 
-	b, err := json.MarshalIndent(wumChildToParent, "", "  ")
+	b, err := json.MarshalIndent(wuaChildToParent, "", "  ")
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -459,49 +597,116 @@ func printMap() {
 
 }
 
+// navigates through xml tree recursively and appends child->parent relationships to map
 func mapTemplate(el *etree.Element) bool {
 
-	// TODO: multiple 'root' templates
+	// TODO: multiple 'contained' templates
+	eTemplateFilename := el.SelectElement("filename")
+	eTemplateId := el.SelectElement("id")
 
-	templateid := el.SelectElement("filename")
+	sCurrentTemplateFilename := eTemplateFilename.Text()
+	sCurrentTemplateId := eTemplateId.Text()
 
-	log.Printf("filename : " + templateid.Text())
-	e_contained_in := el.SelectElement("contained-in")
-	log.Printf("contained-in : " + e_contained_in.Text())
+	//var found = false
 
-	e_parent_template := e_contained_in.SelectElement("template")
+	// add to unique list of known templates
+	relationshipData[sCurrentTemplateFilename] = 0
 
-	if e_parent_template != nil {
-		e_parent_filename := e_parent_template.SelectElement("filename")
+	log.Printf("filename : " + sCurrentTemplateFilename)
 
-		var s_parent_filename = ""
-		s_parent_filename = e_parent_filename.Text()
+	eContainedIn := el.SelectElement("contained-in")
 
-		if s_parent_filename != "" {
-			log.Printf("contained_filename : " + e_parent_filename.Text())
+	if eContainedIn != nil {
+		slParents := eContainedIn.SelectElements("template")
 
-			_, already := wumChildToParent[templateid.Text()]
-			if !already {
-				wumChildToParent[templateid.Text()] = s_parent_filename
+		for _, eParentTemplate := range slParents {
+
+			//log.Printf("contained-in : " + eContainedIn.Text())
+
+			if eParentTemplate != nil {
+				eParentFilename := eParentTemplate.SelectElement("filename")
+				eParentId := eParentTemplate.SelectElement("id")
+
+				var sParentFilename = ""
+				var sParentId = ""
+
+				if eParentFilename != nil {
+					sParentFilename = eParentFilename.Text()
+				}
+
+				if eParentId != nil {
+					sParentId = eParentId.Text()
+				}
+
+				var already = false
+
+				if sParentFilename != "" {
+					log.Printf("contained_filename : " + eParentFilename.Text())
+
+					for _, r := range wuaChildToParent {
+						if (r.ChildId == sCurrentTemplateId) && (r.ParentId == sParentId) {
+							already = true
+						}
+					}
+
+					if !already {
+						//wumChildToParent[templateid.Text()] = sParentFilename
+						var relation childParentRelation
+						relation.ChildName = sCurrentTemplateFilename
+						relation.ChildId = sCurrentTemplateId
+						relation.ParentName = sParentFilename
+						relation.ParentId = sParentId
+						wuaChildToParent = append(wuaChildToParent, relation)
+					}
+
+					mapTemplate(eParentTemplate)
+				}
+
 			}
-
-			mapTemplate(e_parent_template)
 		}
-
 	}
+	// eContainedIn := el.SelectElement("contained-in")
+
+	// if eContainedIn == nil {
+	// 	return true
+	// }
 
 	return true
 }
 
 func mapWhereUsedXML(ParentTree []string) {
+
+	// TODO: multiple root templates
+
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(strings.Join(ParentTree, "\x20")); err != nil {
 		panic(err)
 	}
 
-	root := doc.SelectElement("template")
-	log.Printf("ROOT element:", root.Tag)
+	templates := doc.SelectElements("template")
 
-	mapTemplate(root)
+	for _, template := range templates {
+		if template != nil {
+			mapTemplate(template)
+		}
 
+	}
+
+}
+
+// readLines reads a whole file into memory
+// and returns a slice of its lines.
+func readLines(path string) ([]string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	return lines, scanner.Err()
 }

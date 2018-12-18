@@ -45,7 +45,8 @@
     <id>S-id</id>
     <contained-in>
         <template>
-        <filename>C.oet</filename>
-        <id>C-id</id>
-    </contained-in>        
+            <filename>C.oet</filename>
+            <id>C-id</id>
+        </template>
+    </contained-in>
 </template>
