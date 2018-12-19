@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	//	"encoding/xml"
 	"aqwari.net/xml/xmltree"
 	"github.com/Tkanos/gonfig"
 	"github.com/beevik/etree"
@@ -33,9 +34,11 @@ var relationfile *os.File
 var directory = "."
 
 //var relationshipData = make([]string, 10)
-var relationshipData = make(map[string]int) // where-used map
+//var relationshipData = make(map[string]int) // where-used map
+var relationshipData map[string]int
+
 //var wumChildToParent = make(map[string]string) // where-used map
-var wuaChildToParent = make([]childParentRelation, 0)
+var wuaChildToParent []childParentRelation
 
 type Configuration struct {
 	MirrorCkmPath     string
@@ -47,6 +50,9 @@ type Configuration struct {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 
+	wuaChildToParent = make([]childParentRelation, 0)
+	relationshipData = make(map[string]int) // where-used map
+
 	params := strings.Split(r.RequestURI, ",")
 
 	configuration := Configuration{}
@@ -57,12 +63,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("ckmpath = " + (string)(configuration.MirrorCkmPath))
 
-	if len(params) < 3 {
+	if len(params) < 1 {
 		return
 	}
 
-	param0 := strings.Trim(params[0], "/") // operation type
-
+	param0 := strings.ToLower(strings.Trim(params[0], "/")) // operation type
+	relationsetXML = []string{}                             // used to store the relationships between files
 	var templateID string
 	var templateName string
 	var changesetFolder string
@@ -72,17 +78,35 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch {
-	case param0 == "report":
+	case param0 == "template-xml-report":
 		templateID = params[1]   // child template internal id
 		templateName = params[2] // child template name
 		fmt.Fprintf(w, "<?xml version='1.0' encoding='UTF-8'?>")
 		// fmt.Fprintf(w, "<?xml-stylesheet type='text/xsl' href='/GENERIC.xsl'?>")
 
-	case param0 == "retrieve":
+	case param0 == "ticket-retrieve-supporting":
 
 		templateID = params[1]                                          // child template internal id
 		templateName = params[2]                                        // child template name
-		changesetFolder = configuration.ChangesetPath + "/" + params[3] // ticket
+		changesetFolder = configuration.ChangesetPath + "/" + params[3] // ticket'
+
+	case param0 == "ticket-view-report":
+
+		changesetFolder = configuration.ChangesetPath + "/" + params[1] // ticket'
+
+		// for every template in the changeset
+
+		// find parent templates
+
+		// add xml to map
+
+		mapTicketTemplates("./"+changesetFolder+"/", configuration.MirrorCkmPath)
+		printMap()
+		fmt.Fprintln(w, generateMap())
+
+		// return map?
+
+		return
 
 	case param0 == "testdata":
 
@@ -94,124 +118,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		mapWhereUsedXML(relationsetXML)
 		printMap()
 
-		fmt.Fprintf(w, `
-			
-			<html>
-			
-			  <head>
-				<title>cytoscape-dagre.js demo</title>
-			
-				<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
-			
-				<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
-			
-				<!-- for testing with local version of cytoscape.js -->
-				<!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
-			
-				<script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
-				<script src="https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"></script>
-			
-				<style>
-				  body {
-					font-family: helvetica;
-					font-size: 14px;
-				  }
-			
-				  #cy {
-					width: 1500px;
-					height: 1000px;
-					position: absolute;
-					left: 0;
-					top: 0;
-					z-index: 999;
-				  }
-			
-				  h1 {
-					opacity: 0.5;
-					font-size: 1em;
-				  }
-				</style>
-			
-				<script>
-				  window.addEventListener('DOMContentLoaded', function(){
-			
-					var cy = window.cy = cytoscape({
-					  container: document.getElementById('cy'),
-			
-					  boxSelectionEnabled: false,
-					  autounselectify: true,
-			
-					  layout: {
-						name: 'dagre'
-					  },
-			
-					  style: [
-						{
-						  selector: 'node',
-						  style: {
-							'background-color': '#11479e',
-								   'label': 'data(id)'
-						  }
-						},
-			
-						{
-						  selector: 'edge',
-						  style: {
-							'width': 4,
-							'target-arrow-shape': 'triangle',
-							'line-color': '#9dbaea',
-							'target-arrow-color': '#9dbaea',
-							'curve-style': 'bezier'
-						  }
-						}
-					  ],
+		fmt.Fprintln(w, generateMap())
 
-					  elements: {
-						nodes: [
-			`)
-		for s := range relationshipData {
-			//{ data: { id: 'n0' } },
-			fmt.Fprintf(w, "              { data: { id: '"+s+"' } },"+"\n")
-
-		}
-		fmt.Fprintf(w, `		],
-						edges: [`)
-
-		for _, r := range wuaChildToParent {
-			//              { data: { source: 'n0', target: 'n1' } },
-			fmt.Fprintf(w, `              { data: { source: '`+r.ChildName+"', target: '"+r.ParentName+"' } } ,"+"\n")
-
-		}
-		/*
-
-		   g.addEdge('cherry', 'apple');
-		   g.addEdge('strawberry', 'cherry');
-		   g.addEdge('strawberry', 'apple');
-		   g.addEdge('strawberry', 'tomato');
-		   g.addEdge('tomato', 'apple');
-		   g.addEdge('cherry', 'kiwi');
-		   g.addEdge('tomato', 'kiwi');
-		*/
-		fmt.Fprintf(w, `
-								]
-							}
-						});
-				
-					  });
-					</script>
-				  </head>
-				
-				  <body>
-					<h1>cytoscape-dagre demo</h1>
-				
-					<div id="cy"></div>
-				
-				  </body>
-				
-				</html>
-				
-			 
-			   `)
 		return
 
 	default:
@@ -220,10 +128,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	relationsetXML = []string{} // used to store the relationships between files
 	parentsExist := findParentTemplates(templateID, templateName, configuration.MirrorCkmPath)
 
-	if param0 == "report" {
+	if param0 == "template-xml-report" {
 		for v := range relationsetXML {
 			fmt.Fprintf(w, relationsetXML[v])
 		}
@@ -234,7 +141,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if param0 == "retrieve" {
+	if param0 == "ticket-retrieve-supporting" {
 		if parentsExist {
 			log.Printf("Going to fetch parents....")
 			parseParentsTree(relationsetXML, changesetFolder+"/"+configuration.WorkingFolderPath)
@@ -267,7 +174,6 @@ func checkEnvironment(config Configuration, ticketdir string) bool {
 
 func moveFiles(changesetFolder, assetType, WorkingFolderPath string) string {
 
-	//cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", "tempfiles/unzipped/templates", changesetFolder)
 	cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", changesetFolder+"/"+WorkingFolderPath+"/unzipped/"+assetType, changesetFolder)
 	var outbuf, errbuf bytes.Buffer
 	cmd.Stdout = &outbuf
@@ -404,7 +310,7 @@ func loadTestData(path string) []string {
 	root := path
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 
-		if filepath.Ext(info.Name()) == ".xml" {
+		if strings.ToLower(filepath.Ext(info.Name())) == ".xml" {
 			files = append(files, path)
 		}
 		return nil
@@ -600,9 +506,17 @@ func printMap() {
 // navigates through xml tree recursively and appends child->parent relationships to map
 func mapTemplate(el *etree.Element) bool {
 
+	if el == nil {
+		return false
+	}
+
 	// TODO: multiple 'contained' templates
 	eTemplateFilename := el.SelectElement("filename")
 	eTemplateId := el.SelectElement("id")
+
+	if (eTemplateFilename == nil) || (eTemplateId == nil) {
+		return false
+	}
 
 	sCurrentTemplateFilename := eTemplateFilename.Text()
 	sCurrentTemplateId := eTemplateId.Text()
@@ -679,7 +593,11 @@ func mapWhereUsedXML(ParentTree []string) {
 	// TODO: multiple root templates
 
 	doc := etree.NewDocument()
-	if err := doc.ReadFromString(strings.Join(ParentTree, "\x20")); err != nil {
+	sXML := strings.Join(ParentTree, "\x20")
+
+	sXML = strings.Replace(sXML, "&", "&amp;", 1)
+
+	if err := doc.ReadFromString(sXML); err != nil {
 		panic(err)
 	}
 
@@ -709,4 +627,167 @@ func readLines(path string) ([]string, error) {
 		lines = append(lines, scanner.Text())
 	}
 	return lines, scanner.Err()
+}
+
+func generateMap() string {
+
+	graphmap := `
+		
+		<html>
+		
+		  <head>
+			<title>cytoscape-dagre.js demo</title>
+		
+			<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+		
+			<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+		
+			<!-- for testing with local version of cytoscape.js -->
+			<!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
+		
+			<script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
+			<script src="https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"></script>
+		
+			<style>
+			  body {
+				font-family: helvetica;
+				font-size: 10px;
+			  }
+		
+			  #cy {
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				left: 0;
+				top: 0;
+				z-index: 999;
+			  }
+		
+			  h1 {
+				opacity: 0.5;
+				font-size: 1em;
+			  }
+			</style>
+		
+			<script>
+			  window.addEventListener('DOMContentLoaded', function(){
+		
+				var cy = window.cy = cytoscape({
+				  container: document.getElementById('cy'),
+		
+				  boxSelectionEnabled: false,
+				  autounselectify: true,
+		
+				  layout: {
+					name: 'dagre',
+					rankDir: 'BT',
+					labelpos: 'R',
+									
+				  },
+		
+				  style: [
+					{
+					  selector: 'node',
+					  style: {
+						//'background-color': '#11479e',
+						'background-color': '#ff0000',
+						'text-valign': 'center',
+						'text-halign': 'right',
+							   'label': 'data(id)'
+					  }
+					},
+		
+					{
+					  selector: 'edge',
+					  style: {
+						'width': 4,
+						'target-arrow-shape': 'triangle',
+						'line-color': '#9dbaea',
+						'target-arrow-color': '#9dbaea',
+						'curve-style': 'bezier'
+					  }
+					}
+				  ],
+
+				  elements: {
+					nodes: [
+		`
+	for s := range relationshipData {
+		//{ data: { id: 'n0' } },
+		graphmap += "              { data: { id: '" + s + "' } }," + "\n"
+
+	}
+	graphmap += `		],
+					edges: [`
+
+	for _, r := range wuaChildToParent {
+		//              { data: { source: 'n0', target: 'n1' } },
+		graphmap += `              { data: { source: '` + r.ChildName + "', target: '" + r.ParentName + "' } } ," + "\n"
+
+	}
+	/*
+
+	   g.addEdge('cherry', 'apple');
+	   g.addEdge('strawberry', 'cherry');
+	   g.addEdge('strawberry', 'apple');
+	   g.addEdge('strawberry', 'tomato');
+	   g.addEdge('tomato', 'apple');
+	   g.addEdge('cherry', 'kiwi');
+	   g.addEdge('tomato', 'kiwi');
+	*/
+	graphmap += `
+							]
+						}
+					});
+			
+				  });
+				</script>
+			  </head>
+			
+			  <body>
+				<h1>cytoscape-dagre demo</h1>
+			
+				<div id="cy"></div>
+			
+			  </body>
+			
+			</html>
+			
+		 
+		   `
+
+	return graphmap
+
+}
+
+func mapTicketTemplates(ticketPath, mirrorPath string) []string {
+
+	var files []string
+
+	err := filepath.Walk(ticketPath, func(path string, info os.FileInfo, err error) error {
+
+		if strings.ToLower(filepath.Ext(info.Name())) == ".oet" {
+
+			if !strings.Contains(path, strings.ToLower("downloads")) {
+				files = append(files, path)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range files {
+		log.Printf("loadTicketTemplates: " + file)
+
+		templateID := findTemplateID(file)
+		findParentTemplates(templateID, filepath.Base(file), mirrorPath)
+
+		//templatedata, err := readLines(file)
+		if err == nil {
+			mapWhereUsedXML(relationsetXML)
+		}
+	}
+
+	return nil
 }
