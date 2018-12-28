@@ -312,8 +312,8 @@ func parseParentsTree(ParentTree []string, TicketWorkingFolderPath string) {
 			if err != nil {
 				panic(err)
 			}
-		} else { 
-		  log.Println( "parseParentsTree : template doesn't exist : " + templateid)
+		} else {
+			log.Println("parseParentsTree : template doesn't exist : " + templateid)
 		}
 	}
 
@@ -977,6 +977,7 @@ func ckmValidateTemplate(node *nodeDefinition) bool {
 // TODO : log message
 // TODO : template type
 // TODO : project cid
+// TODO : capture new resource info returned from ckm (for the report...)
 func ckmCommitNewTemplate(node *nodeDefinition) bool {
 	logmessage := "testing%20commit%20process"
 	templatesource, err := readLines(node.NodeLocation)
@@ -1012,6 +1013,7 @@ func ckmCommitNewTemplate(node *nodeDefinition) bool {
 
 // commit a template revision to ckm [NOTE: see also ckmCommitNewTemplate() ]
 // TODO : log message
+// TODO : capture new resource info returned from ckm (for the report...)
 func ckmCommitRevisedTemplate(node *nodeDefinition) bool {
 	logmessage := "testing%20commit%20process"
 	templatesource, err := readLines(node.NodeLocation)
