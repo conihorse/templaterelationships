@@ -61,11 +61,11 @@
     </other_details>
   </description>
   <definition xsi:type="SECTION" archetype_id="openEHR-EHR-SECTION.adhoc.v1" concept_name="Ad hoc heading" max="1" name="Sodas">
-    <Item xsi:type="INSTRUCTION" archetype_id="openEHR-EHR-INSTRUCTION.service_request.v1" concept_name="Service request" max="1" path="/items" name="Sprite">
+    <Item xsi:type="INSTRUCTION" archetype_id="openEHR-EHR-INSTRUCTION.service_request.v1" concept_name="Service request" max="1" path="/items" name="Sprites">
       <Items xsi:type="CLUSTER" archetype_id="openEHR-EHR-CLUSTER.service_request_information.v1" concept_name="Service request information" max="1" path="/activities[at0001]/description[at0009]/items[at0132]" name="Sprite Can" />
       <Items xsi:type="CLUSTER" archetype_id="openEHR-EHR-CLUSTER.service_request_information.v1" concept_name="Service request information" max="1" path="/activities[at0001]/description[at0009]/items[at0132]" name="Sprite Bottle" />
     </Item>
-    <Item xsi:type="INSTRUCTION" archetype_id="openEHR-EHR-INSTRUCTION.service_request.v1" concept_name="Service request" max="1" path="/items" name="Coke">
+    <Item xsi:type="INSTRUCTION" archetype_id="openEHR-EHR-INSTRUCTION.service_request.v1" concept_name="Service request" max="1" path="/items" name="Cokes">
       <Items xsi:type="CLUSTER" archetype_id="openEHR-EHR-CLUSTER.service_request_information.v1" concept_name="Service request information" max="1" path="/activities[at0001]/description[at0009]/items[at0132]" name="Coke Bottle" />
       <Items xsi:type="CLUSTER" archetype_id="openEHR-EHR-CLUSTER.service_request_information.v1" concept_name="Service request information" max="1" path="/activities[at0001]/description[at0009]/items[at0132]" name="Coke Can" />
     </Item>
