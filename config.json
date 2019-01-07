@@ -3,5 +3,7 @@
 	"ChangesetPath": 		"DAM",
 	"WorkingFolderPath":	"downloads/whereused",
 	"Port":					"8081",
-	"TestDataPath":			"./Test Data/Where-used/"
+	"TestDataPath":			"./Test Data/Where-used/",
+	"HTMLGraphTemplate":	"graphtemplate.html",
+	"HTMLStatusTemplate":	"statustemplate.html"
 }

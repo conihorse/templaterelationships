@@ -1,0 +1,316 @@
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- Material Design Lite -->
+    <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <!-- Material Design icon font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        body {
+            padding: 20px;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .demo-card-wide.mdl-card {
+            width: 512px;
+        }
+
+        .demo-card-wide>.mdl-card__title {
+            color: rgb(255, 255, 255);
+            height: 176px;
+            /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
+            background: url('https://getmdl.io/assets/demos/welcome_card.jpg') center / cover;
+        }
+        .demo-statuscard {
+            color: rgb(255, 255, 255);
+            background: rgb(255, 255, 255);
+            height: 76px;
+            width: 512px;            
+            /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
+            
+        }
+        .demo-card-wide>.mdl-card__menu {
+            color: #fff;
+        }
+    </style>
+</head>
+
+
+<div  class="demo-card-wide mdl-card mdl-shadow--2dp" >
+    <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">Welcome</h2>
+    </div>
+    <div class="mdl-card__supporting-text">
+        This screen starts the CKM upload process, which checks that all assets are:
+        <ol>
+            <li>Automatically uploaded into CKM if they have been changed,</li>
+            <li>Updated in other assets that have an updated asset embedded within.</li>
+        </ol>
+        The entire process can take a few minutes, and will take longer if there are a lot of assets.
+        <br>
+        <br>
+        As the process is working, a regularly updated status message will be displayed.
+        At end of the process, a report will list the results.
+    </div>
+    <div class="mdl-card__actions mdl-card--border">
+        <a id="go" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+            Get Started
+        </a>
+    </div>
+    <div class="mdl-card__menu">
+        <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+            <i class="material-icons">share</i>
+        </button>
+    </div>
+</div>
+
+<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" display:"hidden" >
+        <div id="statusmessage" class="mdl-card__supporting-text">
+         <b>2019/01/09 12;12</b> - checkin gthe sausage sfor AM/diner/templates/section/Bacon, Eggs & Hash Browns.oet	
+        </div>
+    </div>
+    
+
+
+<!-- <button id="clickMe">Get JSON</button> -->
+
+<p id="demo"></p>
+
+<div></div>
+
+<!-- Stop Button -->
+<!-- <a href="#" onclick="window.clearInterval(int);return false;">Stop</a> -->
+
+<pre id="statusdata"></pre>
+
+<!-- <table class="mdl-data-table mdl-js-data-table mdl-data-table mdl-shadow--2dp">
+    <thead>
+        <tr>
+            <th class="mdl-data-table__cell--non-numeric">Material</th>
+            <th>Quantity</th>
+            <th>Unit price</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="mdl-data-table__cell--non-numeric">Acrylic (Transparent)</td>
+            <td>25</td>
+            <td>$2.90</td>
+        </tr>
+        <tr>
+            <td class="mdl-data-table__cell--non-numeric">Plywood (Birch)</td>
+            <td>50</td>
+            <td>$1.25</td>
+        </tr>
+        <tr>
+            <td class="mdl-data-table__cell--non-numeric">Laminate (Gold on Blue)</td>
+            <td>10</td>
+            <td>$2.35</td>
+        </tr>
+    </tbody>
+</table> -->
+
+<script>
+    theReport = [{
+            "NodeName": "Coffees.oet",
+            "NodeLocation": "DAM/coffee/templates/section/Coffees.oet",
+            "NodeID": "6f28715f-d054-4dd9-802d-fb84560df17a",
+            "NodeHash": "b7194aa688f191459b9bfd7573ed0e7f",
+            "NodeIsLeaf": 1,
+            "NodeCommitOrder": 0,
+            "NodeIsCommitted": 1,
+            "NodeChanged": 0,
+            "NodeCID": "1175.132.9054",
+            "NodeParentList": [
+                "Drinks Menu.oet"
+            ]
+        },
+        {
+            "NodeName": "Drinks Menu.oet",
+            "NodeLocation": "",
+            "NodeID": "147749ce-b25b-4be2-9dd4-661cc54a6aa7",
+            "NodeHash": "",
+            "NodeIsLeaf": 0,
+            "NodeCommitOrder": 1,
+            "NodeIsCommitted": 1,
+            "NodeChanged": -1,
+            "NodeCID": "",
+            "NodeParentList": [
+                "Menu Morning.oet"
+            ]
+        },
+        {
+            "NodeName": "Menu Morning.oet",
+            "NodeLocation": "",
+            "NodeID": "c5a34cc5-cc9b-4964-8479-1cf336dd7d57",
+            "NodeHash": "",
+            "NodeIsLeaf": 0,
+            "NodeCommitOrder": 2,
+            "NodeIsCommitted": 1,
+            "NodeChanged": -1,
+            "NodeCID": "",
+            "NodeParentList": [
+                "Diner Kit.oet"
+            ]
+        },
+        {
+            "NodeName": "Diner Kit.oet",
+            "NodeLocation": "",
+            "NodeID": "ae2164d4-ae31-463a-b6ee-565e920a59f6",
+            "NodeHash": "",
+            "NodeIsLeaf": 0,
+            "NodeCommitOrder": 3,
+            "NodeIsCommitted": 1,
+            "NodeChanged": -1,
+            "NodeCID": "",
+            "NodeParentList": null
+        }
+    ];
+
+
+    function getJSON() {
+
+        document.getElementById("statuscard").style.display = "block"
+
+        var html = JSON.stringify(theReport, null, 2)
+        //$("#statusdata").html(html)
+
+        //var objreport = JSON.parse(JSON.stringify(theReport))
+        tableCreate(theReport)
+
+
+    }
+    /* "NodeName": "Coffees.oet",
+                "NodeLocation": "DAM/coffee/templates/section/Coffees.oet",
+                "NodeID": "6f28715f-d054-4dd9-802d-fb84560df17a",
+                "NodeHash": "b7194aa688f191459b9bfd7573ed0e7f",
+                "NodeIsLeaf": 1,
+                "NodeCommitOrder": 0,
+                "NodeIsCommitted": 1,
+                "NodeChanged": 0,
+                "NodeCID": "1175.132.9054",
+                "NodeParentList": [
+                    "Drinks Menu.oet" */
+
+    function tableCreate(theReport) {
+
+        if (theReport == "") {
+            return
+        }
+        //alert("tableCreate")
+        document.getElementById("statusmessage").innerHTML = "<b>Done!</b>"
+
+        var objreport = JSON.parse(JSON.stringify(theReport))
+        var body = document.body,
+            tbl = document.createElement('table');
+        tbl.className = 'mdl-data-table mdl-js-data-table mdl-data-table mdl-shadow--2dp'
+        tbl.style.width = '100px';
+
+        var header = tbl.createTHead()
+        header.className = 'mdl-data-table__cell--non-numeric'
+
+        //header.insertCell().appendChild(document.createTextNode("Name"))
+
+        var hr = header.insertRow();
+        hr.className = 'mdl-data-table__cell--non-numeric'
+
+        hr.insertCell().appendChild(document.createTextNode("Asset filenameName"))
+        hr.insertCell().appendChild(document.createTextNode("Local Location"))
+        hr.insertCell().appendChild(document.createTextNode("Start State \r(Local vs CKM)"))
+        hr.insertCell().appendChild(document.createTextNode("Process Result"))
+        hr.insertCell().appendChild(document.createTextNode(""))
+        hr.insertCell().appendChild(document.createTextNode("Embedded In"))
+        var arrayLength = objreport.length;
+        var td;
+
+
+
+        for (var i = 0; i < arrayLength; i++) {
+
+            var tr = tbl.insertRow();
+
+            td = tr.insertCell();
+            td.appendChild(document.createTextNode(objreport[i].NodeName));
+
+
+            td = tr.insertCell();
+            td.appendChild(document.createTextNode(objreport[i].NodeLocation));
+
+            td = tr.insertCell();
+            switch (objreport[i].NodeChanged) {
+                case -1:
+                    td.appendChild(document.createTextNode("Unknown"));
+                    break;
+                case 0:
+                    td.appendChild(document.createTextNode("Unedited"));
+                    break;
+                case 1:
+                    td.appendChild(document.createTextNode("Edited"));
+                    break;
+                case 2:
+                    td.appendChild(document.createTextNode("Created"));
+                    break;
+                default:
+                    td.appendChild(document.createTextNode("Unknown"));
+                    break;
+            }
+
+
+            td = tr.insertCell();
+            //td.appendChild(document.createTextNode(objreport[i].NodeIsCommitted));
+            switch (objreport[i].NodeIsCommitted) {
+                case -1:
+                    td.appendChild(document.createTextNode("Unknown"));
+                    break;
+                case 0:
+                    td.appendChild(document.createTextNode("Failed"));
+                    break;
+                case 1:
+                    td.appendChild(document.createTextNode("Committed to CKM"));
+                    break;
+                default:
+                    td.appendChild(document.createTextNode("Unknown"));
+                    break;
+            }
+
+            td = tr.insertCell();
+            var link = document.createElement("a");
+            link.setAttribute('target', '_blank');
+            link.setAttribute("href", "https://ahsckm.ca/ckm/#showTemplate_" + objreport[i].NodeCID); // 1175.132.9052)
+            var linkText = document.createTextNode("Open in CKM");
+            link.appendChild(linkText);
+
+            // Add the link to the previously created TableCell.
+            td.appendChild(link);
+
+
+            var relations = objreport[i].NodeParentList
+
+            var relationsLength = objreport.length;
+            
+
+
+
+            for (var k = 0; k < relationsLength; k++) {
+
+            }
+
+
+        }
+        body.appendChild(tbl);
+    }
+    //    tableCreate();
+
+
+
+    //document.getElementById("demo").innerHTML = "Processing ticket %%TICKET%%";
+
+    //document.getElementById("clickMe").onclick = getJSON;
+    document.getElementById("go").onclick = getJSON;    
+</script>
+
+</html>

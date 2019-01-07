@@ -1,0 +1,228 @@
+<html>
+
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+  <!-- Material Design Lite -->
+  <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+  <!-- Material Design icon font -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <style>
+    body {
+      padding: 20px;
+      background: #fafafa;
+      position: relative;
+    }
+
+    .demo-card-wide.mdl-card {
+      width: 512px;
+    }
+
+    .demo-card-wide>.mdl-card__title {
+      color: rgb(255, 255, 255);
+      height: 176px;
+      /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
+      background: url('https://getmdl.io/assets/demos/welcome_card.jpg') center / cover;
+    }
+
+    .demo-statuscard {
+      color: rgb(255, 255, 255);
+      background: rgb(255, 255, 255);
+      height: 100px;
+      width: 512px;            
+      /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
+      
+  }
+
+    .demo-card-wide>.mdl-card__menu {
+      color: #fff;
+    }
+  </style>
+
+</head>
+
+<div  class="demo-card-wide mdl-card mdl-shadow--2dp" >
+    <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">Welcome</h2>
+    </div>
+    <div class="mdl-card__supporting-text">
+        This screen starts the CKM upload process, which checks that all assets in <B>%%TICKET%%</B> are:
+        <ol>
+            <li>Automatically uploaded into CKM if they have been changed,</li>
+            <li>Updated in other assets that have an updated asset embedded within.</li>
+        </ol>
+        The entire process can take a few minutes, and will take longer if there are a lot of assets.
+        <br>
+        <br>
+        As the process is working, a regularly updated status message will be displayed.
+        At end of the process, a report will list the results.
+    </div>
+    <div class="mdl-card__actions mdl-card--border">
+        <a id="go" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+            Get Started
+        </a>
+    </div>
+    <div class="mdl-card__menu">
+        <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+            <i class="material-icons">share</i>
+        </button>
+    </div>
+</div>
+
+<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" display: "hidden">
+  <div id="statusdata" class="mdl-card__supporting-text">
+    
+  </div>
+</div>
+<BR>
+
+<!-- <button>Get JSON data</button> -->
+
+<!-- <h3 id="demo"></h3>
+
+<script>
+  document.getElementById("demo").innerHTML = "%%TICKET%%";
+</script>
+ -->
+<div></div>
+
+<!-- Stop Button -->
+<!-- <a href="#" onclick="window.clearInterval(int);return false;">Stop</a> -->
+<!-- <pre id="statusdata"></pre> -->
+<script>
+  var intTimer
+
+  function start() {
+    intTimer = self.setInterval(getStatus, 1000);
+  }
+
+  function getStatus() {
+
+    $.getJSON("/status,%%SESSIONID%%", function (result) {
+      $.each(result, function (i, field) {
+          if (field == "*** Done! ***") {
+            //alert("done")
+            window.clearInterval(intTimer);
+            $.getJSON("/report,%%SESSIONID%%", function (result) {
+              //var html = JSON.stringify(result, null, 2)
+              //$("#statusdata").html(html)
+              //$("div").html("<br>[" + new Date().toLocaleString() + "] " + "Finished!" + " ");
+              document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" +
+                "Finished!" + " ";
+              tableCreate(result)
+            })
+
+            return false;
+          } else {
+            //$("div").html("<br>[" + new Date().toLocaleString() + "] " + field + " ");
+            document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" +
+              field + " ";
+          }
+
+        }
+
+
+      );
+      //var data = $(result).serializeArray()
+
+
+
+    });
+  };
+
+  function tableCreate(theReport) {
+
+    if (theReport == "") {
+      return
+    }
+    //alert("tableCreate")
+    var objreport = JSON.parse(JSON.stringify(theReport))
+    var body = document.body,
+      tbl = document.createElement('table');
+    tbl.className = 'mdl-data-table mdl-js-data-table mdl-data-table mdl-shadow--2dp'
+    tbl.style.width = '100px';
+
+    var header = tbl.createTHead()
+    header.className = 'mdl-data-table__cell--non-numeric'
+
+    //header.insertCell().appendChild(document.createTextNode("Name"))
+
+    var hr = header.insertRow();
+    hr.className = 'mdl-data-table__cell--non-numeric'
+
+    hr.insertCell().appendChild(document.createTextNode("Name"))
+    hr.insertCell().appendChild(document.createTextNode("Location"))
+    hr.insertCell().appendChild(document.createTextNode("Local State"))
+    hr.insertCell().appendChild(document.createTextNode("Was Committed?"))
+    hr.insertCell().appendChild(document.createTextNode("CKM Location"))
+    var arrayLength = objreport.length;
+    var td;
+
+
+
+    for (var i = 0; i < arrayLength; i++) {
+
+      var tr = tbl.insertRow();
+
+      td = tr.insertCell();
+      td.appendChild(document.createTextNode(objreport[i].NodeName));
+
+
+      td = tr.insertCell();
+      td.appendChild(document.createTextNode(objreport[i].NodeLocation));
+
+      td = tr.insertCell();
+      switch (objreport[i].NodeChanged) {
+        case -1:
+          td.appendChild(document.createTextNode("Unknown"));
+          break;
+        case 0:
+          td.appendChild(document.createTextNode("Unedited"));
+          break;
+        case 1:
+          td.appendChild(document.createTextNode("Edited"));
+          break;
+        case 2:
+          td.appendChild(document.createTextNode("Created"));
+          break;
+        default:
+          td.appendChild(document.createTextNode("Unknown"));
+          break;
+      }
+
+
+      td = tr.insertCell();
+      //td.appendChild(document.createTextNode(objreport[i].NodeIsCommitted));
+      switch (objreport[i].NodeIsCommitted) {
+        case -1:
+          td.appendChild(document.createTextNode("Unknown"));
+          break;
+        case 0:
+          td.appendChild(document.createTextNode("Failed"));
+          break;
+        case 1:
+          td.appendChild(document.createTextNode("Committed to CKM"));
+          break;
+        default:
+          td.appendChild(document.createTextNode("Unknown"));
+          break;
+      }
+
+      td = tr.insertCell();
+      var link = document.createElement("a");
+      link.setAttribute('target', '_blank');
+      link.setAttribute("href", "https://ahsckm.ca/ckm/#showTemplate_" + objreport[i].NodeCID); // 1175.132.9052)
+      var linkText = document.createTextNode("Open in CKM");
+      link.appendChild(linkText);
+
+      // Add the link to the previously created TableCell.
+      td.appendChild(link);
+    }
+    body.appendChild(tbl);
+  }
+  document.getElementById("go").onclick = start;
+  //var int = self.setInterval(getStatus, 1000);
+</script>
+
+</html>

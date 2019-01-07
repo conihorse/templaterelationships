@@ -1,0 +1,144 @@
+<html>
+
+<head>
+    <title>testgraph</title>
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.umd.js"></script>
+
+    <!-- for testing with local version of cytoscape.js -->
+    <!--    <script src="../cytoscape.js/build/cytoscape.js"></script> -->
+
+    <script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
+    <script src="https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"></script>
+    <style>
+/*         body {
+            font-family: helvetica;
+            font-size: 18px;
+        } */
+
+        #cy {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 100;
+            z-index: 999;
+        }
+
+/*         h1 {
+            opacity: 0.5;
+            font-size: 1em;
+        } */
+    </style>
+
+    <script>
+        function getstatus() {
+
+            nodes = [{
+                    "data": {
+                        "id": "n0"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "n1"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "n2"
+                    }
+                }
+            ]
+
+            edges = [{
+                    data: {
+                        source: 'n0',
+                        target: 'n1'
+                    }
+                },
+                {
+                    data: {
+                        source: 'n1',
+                        target: 'n2'
+                    }
+                },
+                {
+                    data: {
+                        source: 'n0',
+                        target: 'n2'
+                    }
+                }
+
+
+            ];
+            buildgraph(nodes, edges);
+
+        };
+
+        function buildgraph(nodes, edges) {
+
+            //alert(JSON.parse(nodes))
+
+            var cy = window.cy = cytoscape({
+                container: document.getElementById('cy'),
+
+                boxSelectionEnabled: false,
+                autounselectify: true,
+
+                layout: {
+                    name: 'dagre',
+                    rankDir: 'BT',
+                    labelpos: 'R',
+
+                },
+
+                style: [{
+                        selector: 'node',
+                        style: {
+                            //'background-color': '#11479e',
+                            'background-color': '#ff0000',
+                            'text-valign': 'center',
+                            'text-halign': 'right',
+                            'label': 'data(id)'
+                        }
+                    },
+
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 4,
+                            'target-arrow-shape': 'triangle',
+                            'line-color': '#9dbaea',
+                            'target-arrow-color': '#9dbaea',
+                            'curve-style': 'bezier'
+                        }
+                    }
+                ],
+
+                elements: {
+                    nodes,
+                    edges
+
+                }
+
+            });
+
+        };
+    </script>
+
+
+
+</head>
+
+<body>
+    <h1>testgraph</h1>
+    <input id="clickMe" type="button" value="clickme" onclick="getstatus();" />
+    <div id="cy"></div>
+    <a href="#" onclick="alert('hi');">Get</a>
+
+</body>
+
+</html>
