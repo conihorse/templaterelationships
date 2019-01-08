@@ -1,6 +1,17 @@
 <html>
 
 <head>
+
+
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+
+  <script src="https://unpkg.com/cytoscape/dist/cytoscape.umd.js"></script>
+
+  <!-- for testing with local version of cytoscape.js -->
+  <!--    <script src="../cytoscape.js/build/cytoscape.js"></script> -->
+
+  <script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
+  <script src="https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
   <!-- Material Design Lite -->
@@ -9,6 +20,15 @@
   <!-- Material Design icon font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <style>
+    #cy {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      left: 200;
+      top: 100;
+      z-index: 999;
+    }
+
     body {
       padding: 20px;
       background: #fafafa;
@@ -30,10 +50,9 @@
       color: rgb(255, 255, 255);
       background: rgb(255, 255, 255);
       height: 100px;
-      width: 512px;            
+      width: 512px;
       /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
-      
-  }
+    }
 
     .demo-card-wide>.mdl-card__menu {
       color: #fff;
@@ -42,49 +61,41 @@
 
 </head>
 
-<div  class="demo-card-wide mdl-card mdl-shadow--2dp" >
-    <div class="mdl-card__title">
-        <h2 class="mdl-card__title-text">Welcome</h2>
-    </div>
-    <div class="mdl-card__supporting-text">
-        This screen starts the CKM upload process, which checks that all assets in <B>%%TICKET%%</B> are:
-        <ol>
-            <li>Automatically uploaded into CKM if they have been changed,</li>
-            <li>Updated in other assets that have an updated asset embedded within.</li>
-        </ol>
-        The entire process can take a few minutes, and will take longer if there are a lot of assets.
-        <br>
-        <br>
-        As the process is working, a regularly updated status message will be displayed.
-        At end of the process, a report will list the results.
-    </div>
-    <div class="mdl-card__actions mdl-card--border">
-        <a id="go" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-            Get Started
-        </a>
-    </div>
-    <div class="mdl-card__menu">
-        <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
-            <i class="material-icons">share</i>
-        </button>
-    </div>
+<div class="demo-card-wide mdl-card mdl-shadow--2dp">
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Welcome</h2>
+  </div>
+  <div class="mdl-card__supporting-text">
+    This screen starts the CKM upload process, which checks that all assets in
+    <B>%%TICKET%%</B> are:
+    <ol>
+      <li>Automatically uploaded into CKM if they have been changed,</li>
+      <li>Updated in other assets that have an updated asset embedded within.</li>
+    </ol>
+    The entire process can take a few minutes, and will take longer if there are a lot of assets.
+    <br>
+    <br> As the process is working, a regularly updated status message will be displayed. At end of the process, a report will
+    list the results.
+  </div>
+  <div class="mdl-card__actions mdl-card--border">
+    <a id="go" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+      Get Started
+    </a>
+  </div>
+  <div class="mdl-card__menu">
+    <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+      <i class="material-icons">share</i>
+    </button>
+  </div>
 </div>
 
 <div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" display: "hidden">
   <div id="statusdata" class="mdl-card__supporting-text">
-    
+
   </div>
 </div>
 <BR>
 
-<!-- <button>Get JSON data</button> -->
-
-<!-- <h3 id="demo"></h3>
-
-<script>
-  document.getElementById("demo").innerHTML = "%%TICKET%%";
-</script>
- -->
 <div></div>
 
 <!-- Stop Button -->
@@ -101,35 +112,45 @@
 
     $.getJSON("/status,%%SESSIONID%%", function (result) {
       $.each(result, function (i, field) {
-          if (field == "*** Done! ***") {
-            //alert("done")
-            window.clearInterval(intTimer);
-            $.getJSON("/report,%%SESSIONID%%", function (result) {
-              //var html = JSON.stringify(result, null, 2)
-              //$("#statusdata").html(html)
-              //$("div").html("<br>[" + new Date().toLocaleString() + "] " + "Finished!" + " ");
-              document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" +
-                "Finished!" + " ";
-              tableCreate(result)
+        if (field == "*** Done! ***") {
+
+          window.clearInterval(intTimer);
+          $.getJSON("/report,%%SESSIONID%%", function (report) {
+            document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+              " <br>Finished!";
+            tableCreate(report)
+
+            $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
+              graphCreate(nodes)
             })
-
-            return false;
-          } else {
-            //$("div").html("<br>[" + new Date().toLocaleString() + "] " + field + " ");
-            document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" +
-              field + " ";
-          }
-
+          })
+          return false;
+        } else {
+          document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" + field +
+            " ";
         }
 
-
-      );
+      });
       //var data = $(result).serializeArray()
-
-
-
     });
   };
+
+  function graphCreate(theNodesAndEdges) {
+
+    if (theNodesAndEdges == "") {
+      return
+    }
+    var objreport = JSON.parse(JSON.stringify(theNodesAndEdges))
+    var arrayLength = objreport.length;
+
+    if( arrayLength == 2) {
+
+      var nodes = objreport[0]
+      var edges = objreport[1]
+
+      buildgraph(nodes, edges);
+    }
+  }
 
   function tableCreate(theReport) {
 
@@ -138,8 +159,8 @@
     }
     //alert("tableCreate")
     var objreport = JSON.parse(JSON.stringify(theReport))
-    var body = document.body,
-      tbl = document.createElement('table');
+    var body = document.body
+    tbl = document.createElement('table');
     tbl.className = 'mdl-data-table mdl-js-data-table mdl-data-table mdl-shadow--2dp'
     tbl.style.width = '100px';
 
@@ -221,8 +242,61 @@
     }
     body.appendChild(tbl);
   }
+
+
+
+  function buildgraph(nodes, edges) {
+
+    //alert(JSON.parse(nodes))
+
+    var cy = window.cy = cytoscape({
+      container: document.getElementById('cy'),
+
+      boxSelectionEnabled: false,
+      autounselectify: true,
+
+      layout: {
+        name: 'dagre',
+        rankDir: 'BT',
+        labelpos: 'R',
+
+      },
+
+      style: [{
+          selector: 'node',
+          style: {
+            //'background-color': '#11479e',
+            'background-color': '#ff0000',
+            'text-valign': 'center',
+            'text-halign': 'right',
+            'label': 'data(id)'
+          }
+        },
+
+        {
+          selector: 'edge',
+          style: {
+            'width': 4,
+            'target-arrow-shape': 'triangle',
+            'line-color': '#9dbaea',
+            'target-arrow-color': '#9dbaea',
+            'curve-style': 'bezier'
+          }
+        }
+      ],
+
+      elements: {
+        nodes,
+        edges
+
+      }
+
+    });
+
+  };
+
   document.getElementById("go").onclick = start;
-  //var int = self.setInterval(getStatus, 1000);
 </script>
+<div id="cy"></div>
 
 </html>

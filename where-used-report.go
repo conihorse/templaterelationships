@@ -89,12 +89,6 @@ func getSessionData(sessionID string) *sessionData {
 
 }
 
-func handlerStatus(w http.ResponseWriter, r *http.Request) {
-
-	status := "testing"
-	fmt.Fprintf(w, "<h3>Status "+status+"</h3>")
-}
-
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	var templateID string
@@ -114,7 +108,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
+	// ------------------------ post-session info functions ------------------------ //
 
 	configuration := configuration{}
 	err := gonfig.GetConf("config.json", &configuration)
@@ -134,10 +128,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	
+
+	if param0 == "nodes" {
+		statusSessionID := params[1] // sessionID
+		fmt.Fprintln(w, sendGraphDataToBrowser(statusSessionID))
+		return
+	}
+
+
+	// ------------------------ new-session functions ------------------------ //
+
 	thisSessionData.WuaNodes = make([]nodeDefinition, 0)
-	sessionID := ksuid.New().String()
 	thisSessionData.relationshipData = make(map[string]int) // where-used map
-	thisSessionData.sessionID = sessionID
+	thisSessionData.sessionID = ksuid.New().String()
 	thisSessionData.relationsetXML = []string{} // used to store the relationships between files
 
 	log.Printf("ckmpath = " + (string)(configuration.MirrorCkmPath))
@@ -146,17 +150,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	case param0 == "precommit":
 		changesetFolder = configuration.ChangesetPath + "/" + params[1] // ticket'
-
-		//gStatusChan = make(chan string, 1000)
-
-		//gDataChan = make(chan sessionData, 100)
-
-		//thisSessionData.statusChannel = make(chan string, 1000)
-		//session.Values[sessionID] = thisSessionData
 		thisSessionData.isFinished = false
-		// Save it before we write to the response/return from the handler.
-		//session.Save(r, w)
-
 		gSessionDataList = append(gSessionDataList, &thisSessionData)
 
 		template, err := readLines(configuration.HTMLStatusTemplate)
@@ -187,16 +181,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	case param0 == "ticket-view-report":
 		changesetFolder = configuration.ChangesetPath + "/" + params[1] // ticket'
-
-		// for every template in the changeset
-		// find parent templates
-		// add xml to map
-
 		mapTicketTemplates("./"+changesetFolder+"/", configuration.MirrorCkmPath, &thisSessionData)
 		printMap(thisSessionData)
-		fmt.Fprintln(w, generateMap(thisSessionData))
-
-		// return map?
+		//fmt.Fprintln(w, generateMap(thisSessionData))
+		fmt.Fprintln(w, sendGraphDataToBrowser(thisSessionData.sessionID))
 		return
 
 	default:
@@ -567,12 +555,10 @@ func unzip(src, dest string) error {
 func main() {
 
 	http.HandleFunc("/", handler)
-	http.HandleFunc("/status/*", handlerStatus)
 
 	http.HandleFunc("/assets", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "/GENERIC.xslt")
 	})
-
 
 	http.HandleFunc("/GENERIC.xsl", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("SERVING /home/coni/node/Dropbox/AHS/CMIO Office/Clinical Content/XSLT/GENERIC.xslt")
@@ -862,130 +848,6 @@ func generateMap2(data sessionData, templatefile string) string {
 		}
 	}
 	return generatedmap
-}
-
-func generateMap(data sessionData) string {
-
-	graphmap := `
-		
-		<html>
-		
-		  <head>
-			<title>cytoscape-dagre.js demo</title>
-		
-			<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
-		
-			<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
-		
-			<!-- for testing with local version of cytoscape.js -->
-			<!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
-		
-			<script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
-			<script src="https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"></script>
-		
-			<style>
-			  body {
-				font-family: helvetica;
-				font-size: 10px;
-			  }
-		
-			  #cy {
-				width: 100%;
-				height: 100%;
-				position: absolute;
-				left: 0;
-				top: 0;
-				z-index: 999;
-			  }
-		
-			  h1 {
-				opacity: 0.5;
-				font-size: 1em;
-			  }
-			</style>
-		
-			<script>
-			  window.addEventListener('DOMContentLoaded', function(){
-		
-				var cy = window.cy = cytoscape({
-				  container: document.getElementById('cy'),
-		
-				  boxSelectionEnabled: false,
-				  autounselectify: true,
-		
-				  layout: {
-					name: 'dagre',
-					rankDir: 'BT',
-					labelpos: 'R',
-									
-				  },
-		
-				  style: [
-					{
-					  selector: 'node',
-					  style: {
-						//'background-color': '#11479e',
-						'background-color': '#ff0000',
-						'text-valign': 'center',
-						'text-halign': 'right',
-							   'label': 'data(id)'
-					  }
-					},
-		
-					{
-					  selector: 'edge',
-					  style: {
-						'width': 4,
-						'target-arrow-shape': 'triangle',
-						'line-color': '#9dbaea',
-						'target-arrow-color': '#9dbaea',
-						'curve-style': 'bezier'
-					  }
-					}
-				  ],
-
-				  elements: {
-					nodes: [
-		`
-	for s := range data.relationshipData {
-		//{ data: { id: 'n0' } },
-		graphmap += "              { data: { id: '" + s + "' } }," + "\n"
-
-	}
-	graphmap += `		],
-					edges: [`
-
-	for _, r := range data.WuaNodes {
-		//              { data: { source: 'n0', target: 'n1' } },
-		for _, p := range r.NodeParentList {
-			graphmap += `              { data: { source: '` + r.NodeName + "', target: '" + p + "' } } ," + "\n"
-		}
-
-	}
-
-	graphmap += `
-							]
-						}
-					});
-			
-				  });
-				</script>
-			  </head>
-			
-			  <body>
-				<h1>cytoscape-dagre demo</h1>
-			
-				<div id="cy"></div>
-			
-			  </body>
-			
-			</html>
-			
-		 
-		   `
-
-	return graphmap
-
 }
 
 func getLocalTemplateList(ticketPath string) []string {
@@ -1319,39 +1181,39 @@ func walkTree(relation *nodeDefinition, isLeaf bool, data sessionData) bool {
 	return true
 }
 
-func sendReportToBrowser(statusSessionID string) string {
+func sendGraphDataToBrowser(statusSessionID string) string {
 
-	//return "{\"the report\": \"" + "dump" + "\"}"
 	data := getSessionData(statusSessionID)
+	var nodes string
+	var edges string
 
+	for s := range data.relationshipData {
+		nodes += "{ \"data\": { \"id\": \"" + s + "\" } },"
+	}
+	for _, r := range data.WuaNodes {
+		for _, p := range r.NodeParentList {
+			edges += "{ \"data\": { \"source\": \"" + r.NodeName + "\", \"target\": \"" + p + "\" } },"
+		}
+	}
+	log.Println("sendGraphDataToBrowser")
+
+	nodes = strings.TrimSuffix(nodes, ",")
+	edges = strings.TrimSuffix(edges, ",")
+	return ("[ [" + nodes + "],[" + edges + "] ]")
+}
+func sendReportToBrowser(statusSessionID string) string {
+	data := getSessionData(statusSessionID)
 	if data != nil {
 		return printMap(*data)
 	}
 	return ""
-
 }
 
 func sendStatusToBrowser(statusSessionID string) string {
-
 	data := getSessionData(statusSessionID)
-
-	/* 	if data != nil {
-		status := data.statusText
-		if data.isFinished {
-			fmt.Fprintln(w, printMap(*data))
-		} else {
-			fmt.Fprintln(w, "{\"last status\": \""+status+"\"}")
-		}
-	} */
-
 	if data != nil {
 		status := data.statusText
-		/* 		if data.isFinished {
-		   			return printSessionData(*data)
-		   		} else {
-		*/return "{\"last status\": \"" + status + "\"}"
-		//	}
+		return "{\"last status\": \"" + status + "\"}"
 	}
-
 	return ""
 }
