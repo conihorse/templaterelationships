@@ -25,14 +25,15 @@
             /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
             background: url('https://getmdl.io/assets/demos/welcome_card.jpg') center / cover;
         }
+
         .demo-statuscard {
             color: rgb(255, 255, 255);
             background: rgb(255, 255, 255);
             height: 76px;
-            width: 512px;            
+            width: 512px;
             /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
-            
         }
+
         .demo-card-wide>.mdl-card__menu {
             color: #fff;
         }
@@ -40,7 +41,7 @@
 </head>
 
 
-<div  class="demo-card-wide mdl-card mdl-shadow--2dp" >
+<div class="demo-card-wide mdl-card mdl-shadow--2dp">
     <div class="mdl-card__title">
         <h2 class="mdl-card__title-text">Welcome</h2>
     </div>
@@ -52,9 +53,8 @@
         </ol>
         The entire process can take a few minutes, and will take longer if there are a lot of assets.
         <br>
-        <br>
-        As the process is working, a regularly updated status message will be displayed.
-        At end of the process, a report will list the results.
+        <br> As the process is working, a regularly updated status message will be displayed. At end of the process, a report
+        will list the results.
     </div>
     <div class="mdl-card__actions mdl-card--border">
         <a id="go" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
@@ -68,12 +68,12 @@
     </div>
 </div>
 
-<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" display:"hidden" >
-        <div id="statusmessage" class="mdl-card__supporting-text">
-         <b>2019/01/09 12;12</b> - checkin gthe sausage sfor AM/diner/templates/section/Bacon, Eggs & Hash Browns.oet	
-        </div>
+<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" display: "hidden">
+    <div id="statusmessage" class="mdl-card__supporting-text">
+        <b>2019/01/09 12;12</b> - checkin gthe sausage sfor AM/diner/templates/section/Bacon, Eggs & Hash Browns.oet
     </div>
-    
+</div>
+
 
 
 <!-- <button id="clickMe">Get JSON</button> -->
@@ -287,18 +287,20 @@
             // Add the link to the previously created TableCell.
             td.appendChild(link);
 
-
             var relations = objreport[i].NodeParentList
 
-            var relationsLength = objreport.length;
-            
+            if (relations != null) {
+                var relationsLength = relations.length;
+
+                td = tr.insertCell();
 
 
+                for (var k = 0; k < relationsLength; k++) {
+                    td.appendChild(document.createTextNode(relations[k]))
+                }
 
-            for (var k = 0; k < relationsLength; k++) {
 
             }
-
 
         }
         body.appendChild(tbl);
@@ -310,7 +312,7 @@
     //document.getElementById("demo").innerHTML = "Processing ticket %%TICKET%%";
 
     //document.getElementById("clickMe").onclick = getJSON;
-    document.getElementById("go").onclick = getJSON;    
+    document.getElementById("go").onclick = getJSON;
 </script>
 
 </html>

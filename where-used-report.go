@@ -20,11 +20,17 @@ import (
 	"aqwari.net/xml/xmltree"
 	"github.com/Tkanos/gonfig"
 	"github.com/beevik/etree"
-
-	//	"github.com/gorilla/sessions"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/segmentio/ksuid"
 )
+
+type validationReport []struct {
+	ErrorType          string `json:"errorType"`
+	ErrorText          string `json:"errorText"`
+	ResourceMainID     string `json:"resourceMainId"`
+	ResourceType       string `json:"resourceType"`
+	ValidationSeverity string `json:"validationSeverity"`
+}
 
 type nodeDefinition struct {
 	uid             string   // unique id of this relationship (not used ATM)
@@ -41,6 +47,7 @@ type nodeDefinition struct {
 }
 
 type sessionData struct {
+	timestamp		
 	sessionID        string
 	WuaNodes         []nodeDefinition // working structure holding nodes for proceessing and graph generation.
 	relationset      []string
@@ -53,6 +60,7 @@ type sessionData struct {
 	statusText       string
 	//statusChannel    chan string
 	isFinished bool
+	isError    bool
 }
 
 var gSessionDataList []*sessionData // global array of session data, shared across threads but only one will write to it..... i think....
@@ -65,6 +73,12 @@ type configuration struct {
 	TestDataPath       string
 	HTMLGraphTemplate  string
 	HTMLStatusTemplate string
+}
+
+type status struct {
+	Message    string
+	IsFinished bool
+	IsError    bool
 }
 
 // Note: Don't store your key in your source code. Pass it via an
@@ -128,27 +142,35 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
-
 	if param0 == "nodes" {
 		statusSessionID := params[1] // sessionID
 		fmt.Fprintln(w, sendGraphDataToBrowser(statusSessionID))
 		return
 	}
 
-
 	// ------------------------ new-session functions ------------------------ //
 
 	thisSessionData.WuaNodes = make([]nodeDefinition, 0)
 	thisSessionData.relationshipData = make(map[string]int) // where-used map
 	thisSessionData.sessionID = ksuid.New().String()
+	thisSessionData.isFinished = false
+	thisSessionData.isError = false
 	thisSessionData.relationsetXML = []string{} // used to store the relationships between files
 
 	log.Printf("ckmpath = " + (string)(configuration.MirrorCkmPath))
 
+	/* 	if checkEnvironment(configuration, changesetFolder) == false {
+	   		log.Printf("Exiting due to environment/config issues...")
+	   		return
+	   	}
+	*/
 	switch {
 
 	case param0 == "precommit":
+
+		return
+
+	case param0 == "commit":
 		changesetFolder = configuration.ChangesetPath + "/" + params[1] // ticket'
 		thisSessionData.isFinished = false
 		gSessionDataList = append(gSessionDataList, &thisSessionData)
@@ -169,44 +191,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		return
 
-	case param0 == "commit":
-
-		return
-
 	case param0 == "ticket-retrieve-supporting":
 
 		templateID = params[1]                                          // child template internal id
 		templateName = params[2]                                        // child template name
 		changesetFolder = configuration.ChangesetPath + "/" + params[3] // ticket'
-
-	case param0 == "ticket-view-report":
-		changesetFolder = configuration.ChangesetPath + "/" + params[1] // ticket'
-		mapTicketTemplates("./"+changesetFolder+"/", configuration.MirrorCkmPath, &thisSessionData)
-		printMap(thisSessionData)
-		//fmt.Fprintln(w, generateMap(thisSessionData))
-		fmt.Fprintln(w, sendGraphDataToBrowser(thisSessionData.sessionID))
-		return
-
-	default:
-		log.Printf("unknown operation type: " + param0)
-		log.Printf("exiting...")
-		return
-	}
-
-	parentsExist := findParentTemplates(templateID, templateName, configuration.MirrorCkmPath, changesetFolder, &thisSessionData)
-
-	if param0 == "template-xml-report" {
-		for v := range thisSessionData.relationsetXML {
-			fmt.Fprintf(w, thisSessionData.relationsetXML[v])
-		}
-	}
-
-	if checkEnvironment(configuration, changesetFolder) == false {
-		log.Printf("Exiting due to environment/config issues...")
-		return
-	}
-
-	if param0 == "ticket-retrieve-supporting" {
+		parentsExist := findParentTemplates(templateID, templateName, configuration.MirrorCkmPath, changesetFolder, &thisSessionData)
 		if parentsExist {
 			log.Printf("Going to fetch parents....")
 			parseParentsTree(thisSessionData.relationsetXML, changesetFolder+"/"+configuration.WorkingFolderPath)
@@ -220,17 +210,35 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			log.Printf(status)
 			fmt.Fprintf(w, "<h3>grabbed"+status+"</h3>")
 		}
+		return
+
+	case param0 == "ticket-view-report":
+		changesetFolder = configuration.ChangesetPath + "/" + params[1] // ticket'
+		mapTicketTemplates("./"+changesetFolder+"/", configuration.MirrorCkmPath, &thisSessionData)
+		printMap(thisSessionData)
+		//fmt.Fprintln(w, generateMap(thisSessionData))
+		fmt.Fprintln(w, sendGraphDataToBrowser(thisSessionData.sessionID))
+		return
+
+	case param0 == "template-xml-report":
+		for v := range thisSessionData.relationsetXML {
+			fmt.Fprintf(w, thisSessionData.relationsetXML[v])
+		}
+		return
+
+	default:
+		log.Printf("unknown operation type: " + param0)
+		log.Printf("exiting...")
+		return
 	}
 
 }
-
+func setSessionFailure(status string, data *sessionData) {
+	log.Println(status)
+	data.isError = true
+}
 func updateSessionStatus(status string, data *sessionData) {
-	log.Println("updateSessionStatus-------------------------------------------------------------------------")
-	//data.statusChannel <- status
 	data.statusText = status
-	//gDataChan <- data
-	//gStatusText = status
-	//gStatusChan <- status
 }
 
 func precommitProcessing(changesetFolder string, mirrorpath string, data *sessionData) {
@@ -273,12 +281,10 @@ func precommitProcessing(changesetFolder string, mirrorpath string, data *sessio
 		// for each leaf, follow the tree up
 		if data.WuaNodes[i].NodeIsLeaf == 1 {
 			if !walkTree(&data.WuaNodes[i], true, *data) {
-				log.Println("ERROR : process failed...")
+				setSessionFailure("ERROR : process failed...", data)
 			}
 		}
 	}
-	//fmt.Fprintln(w, generateMap(*data))
-
 	updateSessionStatus("*** Done! ***", data)
 
 	printMap(*data)
@@ -315,10 +321,6 @@ func moveFiles(changesetFolder, assetType, WorkingFolderPath string) string {
 
 	stdout := outbuf.String()
 	return stdout
-
-	//	err := os.Rename( "tempfiles/unzipped/templates", ticket + "/")
-	//check(err)
-
 }
 
 func ckmGetTemplateFilepackURL(cid string) (filesetURL string) {
@@ -336,20 +338,24 @@ func ckmGetTemplateFilepackURL(cid string) (filesetURL string) {
 // TODO handle new templates (those dont exist in ckm, so it will return a "resource could not be found")
 func ckmGetCidFromID(id string) (status bool, cid string) {
 
-	req, err := http.NewRequest("GET", "https://ahsckm.ca/ckm/rest/v1/templates/citeable-identifier/"+id, nil)
+	req, err := retryablehttp.NewRequest("GET", "https://ahsckm.ca/ckm/rest/v1/templates/citeable-identifier/"+id, nil)
 	if err != nil {
 		return false, ""
 	}
 	req.Header.Set("Accept", "text/plain")
-
-	resp, err := http.DefaultClient.Do(req)
+	req.Header.Set("Authorization", "Basic am9uLmJlZWJ5OlBhNTV3b3Jk")
+	client := retryablehttp.NewClient()
+	client.CheckRetry = defaultRetryPolicy
+	resp, err := client.Do(req)
 	if err != nil {
 		return false, ""
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 { // not success
-		log.Println("ERROR: ckmGetCidFromID response statuscode = " + strconv.FormatInt(int64(resp.StatusCode), 10))
+	if resp.StatusCode != 200 || resp.StatusCode == 404 { // not success
+		if resp.StatusCode != 404 {
+			log.Println("ERROR: ckmGetCidFromID response statuscode = " + strconv.FormatInt(int64(resp.StatusCode), 10))
+		}
 		return false, ""
 	}
 
@@ -975,24 +981,46 @@ func ckmValidateTemplate(node *nodeDefinition) bool {
 	}
 
 	body := strings.NewReader(strings.Join(templatesource, "\x20"))
-	req, err := http.NewRequest("POST", "https://ahsckm.ca/ckm/rest/v1/templates/validation-report", body)
+	req, err := retryablehttp.NewRequest("POST", "https://ahsckm.ca/ckm/rest/v1/templates/validation-report", body)
+
 	if err != nil {
-		// handle err
 		return false
 	}
+
 	req.Header.Set("Authorization", "Basic am9uLmJlZWJ5OlBhNTV3b3Jk")
-	req.Header.Set("Accept", "application/xml")
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/xml")
 
-	resp, err := http.DefaultClient.Do(req)
+	client := retryablehttp.NewClient()
+	client.CheckRetry = defaultRetryPolicy
+	resp, err := client.Do(req)
 	if err != nil {
-		// handle err
 		return false
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 { // not success
 		log.Println("ERROR: validation-report response statuscode = " + strconv.FormatInt(int64(resp.StatusCode), 10))
+		return false
+	}
+
+	// need to read the validation report....
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false
+	}
+
+	var report validationReport
+	err = json.Unmarshal(data, &report)
+	if err == nil {
+		if len(report) > 0 {
+			if report[0].ValidationSeverity != "" {
+				log.Println("ERROR: validation-report returned a problem : " + report[0].ErrorText + ", " + report[0].ValidationSeverity)
+				return false
+			}
+		}
+	} else {
 		return false
 	}
 
@@ -1018,9 +1046,8 @@ func ckmCommitNewTemplate(node *nodeDefinition) bool {
 	projectcid := "1175.115.78"
 
 	theRequest := "https://ahsckm.ca/ckm/rest/v1/templates?template-type=" + templatetype + "&cid-project=" + projectcid + "&log-message=" + logmessage + "&proceed-if-outdated-resources-used=false"
-
 	req, err := retryablehttp.NewRequest("POST", theRequest, body)
-	//req, err := http.NewRequest("POST", theRequest, body)
+
 	if err != nil {
 		return false
 	}
@@ -1028,8 +1055,9 @@ func ckmCommitNewTemplate(node *nodeDefinition) bool {
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("Authorization", "Basic am9uLmJlZWJ5OlBhNTV3b3Jk")
 
-	//resp, err := http.DefaultClient.Do(req)
 	client := retryablehttp.NewClient()
+	client.CheckRetry = defaultRetryPolicy
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return false
@@ -1060,7 +1088,7 @@ func defaultRetryPolicy(ctx context.Context, resp *http.Response, err error) (bo
 	// the server time to recover, as 500's are typically not permanent
 	// errors and may relate to outages on the server side. This will catch
 	// invalid response codes as well, like 0 and 999.
-	if resp.StatusCode == 0 || (resp.StatusCode >= 400 && resp.StatusCode != 501) {
+	if resp.StatusCode == 0 || (resp.StatusCode >= 405 && resp.StatusCode != 501) {
 		return true, nil
 	}
 
@@ -1077,7 +1105,7 @@ func ckmCommitRevisedTemplate(node *nodeDefinition) bool {
 		return false
 	}
 	body := strings.NewReader(strings.Join(templatesource, "\x20"))
-	//req, err := http.NewRequest("PUT", "https://ahsckm.ca/ckm/rest/v1/templates/"+node.NodeCID+"?log-message="+logmessage+"&proceed-if-outdated-resources-used=false", body)
+
 	req, err := retryablehttp.NewRequest("PUT", "https://ahsckm.ca/ckm/rest/v1/templates/"+node.NodeCID+"?log-message="+logmessage+"&proceed-if-outdated-resources-used=false", body)
 
 	if err != nil {
@@ -1088,7 +1116,6 @@ func ckmCommitRevisedTemplate(node *nodeDefinition) bool {
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("Authorization", "Basic am9uLmJlZWJ5OlBhNTV3b3Jk")
 
-	//resp, err := http.DefaultClient.Do(req)
 	client := retryablehttp.NewClient()
 	client.CheckRetry = defaultRetryPolicy
 
@@ -1211,9 +1238,22 @@ func sendReportToBrowser(statusSessionID string) string {
 
 func sendStatusToBrowser(statusSessionID string) string {
 	data := getSessionData(statusSessionID)
+	var objStatus = new(status)
+
 	if data != nil {
-		status := data.statusText
-		return "{\"last status\": \"" + status + "\"}"
+
+		objStatus.Message = data.statusText
+		objStatus.IsFinished = data.isFinished
+		objStatus.IsError = data.isError
+
+		b, err := json.Marshal(objStatus)
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+
+		result := string(b)
+		return result
+
 	}
 	return ""
 }

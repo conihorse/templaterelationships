@@ -21,12 +21,14 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <style>
     #cy {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      left: 200;
-      top: 100;
-      z-index: 999;
+      width: 50%;
+      height: 50%;
+      position: relative;
+      left: 00;
+      background: #ede7e7;
+      top: 000;
+      z-index: 1;
+
     }
 
     body {
@@ -96,7 +98,7 @@
 </div>
 <BR>
 
-<div></div>
+<div id="table-results"></div>
 
 <!-- Stop Button -->
 <!-- <a href="#" onclick="window.clearInterval(int);return false;">Stop</a> -->
@@ -110,27 +112,38 @@
 
   function getStatus() {
 
-    $.getJSON("/status,%%SESSIONID%%", function (result) {
-      $.each(result, function (i, field) {
-        if (field == "*** Done! ***") {
+    $.getJSON("/status,%%SESSIONID%%", function (status) {
 
-          window.clearInterval(intTimer);
-          $.getJSON("/report,%%SESSIONID%%", function (report) {
-            document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
-              " <br>Finished!";
-            tableCreate(report)
+      var objStatus = JSON.parse(JSON.stringify(status))
 
-            $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
-              graphCreate(nodes)
-            })
+      if (objStatus.IsError) {
+        document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+          " <br><b>ERROR!</b>";
+
+        window.clearInterval(intTimer);
+        return false;
+      }
+
+      if (objStatus.IsFinished) {
+
+        window.clearInterval(intTimer);
+        $.getJSON("/report,%%SESSIONID%%", function (report) {
+          document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+            " <br>Finished!";
+          tableCreate(report)
+
+          $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
+            graphCreate(nodes)
           })
-          return false;
-        } else {
-          document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" + field +
-            " ";
-        }
+        })
 
-      });
+        return false;
+      } else {
+        document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" + objStatus.Message +
+          " ";
+      }
+
+
       //var data = $(result).serializeArray()
     });
   };
@@ -143,7 +156,7 @@
     var objreport = JSON.parse(JSON.stringify(theNodesAndEdges))
     var arrayLength = objreport.length;
 
-    if( arrayLength == 2) {
+    if (arrayLength == 2) {
 
       var nodes = objreport[0]
       var edges = objreport[1]
@@ -177,6 +190,7 @@
     hr.insertCell().appendChild(document.createTextNode("Local State"))
     hr.insertCell().appendChild(document.createTextNode("Was Committed?"))
     hr.insertCell().appendChild(document.createTextNode("CKM Location"))
+    hr.insertCell().appendChild(document.createTextNode("Embedded Within"))
     var arrayLength = objreport.length;
     var td;
 
@@ -239,8 +253,34 @@
 
       // Add the link to the previously created TableCell.
       td.appendChild(link);
+
+
+      var relations = objreport[i].NodeParentList
+      td = tr.insertCell();
+
+      if (relations != null) {
+        var relationsLength = relations.length;
+
+
+
+
+        for (var k = 0; k < relationsLength; k++) {
+          if ( k == relationsLength -1 ){
+            td.appendChild(document.createTextNode(relations[k]))
+          } else {
+            td.appendChild(document.createTextNode(relations[k] + ", "))
+          }
+
+        }
+
+
+      }
+
+
+
     }
-    body.appendChild(tbl);
+    document.getElementById("table-results").appendChild(tbl);
+    //body.appendChild(tbl);
   }
 
 
