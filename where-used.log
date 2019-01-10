@@ -1,0 +1,136 @@
+[
+  {
+    "NodeName": "Bacon, Eggos \u0026 Hash Browns.oet",
+    "NodeLocation": "",
+    "NodeID": "99fdd22a-bfbb-4799-b6d7-a53c4e5cb7f1",
+    "NodeHash": "",
+    "NodeIsLeaf": 0,
+    "NodeChildChanged": 0,
+    "NodeCommitOrder": -1,
+    "NodeValidated": 0,
+    "NodeIsCommitted": -1,
+    "NodeChanged": -1,
+    "NodeCID": "",
+    "NodeParentList": [
+      "Menu Morning.oet"
+    ],
+    "NodeStatusMessage": ""
+  },
+  {
+    "NodeName": "Menu Morning.oet",
+    "NodeLocation": "",
+    "NodeID": "c5a34cc5-cc9b-4964-8479-1cf336dd7d57",
+    "NodeHash": "",
+    "NodeIsLeaf": 0,
+    "NodeChildChanged": 0,
+    "NodeCommitOrder": -1,
+    "NodeValidated": 0,
+    "NodeIsCommitted": -1,
+    "NodeChanged": -1,
+    "NodeCID": "",
+    "NodeParentList": [
+      "Diner Kit.oet"
+    ],
+    "NodeStatusMessage": ""
+  },
+  {
+    "NodeName": "Diner Kit.oet",
+    "NodeLocation": "",
+    "NodeID": "ae2164d4-ae31-463a-b6ee-565e920a59f6",
+    "NodeHash": "",
+    "NodeIsLeaf": 0,
+    "NodeChildChanged": 0,
+    "NodeCommitOrder": -1,
+    "NodeValidated": 0,
+    "NodeIsCommitted": -1,
+    "NodeChanged": -1,
+    "NodeCID": "",
+    "NodeParentList": null,
+    "NodeStatusMessage": ""
+  },
+  {
+    "NodeName": "Boiled Egg and Cheese.oet",
+    "NodeLocation": "",
+    "NodeID": "b74c7141-7fb7-4c4c-be0d-e3aed7610cc7",
+    "NodeHash": "",
+    "NodeIsLeaf": 0,
+    "NodeChildChanged": 0,
+    "NodeCommitOrder": -1,
+    "NodeValidated": 0,
+    "NodeIsCommitted": -1,
+    "NodeChanged": -1,
+    "NodeCID": "",
+    "NodeParentList": [
+      "Menu Morning.oet"
+    ],
+    "NodeStatusMessage": ""
+  },
+  {
+    "NodeName": "Coffees.oet",
+    "NodeLocation": "",
+    "NodeID": "6f28715f-d054-4dd9-802d-fb84560df17a",
+    "NodeHash": "",
+    "NodeIsLeaf": 0,
+    "NodeChildChanged": 0,
+    "NodeCommitOrder": -1,
+    "NodeValidated": 0,
+    "NodeIsCommitted": -1,
+    "NodeChanged": -1,
+    "NodeCID": "",
+    "NodeParentList": [
+      "Drinks Menu.oet"
+    ],
+    "NodeStatusMessage": ""
+  },
+  {
+    "NodeName": "Drinks Menu.oet",
+    "NodeLocation": "",
+    "NodeID": "147749ce-b25b-4be2-9dd4-661cc54a6aa7",
+    "NodeHash": "",
+    "NodeIsLeaf": 0,
+    "NodeChildChanged": 0,
+    "NodeCommitOrder": -1,
+    "NodeValidated": 0,
+    "NodeIsCommitted": -1,
+    "NodeChanged": -1,
+    "NodeCID": "",
+    "NodeParentList": [
+      "Menu Morning.oet"
+    ],
+    "NodeStatusMessage": ""
+  },
+  {
+    "NodeName": "Iron Bru.oet",
+    "NodeLocation": "",
+    "NodeID": "463b19eb-b129-4303-9e92-27699889df93",
+    "NodeHash": "",
+    "NodeIsLeaf": 0,
+    "NodeChildChanged": 0,
+    "NodeCommitOrder": -1,
+    "NodeValidated": 0,
+    "NodeIsCommitted": -1,
+    "NodeChanged": -1,
+    "NodeCID": "",
+    "NodeParentList": [
+      "Sodas.oet"
+    ],
+    "NodeStatusMessage": ""
+  },
+  {
+    "NodeName": "Sodas.oet",
+    "NodeLocation": "",
+    "NodeID": "4177e6c7-b2e8-4f2d-8216-d9795f215405",
+    "NodeHash": "",
+    "NodeIsLeaf": 0,
+    "NodeChildChanged": 0,
+    "NodeCommitOrder": -1,
+    "NodeValidated": 0,
+    "NodeIsCommitted": -1,
+    "NodeChanged": -1,
+    "NodeCID": "",
+    "NodeParentList": [
+      "Drinks Menu.oet"
+    ],
+    "NodeStatusMessage": ""
+  }
+]

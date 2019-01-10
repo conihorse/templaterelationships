@@ -1,7 +1,8 @@
+
 <html>
 
 <head>
-
+  
 
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
 
@@ -21,13 +22,14 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <style>
     #cy {
-      width: 50%;
-      height: 50%;
-      position: relative;
-      left: 00;
-      background: #ede7e7;
-      top: 000;
-      z-index: 1;
+      width: inherit;
+      height: inherit;
+      position: inherit;
+      left: 1%;
+      background: #ffffff;
+      top: 1%;
+      z-index: 999;
+      border-width: 10px;
 
     }
 
@@ -79,7 +81,7 @@
     <br> As the process is working, a regularly updated status message will be displayed. At end of the process, a report will
     list the results.
   </div>
-  <div class="mdl-card__actions mdl-card--border">
+  <div id="action-go" class="mdl-card__actions mdl-card--border">
     <a id="go" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
       Get Started
     </a>
@@ -91,7 +93,7 @@
   </div>
 </div>
 
-<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" display: "hidden">
+<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" style="visibility:hidden">
   <div id="statusdata" class="mdl-card__supporting-text">
 
   </div>
@@ -99,15 +101,26 @@
 <BR>
 
 <div id="table-results"></div>
+<BR>
+<div id="graphcard" class="demo-statuscard  mdl-shadow--2dp" style="height:800px; width:800px; visibility:hidden" style="text-align:center">
+  <div id="cy" style="display:inline-block">
+  </div>
 
+
+</div>
+<BR>
 <!-- Stop Button -->
 <!-- <a href="#" onclick="window.clearInterval(int);return false;">Stop</a> -->
 <!-- <pre id="statusdata"></pre> -->
-<script>
+<script type="text/javascript">
   var intTimer
 
   function start() {
-    intTimer = self.setInterval(getStatus, 1000);
+    $.getJSON("/precommit,%%SESSIONID%%", function () {
+      document.getElementById("action-go").style.visibility = "hidden"
+      document.getElementById("statuscard").style.visibility = "visible"
+      intTimer = self.setInterval(getStatus, 1000);
+    })
   }
 
   function getStatus() {
@@ -153,6 +166,7 @@
     if (theNodesAndEdges == "") {
       return
     }
+    document.getElementById("graphcard").style.visibility = "visible"
     var objreport = JSON.parse(JSON.stringify(theNodesAndEdges))
     var arrayLength = objreport.length;
 
@@ -161,7 +175,7 @@
       var nodes = objreport[0]
       var edges = objreport[1]
 
-      buildgraph(nodes, edges);
+      displayGraph(nodes, edges);
     }
   }
 
@@ -188,7 +202,7 @@
     hr.insertCell().appendChild(document.createTextNode("Name"))
     hr.insertCell().appendChild(document.createTextNode("Location"))
     hr.insertCell().appendChild(document.createTextNode("Local State"))
-    hr.insertCell().appendChild(document.createTextNode("Was Committed?"))
+    hr.insertCell().appendChild(document.createTextNode("Action"))
     hr.insertCell().appendChild(document.createTextNode("CKM Location"))
     hr.insertCell().appendChild(document.createTextNode("Embedded Within"))
     var arrayLength = objreport.length;
@@ -231,13 +245,17 @@
       //td.appendChild(document.createTextNode(objreport[i].NodeIsCommitted));
       switch (objreport[i].NodeIsCommitted) {
         case -1:
-          td.appendChild(document.createTextNode("Unknown"));
+          td.appendChild(document.createTextNode(""));
           break;
         case 0:
           td.appendChild(document.createTextNode("Failed"));
           break;
         case 1:
-          td.appendChild(document.createTextNode("Committed to CKM"));
+          if ((objreport[i].NodeChildChanged == 1) && (objreport[i].NodeChanged < 1)) {
+            td.appendChild(document.createTextNode("Version Bump in CKM"));
+          } else {
+            td.appendChild(document.createTextNode("Committed to CKM"));
+          }
           break;
         default:
           td.appendChild(document.createTextNode("Unknown"));
@@ -265,7 +283,7 @@
 
 
         for (var k = 0; k < relationsLength; k++) {
-          if ( k == relationsLength -1 ){
+          if (k == relationsLength - 1) {
             td.appendChild(document.createTextNode(relations[k]))
           } else {
             td.appendChild(document.createTextNode(relations[k] + ", "))
@@ -285,9 +303,10 @@
 
 
 
-  function buildgraph(nodes, edges) {
+  function displayGraph(nodes, edges) {
 
     //alert(JSON.parse(nodes))
+    var elements = {nodes, edges}
 
     var cy = window.cy = cytoscape({
       container: document.getElementById('cy'),
@@ -337,6 +356,8 @@
 
   document.getElementById("go").onclick = start;
 </script>
-<div id="cy"></div>
+
+
+<!-- <div id="cy"></div> -->
 
 </html>

@@ -33,26 +33,31 @@ type validationReport []struct {
 }
 
 type nodeDefinition struct {
-	uid             string   // unique id of this relationship (not used ATM)
-	NodeName        string   // the filename of the template (not path)
-	NodeLocation    string   // the relative path to the node file
-	NodeID          string   // internal id of the template
-	NodeHash        string   // the md5 hash of the local template
-	NodeIsLeaf      int      // = 1 if node is a leaf
-	NodeCommitOrder int      // order in which the node should be commmitted to ckm [-1,n : unknown, 0-n order)
-	NodeIsCommitted int      // [-1,0,1 : unknown, failed, succeeded]
-	NodeChanged     int      // flag set if NodeHash different to ckm version [ -1,0,1,2 : unknown,not changed,changed,new ]
-	NodeCID         string   // ckm citable identifier for the template (blank if template is new)
-	NodeParentList  []string // list of parent template filenames
+	uid               string   // unique id of this relationship (not used ATM)
+	NodeName          string   // the filename of the template (not path)
+	NodeLocation      string   // the relative path to the node file
+	NodeID            string   // internal id of the template
+	NodeHash          string   // the md5 hash of the local template
+	NodeIsLeaf        int      // = 1 if node is a leaf
+	NodeChildChanged  int      // [0,1] 1 - embedded ancestor changed, so will need to be committed/bumped
+	NodeCommitOrder   int      // order in which the node should be commmitted to ckm [-1,n : unknown, 0-n order)
+	NodeValidated     int      // [-1,0,1] - unknown, failed, succeeed
+	NodeIsCommitted   int      // [-1,0,1 : unknown, failed, succeeded]
+	NodeChanged       int      // flag set if NodeHash different to ckm version [ -1,0,1,2 : unknown,not changed,changed,new ]
+	NodeCID           string   // ckm citable identifier for the template (blank if template is new)
+	NodeParentList    []string // list of parent template filenames
+	NodeStatusMessage string   // if something goes wrong....
 }
 
 type sessionData struct {
-	timestamp		
-	sessionID        string
-	WuaNodes         []nodeDefinition // working structure holding nodes for proceessing and graph generation.
-	relationset      []string
-	relationsetXML   []string
-	relationfile     *os.File
+	//timestamp
+	sessionConfig   configuration
+	sessionID       string
+	ChangesetFolder string
+	WuaNodes        []nodeDefinition // working structure holding nodes for proceessing and graph generation.
+	mappedList      []string
+	relationsetXML  []string
+	//relationfile     *os.File
 	treeCommitOrder  int
 	relationshipData map[string]int
 	htmlGraph        string
@@ -122,12 +127,29 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ------------------------ post-session info functions ------------------------ //
+	// ------------------------ existing-session info functions ------------------------ //
 
-	configuration := configuration{}
-	err := gonfig.GetConf("config.json", &configuration)
-	if err != nil {
-		panic(err)
+	if param0 == "commit" {
+		statusSessionID := params[1] // sessionID
+		thisSessionData := getSessionData(statusSessionID)
+		go precommitProcessing(thisSessionData.ChangesetFolder, thisSessionData.sessionConfig.MirrorCkmPath, thisSessionData)
+		fmt.Fprintln(w, sendStatusToBrowser(statusSessionID))
+		return
+	}
+
+	if param0 == "precommit" {
+		go precommitProcessing(thisSessionData.ChangesetFolder, thisSessionData.sessionConfig.MirrorCkmPath, thisSessionData)
+		// hash existing assets and identify changed assets
+
+		// validate the assets that need committing
+
+		// get latest versions for existing assets that haven't changed
+
+		// get all related assets that might be missing
+
+		// build precommit report.
+
+		return
 	}
 
 	if param0 == "status" {
@@ -150,14 +172,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	// ------------------------ new-session functions ------------------------ //
 
+	thisSessionData.sessionConfig = configuration{}
+	err := gonfig.GetConf("config.json", &thisSessionData.sessionConfig)
+	if err != nil {
+		panic(err)
+	}
 	thisSessionData.WuaNodes = make([]nodeDefinition, 0)
 	thisSessionData.relationshipData = make(map[string]int) // where-used map
 	thisSessionData.sessionID = ksuid.New().String()
 	thisSessionData.isFinished = false
 	thisSessionData.isError = false
 	thisSessionData.relationsetXML = []string{} // used to store the relationships between files
+	gSessionDataList = append(gSessionDataList, &thisSessionData)
 
-	log.Printf("ckmpath = " + (string)(configuration.MirrorCkmPath))
+	log.Printf("ckmpath = " + (string)(thisSessionData.sessionConfig.MirrorCkmPath))
 
 	/* 	if checkEnvironment(configuration, changesetFolder) == false {
 	   		log.Printf("Exiting due to environment/config issues...")
@@ -166,16 +194,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	*/
 	switch {
 
-	case param0 == "precommit":
-
-		return
-
-	case param0 == "commit":
-		changesetFolder = configuration.ChangesetPath + "/" + params[1] // ticket'
-		thisSessionData.isFinished = false
-		gSessionDataList = append(gSessionDataList, &thisSessionData)
-
-		template, err := readLines(configuration.HTMLStatusTemplate)
+	case param0 == "init":
+		changesetFolder = thisSessionData.sessionConfig.ChangesetPath + "/" + params[1] // ticket'
+		thisSessionData.ChangesetFolder = changesetFolder
+		template, err := readLines(thisSessionData.sessionConfig.HTMLStatusTemplate)
 		if err == nil {
 
 			var line string
@@ -187,34 +209,32 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		go precommitProcessing(changesetFolder, configuration.MirrorCkmPath, &thisSessionData)
-
 		return
 
 	case param0 == "ticket-retrieve-supporting":
 
-		templateID = params[1]                                          // child template internal id
-		templateName = params[2]                                        // child template name
-		changesetFolder = configuration.ChangesetPath + "/" + params[3] // ticket'
-		parentsExist := findParentTemplates(templateID, templateName, configuration.MirrorCkmPath, changesetFolder, &thisSessionData)
+		templateID = params[1]                                                          // child template internal id
+		templateName = params[2]                                                        // child template name
+		changesetFolder = thisSessionData.sessionConfig.ChangesetPath + "/" + params[3] // ticket'
+		parentsExist := findParentTemplates(templateID, templateName, thisSessionData.sessionConfig.MirrorCkmPath, changesetFolder, &thisSessionData)
 		if parentsExist {
 			log.Printf("Going to fetch parents....")
-			parseParentsTree(thisSessionData.relationsetXML, changesetFolder+"/"+configuration.WorkingFolderPath)
+			parseParentsTree(thisSessionData.relationsetXML, changesetFolder+"/"+thisSessionData.sessionConfig.WorkingFolderPath)
 			status := ""
 
-			status = moveFiles(changesetFolder, "templates", configuration.WorkingFolderPath)
+			status = moveFiles(changesetFolder, "templates", thisSessionData.sessionConfig.WorkingFolderPath)
 			log.Printf(status)
 			fmt.Fprintf(w, "<h3>grabbed"+status+"</h3>")
 
-			status = moveFiles(changesetFolder, "archetypes", configuration.WorkingFolderPath)
+			status = moveFiles(changesetFolder, "archetypes", thisSessionData.sessionConfig.WorkingFolderPath)
 			log.Printf(status)
 			fmt.Fprintf(w, "<h3>grabbed"+status+"</h3>")
 		}
 		return
 
-	case param0 == "ticket-view-report":
-		changesetFolder = configuration.ChangesetPath + "/" + params[1] // ticket'
-		mapTicketTemplates("./"+changesetFolder+"/", configuration.MirrorCkmPath, &thisSessionData)
+	case param0 == "ticket-view-report-json":
+		changesetFolder = thisSessionData.sessionConfig.ChangesetPath + "/" + params[1] // ticket'
+		mapTicketTemplates("./"+changesetFolder+"/", thisSessionData.sessionConfig.MirrorCkmPath, &thisSessionData)
 		printMap(thisSessionData)
 		//fmt.Fprintln(w, generateMap(thisSessionData))
 		fmt.Fprintln(w, sendGraphDataToBrowser(thisSessionData.sessionID))
@@ -238,6 +258,7 @@ func setSessionFailure(status string, data *sessionData) {
 	data.isError = true
 }
 func updateSessionStatus(status string, data *sessionData) {
+	log.Println(status)
 	data.statusText = status
 }
 
@@ -280,7 +301,7 @@ func precommitProcessing(changesetFolder string, mirrorpath string, data *sessio
 	for i := 0; i < len(data.WuaNodes); i++ {
 		// for each leaf, follow the tree up
 		if data.WuaNodes[i].NodeIsLeaf == 1 {
-			if !walkTree(&data.WuaNodes[i], true, *data) {
+			if !commitTree(&data.WuaNodes[i], true, *data) {
 				setSessionFailure("ERROR : process failed...", data)
 			}
 		}
@@ -414,6 +435,23 @@ func check(e error) {
 	}
 }
 
+func backup(changesetFolder, WorkingFolderPath string, relation nodeDefinition) string {
+
+	cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", changesetFolder+"/"+WorkingFolderPath+"/backup/", relation.NodeLocation)
+	var outbuf, errbuf bytes.Buffer
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
+
+	err := cmd.Run()
+	if err != nil {
+		log.Printf("backup finished with error: %v", err)
+	}
+
+	stdout := outbuf.String()
+	return stdout
+
+}
+
 func ckmDownloadFile(filepath string, url string) error {
 	// DownloadFile will download a url to a local file. It's efficient because it will
 	// write as it downloads and not load the whole file into memory.
@@ -426,7 +464,7 @@ func ckmDownloadFile(filepath string, url string) error {
 	defer out.Close()
 
 	// Get the data
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) // TODO retryable
 	if err != nil {
 		return err
 	}
@@ -447,7 +485,7 @@ func ckmGetContentPlain(url string) ([]byte, error) {
 	req.Header.Set("Accept", "text/plain")
 	req.Header.Set("Authorization", "Basic am9uLmJlZWJ5OlBhNTV3b3Jk")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req) // TODO retryable
 	check(err)
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
@@ -463,7 +501,7 @@ func ckmGetContentXML(url string) ([]byte, error) {
 	req.Header.Set("Accept", "application/xml")
 	req.Header.Set("Authorization", "Basic am9uLmJlZWJ5OlBhNTV3b3Jk")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req) // TODO retryable
 	check(err)
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
@@ -558,24 +596,22 @@ func unzip(src, dest string) error {
 	return nil
 }
 
+func panic(err error) {
+	fmt.Println(err.Error)
+
+}
+
 func main() {
 
 	http.HandleFunc("/", handler)
-
-	http.HandleFunc("/assets", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "/GENERIC.xslt")
-	})
-
-	http.HandleFunc("/GENERIC.xsl", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("SERVING /home/coni/node/Dropbox/AHS/CMIO Office/Clinical Content/XSLT/GENERIC.xslt")
-		http.ServeFile(w, r, "/home/coni/node/Dropbox/AHS/CMIO Office/Clinical Content/XSLT/GENERIC.xslt")
-	})
+	fmt.Println("Starting....")
 
 	configuration := configuration{}
 	err := gonfig.GetConf("config.json", &configuration)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Ready. Listening on port " + configuration.Port)
 
 	http.ListenAndServe(":"+configuration.Port, nil)
 
@@ -609,13 +645,19 @@ func findParentTemplates(id string, file string, ckmMirror string, ticketDir str
 		return false
 	}
 
-	var foundfiles = grepDir(id, ckmMirror)
+	/* 	if Contains(data.mappedList, id) {
+	   		log.Printf("findParentTemplates : skipping " + id)
+	   		return false // dont need to process parents, they've already been done.
 
-	log.Printf("findParentTemplates( " + id + " / " + file + " ) ckm parents = (" + foundfiles + ")")
+	   	}
+	*/
+	log.Printf("findParentTemplates( " + id + " / " + file)
+
+	var foundfiles = grepDir(id, ckmMirror)
 	var foundlocalfiles = grepDir(id, ticketDir)
-	log.Printf("findParentTemplates( " + id + " / " + file + " ) local parents = (" + foundlocalfiles + ")")
 	results := strings.Split(foundlocalfiles+"\n"+foundfiles, "\n")
 	data.relationsetXML = append(data.relationsetXML, "<template><filename>"+file+"</filename><id>"+id+"</id><contained-in>")
+
 	parent := ""
 
 	for i := range results {
@@ -626,16 +668,18 @@ func findParentTemplates(id string, file string, ckmMirror string, ticketDir str
 
 		if parent != "" {
 			log.Println("findParentTemplates parent - " + parent)
-			id = findTemplateID(parent)
+			parentID := findTemplateID(parent)
 			trimmedparent := filepath.Base(parent)
 
-			findParentTemplates(id, trimmedparent, ckmMirror, ticketDir, data)
+			findParentTemplates(parentID, trimmedparent, ckmMirror, ticketDir, data)
 		}
 	}
 	data.relationsetXML = append(data.relationsetXML, "</contained-in></template>")
 
 	if len(results) > 1 {
+		//		data.mappedList = append(data.mappedList, id) // add to list of mapped templates (don't reprocess)
 		return true
+
 	}
 	return false
 }
@@ -681,18 +725,6 @@ func printSession(data sessionData) string {
 
 }
 
-func printSessionData(data sessionData) string {
-
-	b, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	fmt.Print(string(b))
-
-	return string(b)
-
-}
-
 func printMap(data sessionData) string {
 
 	b, err := json.MarshalIndent(data.WuaNodes, "", "  ")
@@ -721,7 +753,7 @@ func mapTemplate(el *etree.Element, data *sessionData) bool {
 	}
 
 	sCurrentTemplateFilename := eTemplateFilename.Text()
-	sCurrentTemplateI := eTemplateID.Text()
+	sCurrentTemplateID := eTemplateID.Text()
 
 	// add to unique list of known templates
 	data.relationshipData[sCurrentTemplateFilename] = 0
@@ -736,7 +768,7 @@ func mapTemplate(el *etree.Element, data *sessionData) bool {
 		var relation nodeDefinition
 		// find the child
 		for idx, r := range data.WuaNodes {
-			if r.NodeID == sCurrentTemplateI {
+			if r.NodeID == sCurrentTemplateID {
 				alreadyExists = true
 				foundrelation = idx
 				break
@@ -746,10 +778,12 @@ func mapTemplate(el *etree.Element, data *sessionData) bool {
 		if !alreadyExists { // create node if not found
 			relation.uid = ksuid.New().String()
 			relation.NodeName = sCurrentTemplateFilename
-			relation.NodeID = sCurrentTemplateI
+			relation.NodeID = sCurrentTemplateID
 			relation.NodeChanged = -1     // not checked.
 			relation.NodeCommitOrder = -1 // not yet processed by precommit
 			relation.NodeIsCommitted = -1
+			relation.NodeChildChanged = 0
+
 			data.WuaNodes = append(data.WuaNodes, relation)
 			//addSessionNode(gTempSessionID,&relation)
 
@@ -917,7 +951,8 @@ func getHashAndChangedStatus(ticketPath string, data *sessionData) {
 				data.WuaNodes[i].NodeHash = hash
 				data.WuaNodes[i].NodeLocation = file
 
-				templateexists, cid := ckmGetCidFromID(data.WuaNodes[i].NodeID)
+				templateexists, cid := ckmGetCidFromID(data.WuaNodes[i].NodeID) // check template exists in ckm
+
 				if templateexists {
 					data.WuaNodes[i].NodeCID = cid
 					ckmHash := ckmGetHash(data.WuaNodes[i].NodeCID)
@@ -1148,7 +1183,7 @@ func ckmCommitRevisedTemplate(node *nodeDefinition) bool {
 	return true
 }
 
-func walkTree(relation *nodeDefinition, isLeaf bool, data sessionData) bool {
+func commitTree(relation *nodeDefinition, isLeaf bool, data sessionData) bool {
 
 	var allChildrenCommitted = true
 
@@ -1157,9 +1192,15 @@ func walkTree(relation *nodeDefinition, isLeaf bool, data sessionData) bool {
 		for i := 0; i < len(data.WuaNodes); i++ { // for all nodes
 			for j := 0; j < len(data.WuaNodes[i].NodeParentList); j++ { // for all parents of this node
 				if data.WuaNodes[i].NodeParentList[j] == relation.NodeName { // is a child of this node
-					if data.WuaNodes[i].NodeIsCommitted != 1 {
+					thechildnode := data.WuaNodes[i]
+					if thechildnode.NodeChanged > 0 || thechildnode.NodeChildChanged > 0 {
+						relation.NodeChildChanged = 1 // make sure this node gets a "version bump"
+						log.Println("commitTree: " + relation.NodeName + " gets a bump because " + thechildnode.NodeName + " was changed/bumped")
+
+						allChildrenCommitted = (thechildnode.NodeIsCommitted == 1)
+
 						// child not yet committed
-						allChildrenCommitted = false
+						//						allChildrenCommitted = false
 						break
 					}
 				}
@@ -1168,37 +1209,63 @@ func walkTree(relation *nodeDefinition, isLeaf bool, data sessionData) bool {
 	}
 	if allChildrenCommitted { // only commit this node if all of its children have already been commmitted.
 
-		if relation.NodeChanged > 0 { // only validate templates that are different to ckm version
-			if !ckmValidateTemplate(relation) {
-				log.Println("walkTree : ERROR validate template failed for " + relation.NodeName)
-				return false
+		// NOTE: we need to commit unchanged templates, so that they receive their child's updates in ckm (i.e. NodeChildChanged = 1)
+		if relation.NodeChanged > 0 || relation.NodeChildChanged == 1 { // only validate templates that are different to ckm version
+
+			if relation.NodeChanged > 0 {
+				if relation.NodeValidated < 0 {
+					if !ckmValidateTemplate(relation) {
+						log.Println("commitTree : ERROR validate template failed for " + relation.NodeName)
+						relation.NodeValidated = 0
+						return false
+					}
+					relation.NodeValidated = 1
+				}
 			}
+			// commit child
+			if relation.NodeChanged == 1 || relation.NodeChildChanged == 1 { // commit revision to existing template
+				if relation.NodeIsCommitted < 0 {
+					if !ckmCommitRevisedTemplate(relation) {
+						log.Println("commitTree : ERROR ckmCommitRevisedTemplate failed for " + relation.NodeName)
+						relation.NodeIsCommitted = 0
+						return false
+					}
+				}
+			} else if relation.NodeChanged == 2 { // commit new template
+				if !ckmCommitNewTemplate(relation) {
+					log.Println("commitTree : ERROR ckmCommitNewTemplate failed for " + relation.NodeName)
+					relation.NodeIsCommitted = 0
+					return false
+				}
+			}
+			relation.NodeCommitOrder = data.treeCommitOrder
+			relation.NodeIsCommitted = 1 // node has been committed
+			data.treeCommitOrder++
+
+			// backup file
+
+			backup(data.ChangesetFolder, data.sessionConfig.WorkingFolderPath, *relation)
+
+			// get new revision from ckm to replace old file
+
+			err := ckmGetTemplateOET(*relation)
+			if err != nil {
+				updateSessionStatus("ERROR: failed to get copy of committed template from CKM", &data)
+
+			}
+
 		}
 
-		// NOTE: we need to commit unchanged templates, so that they receive their child's updates in ckm
-
-		// commit child
-		if relation.NodeChanged == 1 { // commit revision to existing template
-			if !ckmCommitRevisedTemplate(relation) {
-				log.Println("walkTree : ERROR ckmCommitRevisedTemplate failed for " + relation.NodeName)
-				return false
-			}
-		} else if relation.NodeChanged == 2 { // commit new template
-			if !ckmCommitNewTemplate(relation) {
-				log.Println("walkTree : ERROR ckmCommitNewTemplate failed for " + relation.NodeName)
-				return false
-			}
-		}
-
-		relation.NodeCommitOrder = data.treeCommitOrder // global var
-		relation.NodeIsCommitted = 1                    // node has been committed
-		data.treeCommitOrder++
 		// find parents
 		for _, aParent := range relation.NodeParentList {
 			for i := 0; i < len(data.WuaNodes); i++ {
+				theParentNode := &data.WuaNodes[i]
 				// process each parent of this node
-				if data.WuaNodes[i].NodeName == aParent {
-					if !walkTree(&data.WuaNodes[i], false, data) {
+
+				if theParentNode.NodeName == aParent {
+
+					//theParentNode.NodeChildChanged = 1
+					if !commitTree(theParentNode, false, data) {
 						return false
 					}
 				}
@@ -1206,6 +1273,31 @@ func walkTree(relation *nodeDefinition, isLeaf bool, data sessionData) bool {
 		}
 	}
 	return true
+}
+
+func ckmGetTemplateOET(node nodeDefinition) error {
+
+	out, err := os.Create(node.NodeLocation)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Get the data
+	resp, err := retryablehttp.Get("https://ahsckm.ca/ckm/rest/v1/templates/" + node.NodeCID + "/oet")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func sendGraphDataToBrowser(statusSessionID string) string {
@@ -1256,4 +1348,14 @@ func sendStatusToBrowser(statusSessionID string) string {
 
 	}
 	return ""
+}
+
+// Contains tells whether a contains x.
+func Contains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
 }

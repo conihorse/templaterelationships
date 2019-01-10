@@ -56,7 +56,7 @@
         <br> As the process is working, a regularly updated status message will be displayed. At end of the process, a report
         will list the results.
     </div>
-    <div class="mdl-card__actions mdl-card--border">
+    <div id="action-go" class="mdl-card__actions mdl-card--border">
         <a id="go" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
             Get Started
         </a>
@@ -68,7 +68,7 @@
     </div>
 </div>
 
-<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" display: "hidden">
+<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" style="visibility:hidden">
     <div id="statusmessage" class="mdl-card__supporting-text">
         <b>2019/01/09 12;12</b> - checkin gthe sausage sfor AM/diner/templates/section/Bacon, Eggs & Hash Browns.oet
     </div>
@@ -175,7 +175,7 @@
     function getJSON() {
 
         document.getElementById("statuscard").style.display = "block"
-
+        document.getElementById("action-go").style.visibility = "hidden"
         var html = JSON.stringify(theReport, null, 2)
         //$("#statusdata").html(html)
 
@@ -246,10 +246,10 @@
                     td.appendChild(document.createTextNode("Unknown"));
                     break;
                 case 0:
-                    td.appendChild(document.createTextNode("Unedited"));
+                    td.appendChild(document.createTextNode("Unchanged"));
                     break;
                 case 1:
-                    td.appendChild(document.createTextNode("Edited"));
+                    td.appendChild(document.createTextNode("Amended"));
                     break;
                 case 2:
                     td.appendChild(document.createTextNode("Created"));
