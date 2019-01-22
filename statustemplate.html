@@ -1,8 +1,7 @@
-
 <html>
 
 <head>
-  
+
 
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
 
@@ -65,24 +64,29 @@
 
 </head>
 
-<div class="demo-card-wide mdl-card mdl-shadow--2dp">
+<div id="prepcard" class="demo-card-wide mdl-card mdl-shadow--2dp">
   <div class="mdl-card__title">
-    <h2 class="mdl-card__title-text">Welcome</h2>
+    <h2 class="mdl-card__title-text">Precommit</h2>
   </div>
   <div class="mdl-card__supporting-text">
-    This screen starts the CKM upload process, which checks that all assets in
-    <B>%%TICKET%%</B> are:
-    <ol>
-      <li>Automatically uploaded into CKM if they have been changed,</li>
-      <li>Updated in other assets that have an updated asset embedded within.</li>
-    </ol>
-    The entire process can take a few minutes, and will take longer if there are a lot of assets.
+    This screen starts the CKM upload process for <B>%%TICKET%%</B>
     <br>
-    <br> As the process is working, a regularly updated status message will be displayed. At end of the process, a report will
-    list the results.
-  </div>
-  <div id="action-go" class="mdl-card__actions mdl-card--border">
-    <a id="go" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+    <br>
+    The entire process can take a few minutes and has two stages:
+    <ol>
+      <li><b>Precommit:</b> Create a Report for the ticket, showing what will be updated to CKM</li>
+      <li><b>Commit</b>: Send changes to CKM in the correct order and show a report confirming the changes.</li>
+    </ol>
+
+    As the process is working, a regularly updated status message will be displayed. Additionally a view
+    of the template relations is shown below the stage report.
+    <br>
+    <br><b></b><em>This is preview of the commit workflow, which is under development and not yet tested. There are
+      still some bugs to be worked out with the commit order, as well as others.</em></div></b>
+
+
+  <div id="action-precommit" class="mdl-card__actions mdl-card--border">
+    <a id="precommit" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
       Get Started
     </a>
   </div>
@@ -93,7 +97,30 @@
   </div>
 </div>
 
-<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" style="visibility:hidden">
+
+<div id="commitcard" class="demo-card-wide mdl-card mdl-shadow--2dp" style="display:none">
+  <!-- initally hidden -->
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Commit?</h2>
+  </div>
+  <div class="mdl-card__supporting-text">
+    The preparation process is complete, check the intended actions below and hit commit if you are ready to go!
+  </div>
+  <div id="action-commit" class="mdl-card__actions mdl-card--border">
+    <a id="commit" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+      Commit
+    </a>
+  </div>
+  <div class="mdl-card__menu">
+    <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+      <i class="material-icons">share</i>
+    </button>
+  </div>
+</div>
+
+
+<div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" style="display:none">
+  <!-- initally hidden -->
   <div id="statusdata" class="mdl-card__supporting-text">
 
   </div>
@@ -101,13 +128,12 @@
 <BR>
 
 <div id="table-results"></div>
-<BR>
-<div id="graphcard" class="demo-statuscard  mdl-shadow--2dp" style="height:800px; width:800px; visibility:hidden" style="text-align:center">
-  <div id="cy" style="display:inline-block">
-  </div>
-
-
+<br>
+<div id="graphcard" class="demo-statuscard  mdl-shadow--2dp" style="height:800px; width:800px; display:none" style="text-align:center">
+  <h3 style="z-index: 999">ticket asset relationship map</h3>
+  <div id="cy" style="display:inline-block"> </div>
 </div>
+
 <BR>
 <!-- Stop Button -->
 <!-- <a href="#" onclick="window.clearInterval(int);return false;">Stop</a> -->
@@ -115,10 +141,22 @@
 <script type="text/javascript">
   var intTimer
 
-  function start() {
+  function start_precommit() {
     $.getJSON("/precommit,%%SESSIONID%%", function () {
-      document.getElementById("action-go").style.visibility = "hidden"
-      document.getElementById("statuscard").style.visibility = "visible"
+      document.getElementById("action-precommit").style.display = "none"
+      document.getElementById("statuscard").style.display = "block"
+      intTimer = self.setInterval(getStatus, 1000);
+    })
+  }
+
+
+  function start_commit() {
+    document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+      " <br>Starting commit!";
+
+    $.getJSON("/commit,%%SESSIONID%%", function () {
+      document.getElementById("action-commit").style.display = "none"
+      document.getElementById("statuscard").style.display = "block"
       intTimer = self.setInterval(getStatus, 1000);
     })
   }
@@ -137,37 +175,61 @@
         return false;
       }
 
-      if (objStatus.IsFinished) {
+      if (objStatus.ProcessingStage == 2) {
+        //        alert("prep is finished...")
+        //if( objStatus.IsFinishedCommit) { alert ("hmmm....")}
+
+        document.getElementById("prepcard").style.display = "none"
+        document.getElementById("commitcard").style.display = "inline-block"
 
         window.clearInterval(intTimer);
         $.getJSON("/report,%%SESSIONID%%", function (report) {
           document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
-            " <br>Finished!";
-          tableCreate(report)
+            " <br>Finished Preparation!";
+          tableCreate(report, true)
+
+          $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
+            graphCreate(nodes)
+          })
+
+          return false
+
+          //var data = $(result).serializeArray()
+        });
+      }
+
+      if (objStatus.ProcessingStage == 4) {
+        //alert("commit finished!")
+        window.clearInterval(intTimer);
+        $.getJSON("/report,%%SESSIONID%%", function (report) {
+          document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+            " <br>Commit to CKM completed!";
+          tableCreate(report, false)
 
           $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
             graphCreate(nodes)
           })
         })
-
         return false;
-      } else {
-        document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" + objStatus.Message +
-          " ";
       }
 
 
-      //var data = $(result).serializeArray()
+
+
+      document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" +
+        objStatus.Message +
+        " ";
     });
-  };
+  }
 
   function graphCreate(theNodesAndEdges) {
 
     if (theNodesAndEdges == "") {
       return
     }
-    document.getElementById("graphcard").style.visibility = "visible"
+    document.getElementById("graphcard").style.display = "block"
     var objreport = JSON.parse(JSON.stringify(theNodesAndEdges))
+    //alert("parsed nodes")
     var arrayLength = objreport.length;
 
     if (arrayLength == 2) {
@@ -179,8 +241,8 @@
     }
   }
 
-  function tableCreate(theReport) {
-
+  function tableCreate(theReport, dryrun) {
+    var title
     if (theReport == "") {
       return
     }
@@ -202,9 +264,18 @@
     hr.insertCell().appendChild(document.createTextNode("Name"))
     hr.insertCell().appendChild(document.createTextNode("Location"))
     hr.insertCell().appendChild(document.createTextNode("Local State"))
-    hr.insertCell().appendChild(document.createTextNode("Action"))
+    if (dryrun) {
+      title = document.createTextNode("Planned Changes");
+      hr.insertCell().appendChild(document.createTextNode("Planned Action"))
+    } else {
+      title = document.createTextNode("Change Report");
+      hr.insertCell().appendChild(document.createTextNode("Action Performed"))
+    }
+
     hr.insertCell().appendChild(document.createTextNode("CKM Location"))
     hr.insertCell().appendChild(document.createTextNode("Embedded Within"))
+    hr.insertCell().appendChild(document.createTextNode("Commit Order"))
+
     var arrayLength = objreport.length;
     var td;
 
@@ -242,45 +313,67 @@
 
 
       td = tr.insertCell();
-      //td.appendChild(document.createTextNode(objreport[i].NodeIsCommitted));
-      switch (objreport[i].NodeIsCommitted) {
-        case -1:
-          td.appendChild(document.createTextNode(""));
-          break;
-        case 0:
-          td.appendChild(document.createTextNode("Failed"));
-          break;
-        case 1:
-          if ((objreport[i].NodeChildChanged == 1) && (objreport[i].NodeChanged < 1)) {
-            td.appendChild(document.createTextNode("Version Bump in CKM"));
-          } else {
-            td.appendChild(document.createTextNode("Committed to CKM"));
-          }
-          break;
-        default:
-          td.appendChild(document.createTextNode("Unknown"));
-          break;
+      if (!dryrun) {
+        switch (objreport[i].NodeIsCommitted) {
+          case -1:
+            td.appendChild(document.createTextNode("None"));
+            break;
+          case 0:
+            td.appendChild(document.createTextNode("Failed"));
+            break;
+          case 1:
+            if ((objreport[i].NodeChildChanged == 1) && (objreport[i].NodeChanged < 1)) {
+              td.appendChild(document.createTextNode("Version Bump in CKM"));
+            } else {
+              td.appendChild(document.createTextNode("Committed to CKM"));
+            }
+            break;
+          default:
+            td.appendChild(document.createTextNode("Unknown"));
+            break;
+        }
+      } else {
+        switch (objreport[i].NodeCommitIntended) {
+          case -1:
+            td.appendChild(document.createTextNode("None"));
+            break;
+          case 0:
+            td.appendChild(document.createTextNode("Failed"));
+            break;
+          case 1:
+            if ((objreport[i].NodeChildChanged == 1) && (objreport[i].NodeChanged < 1)) {
+              td.appendChild(document.createTextNode("Version Bump in CKM"));
+            } else {
+              td.appendChild(document.createTextNode("Commit to CKM"));
+            }
+            break;
+          default:
+            td.appendChild(document.createTextNode("Unknown"));
+            break;
+        }
       }
-
       td = tr.insertCell();
-      var link = document.createElement("a");
-      link.setAttribute('target', '_blank');
-      link.setAttribute("href", "https://ahsckm.ca/ckm/#showTemplate_" + objreport[i].NodeCID); // 1175.132.9052)
-      var linkText = document.createTextNode("Open in CKM");
-      link.appendChild(linkText);
 
-      // Add the link to the previously created TableCell.
-      td.appendChild(link);
+      if ((objreport[i].NodeChanged == 2) && (dryrun)) { // asset isn't in ckm yet, so no link
+        td.appendChild(document.createTextNode("-"));
 
+      } else {
+
+        var link = document.createElement("a");
+        link.setAttribute('target', '_blank');
+        link.setAttribute("href", "https://ahsckm.ca/ckm/#showTemplate_" + objreport[i].NodeCID); // 1175.132.9052)
+        var linkText = document.createTextNode("Open in CKM");
+        link.appendChild(linkText);
+
+        // Add the link to the previously created TableCell.
+        td.appendChild(link);
+      }
 
       var relations = objreport[i].NodeParentList
       td = tr.insertCell();
 
       if (relations != null) {
         var relationsLength = relations.length;
-
-
-
 
         for (var k = 0; k < relationsLength; k++) {
           if (k == relationsLength - 1) {
@@ -294,10 +387,21 @@
 
       }
 
+      td = tr.insertCell();
+      if (objreport[i].NodeCommitOrder < 0) {
+        td.appendChild(document.createTextNode("-"));
+      } else {
+        td.appendChild(document.createTextNode(objreport[i].NodeCommitOrder));
+      }
 
 
     }
-    document.getElementById("table-results").appendChild(tbl);
+    var tablelocation = document.getElementById("table-results")
+    while (tablelocation.firstChild) {
+      tablelocation.removeChild(tablelocation.firstChild);
+    }
+    tablelocation.appendChild(title)
+    tablelocation.appendChild(tbl);
     //body.appendChild(tbl);
   }
 
@@ -306,7 +410,10 @@
   function displayGraph(nodes, edges) {
 
     //alert(JSON.parse(nodes))
-    var elements = {nodes, edges}
+    var elements = {
+      nodes,
+      edges
+    }
 
     var cy = window.cy = cytoscape({
       container: document.getElementById('cy'),
@@ -324,10 +431,18 @@
       style: [{
           selector: 'node',
           style: {
-            //'background-color': '#11479e',
-            'background-color': '#ff0000',
-            'text-valign': 'center',
+            'height': 20,
+            'width': 20,
+            'background-fit': 'cover',
+            'border-color': 'data(bg)',
+            'border-width': 20,
+            'border-opacity': 0.5,
+
+            'background-color': '#11479e',
+            //'background-color': '#ff0000',
+/*             'text-valign': 'center',
             'text-halign': 'right',
+ */            'border-color': 'data(bg)',
             'label': 'data(id)'
           }
         },
@@ -335,11 +450,16 @@
         {
           selector: 'edge',
           style: {
-            'width': 4,
-            'target-arrow-shape': 'triangle',
-            'line-color': '#9dbaea',
-            'target-arrow-color': '#9dbaea',
-            'curve-style': 'bezier'
+
+
+//            'line-color': '#9dbaea',
+//            'target-arrow-color': '#9dbaea',
+            'curve-style': 'bezier',
+                        'width': 8,
+                        'target-arrow-shape': 'triangle',
+                        'border-width': 15,
+                        'line-color': '#ffaaaa',
+                        'target-arrow-color': '#ffaaaa'            
           }
         }
       ],
@@ -354,7 +474,9 @@
 
   };
 
-  document.getElementById("go").onclick = start;
+  document.getElementById("precommit").onclick = start_precommit;
+  document.getElementById("commit").onclick =
+    start_commit;
 </script>
 
 
