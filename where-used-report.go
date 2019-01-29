@@ -58,11 +58,12 @@ type nodeDefinition struct {
 	NodeID             string   // internal id of the template
 	NodeHash           string   // the md5 hash of the local template
 	NodeIsLeaf         int      // = 1 if node is a leaf
+	NodeIsHead         int      // = 1 if node is at top/head
 	NodeChildChanged   int      // [0,1] 1 - embedded ancestor changed, so will need to be committed/bumped
 	NodeCommitOrder    int      // order in which the node should be commmitted to ckm [-1,n : unknown, 0-n order)
 	NodeValidated      int      // [-1,0,1] - unknown, failed, succeeded
 	NodeIsCommitted    int      // [-1,0,1] : unknown, failed, succeeded
-	NodeCommitIntended int      // [-1,0,1] : unknown, no, commit, bump commit
+	NodeCommitIntended int      // [-1,0,1,2] : unknown, no, commit, bump commit
 	NodeChanged        int      // flag set if NodeHash different to ckm version [ -1,0,1,2 : unknown,not changed,changed,new ]
 	NodeCID            string   // ckm citable identifier for the template (blank if template is new)
 	NodeParentList     []string // list of parent template filenames
@@ -78,6 +79,7 @@ type sessionData struct {
 	WuaNodes        []nodeDefinition // working structure holding nodes for proceessing and graph generation.
 	mappedList      []string
 	relationsetXML  []string
+	nodeOrderList   []string // the order of commit (top down process)
 	//relationfile     *os.File
 	treeCommitOrder  int
 	relationshipData map[string]int
@@ -212,6 +214,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	thisSessionData.ProcessingStage = 0
 	thisSessionData.isError = false
 	thisSessionData.relationsetXML = []string{} // used to store the relationships between files
+	thisSessionData.nodeOrderList = []string{}  // used to store the order of the commit (filename)
 	gSessionDataList = append(gSessionDataList, &thisSessionData)
 
 	log.Printf("ckmpath = " + (string)(thisSessionData.sessionConfig.MirrorCkmPath))
@@ -300,7 +303,7 @@ func commitProcessing(changesetFolder string, mirrorpath string, data *sessionDa
 	for i := 0; i < len(data.WuaNodes); i++ {
 		// for each leaf, follow the tree up
 		if data.WuaNodes[i].NodeIsLeaf == 1 {
-			if !processTree(&data.WuaNodes[i], true, data, false) {
+			if !processTreeChildFirst(&data.WuaNodes[i], true, data, false) {
 				setSessionFailure("ERROR : process failed...", data)
 			}
 		}
@@ -350,18 +353,143 @@ func precommitProcessing(changesetFolder string, mirrorpath string, data *sessio
 	getHashAndChangedStatus(changesetFolder, data)
 	data.treeCommitOrder = 0
 
+	// walk down tree, starting at each head node
+	for i := 0; i < len(data.WuaNodes); i++ {
+		// for each leaf, follow the tree up
+		if len(data.WuaNodes[i].NodeParentList) == 0 {
+
+			treeorder := []string{}
+
+			log.Println("precommitProcessing: processTreeTopFirst( " + data.WuaNodes[i].NodeName + ")")
+			if processTreeTopFirst(&data.WuaNodes[i], true, &treeorder, data, true) { // dry run flag set
+				if data.WuaNodes[i].NodeCommitIntended < 1 {
+					data.WuaNodes[i].NodeCommitIntended = 2
+				}
+			}
+
+			mergeTraverseList(treeorder, data)
+
+			// merge list
+			log.Println("list")
+		}
+	}
+
+	setCommitOrder(data)
+
+	log.Println(data.nodeOrderList)
+
+	data.ProcessingStage = 2
+
+	return // dont do regular processing
+
 	// walk up tree, starting at each leaf node
 	for i := 0; i < len(data.WuaNodes); i++ {
 		// for each leaf, follow the tree up
 		if data.WuaNodes[i].NodeIsLeaf == 1 {
-			log.Println("precommitProcessing: processTree( " + data.WuaNodes[i].NodeName + ")")
-			if !processTree(&data.WuaNodes[i], true, data, true) { // dry run flag set
+			log.Println("precommitProcessing: processTreeChildFirst( " + data.WuaNodes[i].NodeName + ")")
+			if !processTreeChildFirst(&data.WuaNodes[i], true, data, true) { // dry run flag set
 				setSessionFailure("ERROR : process failed...", data)
 			}
 		}
 	}
 
 	data.ProcessingStage = 2
+
+}
+
+func setCommitOrder(data *sessionData) {
+
+	// for each node in the nodeOrderList
+
+	// check if it is to be committed, if so set its order
+
+	order := 1
+
+	for _, node := range data.nodeOrderList {
+		for idx, nodedef := range data.WuaNodes {
+			if node == nodedef.NodeName {
+				if nodedef.NodeCommitIntended > 0 || nodedef.NodeChanged > 0 {
+					//nodedef.NodeCommitOrder = order
+					data.WuaNodes[idx].NodeCommitOrder = order
+					order++
+				}
+			}
+		}
+	}
+}
+
+func mergeTraverseList(treeorder []string, data *sessionData) {
+
+	// merge tree order into session commit order
+	log.Println("before <-------------------------------------------------")
+	log.Println("treeorder")
+	log.Println(treeorder)
+	log.Println("session")
+	log.Println(&data.nodeOrderList)
+	last := len(treeorder) - 1
+	//bumpneeded := false
+	//bumpsource := ""
+	for i := range treeorder {
+
+		node := treeorder[last-i]
+		// has this node been edited
+		// if so, then all subsequent nodes need to get a version bump
+		/* 		for _, nodedef := range data.WuaNodes {
+
+			if nodedef.NodeName == node {
+				if nodedef.NodeChanged > 0 {
+					bumpneeded = true
+					bumpsource = node
+					nodedef.NodeCommitIntended = 1
+				} else {
+					if bumpneeded {
+						nodedef.NodeChildChanged = 1
+						nodedef.NodeCommitIntended = 2
+						log.Println("processTreeChildFirst: " + nodedef.NodeName + " gets a bump because " + bumpsource + " was changed/bumped")
+
+					}
+
+				}
+
+				break
+			}
+		} */
+
+		// for each node, check if it exists
+		nodeExists := false
+		for _, name := range data.nodeOrderList {
+			if name == node {
+				nodeExists = true
+			}
+		}
+
+		// if it doesnt exist, insert it after its predecessor (which should already exist)
+		if !nodeExists {
+			insertpos := 0
+			if i > 0 { // node has a predecessor
+				prenode := treeorder[(last - i + 1)]
+
+				for prepos, name := range data.nodeOrderList {
+					if name == prenode {
+						insertpos = prepos + 1
+						break
+					}
+				}
+			}
+			// insert node into session at insertpos
+			data.nodeOrderList = append(data.nodeOrderList, "")
+			copy(data.nodeOrderList[(insertpos+1):], data.nodeOrderList[insertpos:])
+			log.Println("inserting " + node + " at " + strconv.Itoa(insertpos))
+
+			data.nodeOrderList[insertpos] = node
+		}
+
+	}
+	log.Println("after <-------------------------------------------------")
+	log.Println("treeorder")
+	log.Println(treeorder)
+	log.Println("session")
+	log.Println(data.nodeOrderList)
 
 }
 
@@ -690,12 +818,11 @@ func findTemplateID(path string) string {
 
 }
 
-
 func findReleasedVersions(id string, file string, ckmMirror string, ticketDir string, data *sessionData) bool {
 
 	// grep for AHSID~<template id>
 
-	// remove the source template from the results 
+	// remove the source template from the results
 	if id == "" {
 		log.Printf("findReleasedVersions failure....no id passed in")
 		return false
@@ -747,6 +874,11 @@ func findParentTemplates(id string, file string, ckmMirror string, ticketDir str
 	var foundfiles = grepDir("template_id=\""+id, ckmMirror)
 	var foundlocalfiles = grepDir("template_id=\""+id, ticketDir)
 	results := strings.Split(foundlocalfiles+"\n"+foundfiles, "\n")
+
+	var foundversions = grepDir("~AHSID~"+id, ckmMirror)
+	var foundlocalversions = grepDir("~AHSID~"+id, ticketDir)
+	versions := strings.Split(foundlocalversions+"\n"+foundversions, "\n")
+
 	data.relationsetXML = append(data.relationsetXML, "<template><filename>"+file+"</filename><id>"+id+"</id><contained-in>")
 
 	parent := ""
@@ -765,7 +897,39 @@ func findParentTemplates(id string, file string, ckmMirror string, ticketDir str
 			findParentTemplates(parentID, trimmedparent, ckmMirror, ticketDir, data)
 		}
 	}
-	data.relationsetXML = append(data.relationsetXML, "</contained-in></template>")
+	data.relationsetXML = append(data.relationsetXML, "</contained-in>")
+	data.relationsetXML = append(data.relationsetXML, "<released-in>")
+
+	for j := range versions {
+		version := versions[j]
+		if version == "" {
+			continue
+		}
+
+		parts := strings.Split(version, ":")
+		parent = parts[0]
+		parent = strings.TrimSpace(parent)
+
+		// remove the source template from the results.
+		if strings.Contains(parent, file) {
+			continue
+		}
+		/* 		if parent == file {
+		   			continue
+		   		}
+		*/
+		if parent != "" {
+			log.Println("findParentTemplates version - " + parent)
+			parentID := findTemplateID(parent)
+			trimmedparent := filepath.Base(parent)
+
+			findParentTemplates(parentID, trimmedparent, ckmMirror, ticketDir, data)
+		}
+
+	}
+	data.relationsetXML = append(data.relationsetXML, "</released-in>")
+
+	data.relationsetXML = append(data.relationsetXML, "</template>")
 
 	if len(results) > 1 {
 		return true
@@ -830,6 +994,12 @@ func printMap(data sessionData) string {
 // navigates through xml tree recursively and appends child->parent relationships to map
 func mapTemplate(el *etree.Element, data *sessionData) bool {
 
+	var slParents []*etree.Element
+	var slVersions []*etree.Element
+	var alreadyExists = false
+	var foundrelation = -1
+	var relation nodeDefinition
+
 	if el == nil {
 		return false
 	}
@@ -851,62 +1021,90 @@ func mapTemplate(el *etree.Element, data *sessionData) bool {
 	eContainedIn := el.SelectElement("contained-in")
 
 	if eContainedIn != nil {
-		slParents := eContainedIn.SelectElements("template")
+		slParents = eContainedIn.SelectElements("template")
+	}
 
-		var alreadyExists = false
-		var foundrelation = -1
-		var relation nodeDefinition
-		// find the child
-		for idx, r := range data.WuaNodes {
-			if r.NodeID == sCurrentTemplateID {
-				alreadyExists = true
-				foundrelation = idx
-				break
+	// find the child
+	for idx, r := range data.WuaNodes {
+		if r.NodeID == sCurrentTemplateID {
+			alreadyExists = true
+			foundrelation = idx
+			break
+		}
+	}
+
+	if !alreadyExists { // create node if not found
+		relation.uid = ksuid.New().String()
+		relation.NodeName = sCurrentTemplateFilename
+		relation.NodeID = sCurrentTemplateID
+		relation.NodeChanged = -1        // // not yet processed by precommit
+		relation.NodeCommitOrder = -1    // not yet processed by precommit
+		relation.NodeCommitIntended = -1 // not yet processed by precommit
+		relation.NodeIsCommitted = -1    // not yet processed by commit
+		relation.NodeChildChanged = 0    // not yet processed by precommit
+
+		data.WuaNodes = append(data.WuaNodes, relation)
+		//addSessionNode(gTempSessionID,&relation)
+
+		foundrelation = len(data.WuaNodes) - 1
+	} else {
+		relation = data.WuaNodes[foundrelation]
+	}
+
+	for _, eParentTemplate := range slParents { // add all the parent relationships to the node
+		if eParentTemplate != nil {
+			var sParentFilename = ""
+			var parentAlreadyMapped = false
+
+			eParentFilename := eParentTemplate.SelectElement("filename")
+			if eParentFilename != nil {
+				sParentFilename = eParentFilename.Text()
 			}
-		}
-
-		if !alreadyExists { // create node if not found
-			relation.uid = ksuid.New().String()
-			relation.NodeName = sCurrentTemplateFilename
-			relation.NodeID = sCurrentTemplateID
-			relation.NodeChanged = -1        // // not yet processed by precommit
-			relation.NodeCommitOrder = -1    // not yet processed by precommit
-			relation.NodeCommitIntended = -1 // not yet processed by precommit
-			relation.NodeIsCommitted = -1    // not yet processed by commit
-			relation.NodeChildChanged = 0    // not yet processed by precommit
-
-			data.WuaNodes = append(data.WuaNodes, relation)
-			//addSessionNode(gTempSessionID,&relation)
-
-			foundrelation = len(data.WuaNodes) - 1
-		} else {
-			relation = data.WuaNodes[foundrelation]
-		}
-
-		for _, eParentTemplate := range slParents { // add all the parent relationships to the node
-			if eParentTemplate != nil {
-				var sParentFilename = ""
-				var parentAlreadyMapped = false
-
-				eParentFilename := eParentTemplate.SelectElement("filename")
-				if eParentFilename != nil {
-					sParentFilename = eParentFilename.Text()
-				}
-				if sParentFilename != "" {
-					for _, parent := range data.WuaNodes[foundrelation].NodeParentList {
-						if parent == sParentFilename {
-							parentAlreadyMapped = true
-							break
-						}
+			if sParentFilename != "" {
+				for _, parent := range data.WuaNodes[foundrelation].NodeParentList {
+					if parent == sParentFilename {
+						parentAlreadyMapped = true
+						break
 					}
-					if !parentAlreadyMapped {
-						data.WuaNodes[foundrelation].NodeParentList = append(data.WuaNodes[foundrelation].NodeParentList, sParentFilename)
-					}
-					mapTemplate(eParentTemplate, data)
 				}
+				if !parentAlreadyMapped {
+					data.WuaNodes[foundrelation].NodeParentList = append(data.WuaNodes[foundrelation].NodeParentList, sParentFilename)
+				}
+				mapTemplate(eParentTemplate, data)
 			}
 		}
 	}
+
+	eReleasedIn := el.SelectElement("released-in")
+
+	if eReleasedIn != nil {
+		slVersions = eReleasedIn.SelectElements("template")
+	}
+
+	for _, eVersion := range slVersions { // add all the released version relationships to the node
+		if eVersion != nil {
+			var sVersionFilename = ""
+			var versionAlreadyMapped = false
+
+			eVersionFilename := eVersion.SelectElement("filename")
+			if eVersionFilename != nil {
+				sVersionFilename = eVersionFilename.Text()
+			}
+			if sVersionFilename != "" {
+				for _, version := range data.WuaNodes[foundrelation].NodeReleasedList {
+					if version == sVersionFilename {
+						versionAlreadyMapped = true
+						break
+					}
+				}
+				if !versionAlreadyMapped {
+					data.WuaNodes[foundrelation].NodeReleasedList = append(data.WuaNodes[foundrelation].NodeReleasedList, sVersionFilename)
+				}
+				mapTemplate(eVersion, data)
+			}
+		}
+	}
+
 	return true
 }
 
@@ -1294,11 +1492,49 @@ func ckmCommitRevisedTemplate(node *nodeDefinition) bool {
 	return true
 }
 
-func processTree(relation *nodeDefinition, isLeaf bool, data *sessionData, dryrun bool) bool {
+func processTreeTopFirst(relation *nodeDefinition, isTop bool, nodeOrderList *[]string, data *sessionData, dryrun bool) bool {
+
+	*nodeOrderList = append(*nodeOrderList, relation.NodeName)
+	bumpparent := false
+
+	if relation.NodeChanged > 0 {
+		relation.NodeCommitIntended = 1
+		log.Println(relation.NodeName + " has changed, so we intent to commit it [1]")
+		bumpparent = true
+	}
+
+	// navigate the tree top down
+	// check no children not committed
+	for i := 0; i < len(data.WuaNodes); i++ { // iterate all nodes
+		for j := 0; j < len(data.WuaNodes[i].NodeParentList); j++ { // for a given node, look through its parents
+			if data.WuaNodes[i].NodeParentList[j] == relation.NodeName { // is the relation a parent of this node?
+				thechildnode := &data.WuaNodes[i] // the direct child of the relation
+
+				if processTreeTopFirst(thechildnode, false, nodeOrderList, data, dryrun) {
+					bumpparent = true
+					// relation's decendents have been changed, so a version bump is needed
+					log.Println(thechildnode.NodeName + " or its decendant has changed, so " + relation.NodeName + " needs a bump")
+					relation.NodeChildChanged = 1
+					if relation.NodeCommitIntended < 1 {
+						relation.NodeCommitIntended = 1
+					}
+				}
+
+			}
+		}
+	}
+	// each node added to list
+
+	// when all top nodes mapped, iterate list
+	return bumpparent // return true if decendent has been changed.
+
+}
+
+func processTreeChildFirst(relation *nodeDefinition, isLeaf bool, data *sessionData, dryrun bool) bool {
 
 	var allChildrenCommitted = true
 
-	log.Println("processTree( " + relation.NodeName + ")")
+	log.Println("processTreeChildFirst( " + relation.NodeName + ")")
 
 	if !isLeaf { // (leaf nodes have no children)
 		// check no children not committed
@@ -1308,7 +1544,7 @@ func processTree(relation *nodeDefinition, isLeaf bool, data *sessionData, dryru
 					thechildnode := data.WuaNodes[i] // the direct child of the relation
 					if thechildnode.NodeChanged > 0 || thechildnode.NodeChildChanged > 0 {
 						relation.NodeChildChanged = 1 // make sure the relation gets a "version bump"
-						log.Println("processTree: " + relation.NodeName + " gets a bump because " + thechildnode.NodeName + " was changed/bumped")
+						log.Println("processTreeChildFirst: " + relation.NodeName + " gets a bump because " + thechildnode.NodeName + " was changed/bumped")
 
 						if !dryrun {
 							allChildrenCommitted = (thechildnode.NodeIsCommitted == 1)
@@ -1333,7 +1569,7 @@ func processTree(relation *nodeDefinition, isLeaf bool, data *sessionData, dryru
 			if relation.NodeChanged > 0 {
 				if relation.NodeValidated < 0 {
 					if !ckmValidateTemplate(relation) {
-						log.Println("processTree : ERROR validate template failed for " + relation.NodeName)
+						log.Println("processTreeChildFirst : ERROR validate template failed for " + relation.NodeName)
 						relation.NodeValidated = 0
 						return false
 					}
@@ -1344,7 +1580,7 @@ func processTree(relation *nodeDefinition, isLeaf bool, data *sessionData, dryru
 			if relation.NodeChanged == 1 || ((relation.NodeChildChanged == 1) && (relation.NodeChanged != 2)) { // commit revision to existing template
 				if relation.NodeIsCommitted < 0 && !dryrun {
 					if !ckmCommitRevisedTemplate(relation) {
-						log.Println("processTree : ERROR ckmCommitRevisedTemplate failed for " + relation.NodeName)
+						log.Println("processTreeChildFirst : ERROR ckmCommitRevisedTemplate failed for " + relation.NodeName)
 						relation.NodeIsCommitted = 0
 						return false
 					}
@@ -1352,7 +1588,7 @@ func processTree(relation *nodeDefinition, isLeaf bool, data *sessionData, dryru
 			} else if relation.NodeChanged == 2 { // commit new template
 				if relation.NodeIsCommitted < 0 && !dryrun {
 					if !ckmCommitNewTemplate(relation, data) {
-						log.Println("processTree : ERROR ckmCommitNewTemplate failed for " + relation.NodeName)
+						log.Println("processTreeChildFirst : ERROR ckmCommitNewTemplate failed for " + relation.NodeName)
 						relation.NodeIsCommitted = 0
 						return false
 					}
@@ -1376,7 +1612,7 @@ func processTree(relation *nodeDefinition, isLeaf bool, data *sessionData, dryru
 				}
 			} else {
 				relation.NodeCommitIntended = 1 // we plan to commit this node
-				log.Println("processTree( " + relation.NodeName + ") <<<--- we plan to commit this node")
+				log.Println("processTreeChildFirst( " + relation.NodeName + ") <<<--- we plan to commit this node")
 			}
 
 		}
@@ -1390,7 +1626,7 @@ func processTree(relation *nodeDefinition, isLeaf bool, data *sessionData, dryru
 				if theParentNode.NodeName == aParent {
 
 					//theParentNode.NodeChildChanged = 1
-					if !processTree(theParentNode, false, data, dryrun) {
+					if !processTreeChildFirst(theParentNode, false, data, dryrun) {
 						return false
 					}
 				}
@@ -1434,26 +1670,36 @@ func sendGraphDataToBrowser(statusSessionID string) string {
 	var edges string
 	var nodecolor string
 
-	for s := range data.WuaNodes {
-		if data.WuaNodes[s].NodeCommitIntended > 0 {
-			if data.WuaNodes[s].NodeChildChanged == 1 {
-				nodecolor = "#fcb04e\""
-			} else {
-				nodecolor = "#f00\""
-			}
+	for s := range data.WuaNodes { // TODO move UI code into html
 
+		if data.WuaNodes[s].NodeChildChanged == 1 {
+			nodecolor = "#fcb04e\""
 		} else {
-			nodecolor = "#4eadfc\""
-		}
 
+			if data.WuaNodes[s].NodeCommitIntended > 0 {
+				nodecolor = "#f00\""
+			} else {
+				nodecolor = "#4eadfc\""
+			}
+		}
+		/* 		if data.WuaNodes[s].NodeCommitIntended < 1  {
+		   			nodecolor = "#4eadfc\""
+		   		}
+		*/
 		nodes += "{ \"data\": { \"id\": \"" + data.WuaNodes[s].NodeName + "\", \"bg\": \"" + nodecolor + " } },"
 	}
 	for _, r := range data.WuaNodes {
 		for _, p := range r.NodeParentList {
 
-			edges += "{ \"data\": { \"source\": \"" + r.NodeName + "\", \"target\": \"" + p + "\" } },"
+			edges += "{ \"data\": { \"style\": \"solid\",  \"color\": \"#ffaaaa\",  \"arrowcolor\": \"#ffaaaa\", \"source\": \"" + r.NodeName + "\", \"target\": \"" + p + "\" } },"
 		}
+		for _, v := range r.NodeReleasedList {
+
+			edges += "{ \"data\": { \"style\": \"dashed\", \"color\": \"#b2b0a9\",  \"arrowcolor\": \"#b2b0a9\", \"source\": \"" + r.NodeName + "\", \"target\": \"" + v + "\" } },"
+		}
+
 	}
+
 	log.Println("sendGraphDataToBrowser: " + "[ [" + nodes + "],[" + edges + "] ]")
 
 	nodes = strings.TrimSuffix(nodes, ",")

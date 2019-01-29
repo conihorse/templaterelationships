@@ -274,6 +274,7 @@
 
     hr.insertCell().appendChild(document.createTextNode("CKM Location"))
     hr.insertCell().appendChild(document.createTextNode("Embedded Within"))
+    hr.insertCell().appendChild(document.createTextNode("Released Within"))
     hr.insertCell().appendChild(document.createTextNode("Commit Order"))
 
     var arrayLength = objreport.length;
@@ -295,7 +296,7 @@
       td = tr.insertCell();
       switch (objreport[i].NodeChanged) {
         case -1:
-          td.appendChild(document.createTextNode("Unknown"));
+          td.appendChild(document.createTextNode("Not Local"));
           break;
         case 0:
           td.appendChild(document.createTextNode("Unedited"));
@@ -383,9 +384,24 @@
           }
 
         }
+      }
+
+      var versions = objreport[i].NodeReleasedList
+      td = tr.insertCell();
+
+      if (versions != null) {
+        for (var k = 0; k < versions.length; k++) {
+          if (k == versions.length - 1) {
+            td.appendChild(document.createTextNode(versions[k]))
+          } else {
+            td.appendChild(document.createTextNode(versions[k] + ", "))
+          }
+
+        }
 
 
       }
+
 
       td = tr.insertCell();
       if (objreport[i].NodeCommitOrder < 0) {
@@ -440,9 +456,10 @@
 
             'background-color': '#11479e',
             //'background-color': '#ff0000',
-/*             'text-valign': 'center',
-            'text-halign': 'right',
- */            'border-color': 'data(bg)',
+            /*             'text-valign': 'center',
+                        'text-halign': 'right',
+             */
+            'border-color': 'data(bg)',
             'label': 'data(id)'
           }
         },
@@ -450,16 +467,14 @@
         {
           selector: 'edge',
           style: {
-
-
-//            'line-color': '#9dbaea',
-//            'target-arrow-color': '#9dbaea',
             'curve-style': 'bezier',
-                        'width': 8,
-                        'target-arrow-shape': 'triangle',
-                        'border-width': 15,
-                        'line-color': '#ffaaaa',
-                        'target-arrow-color': '#ffaaaa'            
+            'width': 8,
+            'target-arrow-shape': 'triangle',
+            'border-width': 15,
+            'line-color': 'data(color)',
+            'target-arrow-color': 'data(arrowcolor)',
+            'line-dash-pattern': [6, 3],
+            'line-style': 'data(style)'
           }
         }
       ],

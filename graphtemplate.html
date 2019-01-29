@@ -207,35 +207,36 @@
                 style: cytoscape.stylesheet()
                     .selector('node')
                     .css({
-                        'height': 80,
-                        'width': 80,
+                        'height': 20,
+                        'width': 20,
                         'background-fit': 'cover',
                         'border-color': 'data(bg)',
-                        'border-width': 80,
+                        'border-width': 20,
                         'border-opacity': 0.5,
                         'label': 'data(name)'
                     })
-                    .selector('.eating')
-                    .css({
-                        'border-color': 'red'
-                    })
-                    .selector('.eater')
-                    .css({
-                        'border-width': 15
-                    })
+
                     .selector('edge')
                     .css({
                         'curve-style': 'bezier',
-                        'width': 25,
+                        'width': 5,
                         'target-arrow-shape': 'triangle',
-                        'border-width': 30,
+                        'border-width': 10,
                         'line-color': '#ffaaaa',
-                        'target-arrow-color': '#ffaaaa'
+                        //'target-arrow-color': '#ffaaaa',
+                        'target-arrow-color':'data(arrowcolor)',
+                        'minlen': 10,
+                        'line-color': 'data(color)',
+                        'line-dash-pattern': [6,3],
+//                        'line-color': 'data(color)',                        
+                        'line-style': 'data(style)',          
+
+
                     }),
                 layout: {
                     name: 'dagre',
-                    rankDir: 'BT',
-                    labelpos: 'R',
+                    rankDir: 'BT'/* ,
+                    labelpos: 'R', */
 
                 },
 /* 
@@ -310,19 +311,28 @@
                     edges: [{
                             data: {
                                 source: 'cat',
-                                target: 'bird'
+                                target: 'bird',
+                                width:  100,
+                                color: '#ffaaaa',
+                                arrowcolor: '#ffaaaa'
                             }
                         },
                         {
                             data: {
                                 source: 'bird',
-                                target: 'ladybug'
+                                target: 'ladybug',
+                                style: 'dashed',
+                                color: '#f7d779',
+                                arrowcolor: '#f7d779'
                             }
                         },
                         {
                             data: {
                                 source: 'bird',
-                                target: 'grasshopper'
+                                target: 'grasshopper',
+                                color: '#ffaaaa',
+                                arrowcolor: '#ffaaaa'
+
                             }
                         },
                         {

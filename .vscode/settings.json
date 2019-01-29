@@ -1,0 +1,6 @@
+{                "followPointers": true,
+    "maxVariableRecurse": 1,
+    "maxStringLen": 64000,
+    "maxArrayValues": 64000,
+    "maxStructFields": -1
+}

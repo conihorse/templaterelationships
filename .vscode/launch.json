@@ -18,7 +18,14 @@
             "args": [],
             //"cwd": "./templates_2017_09_09-17_10_47/",
             "cwd": "./",
-            "showLog": true
+            "showLog": true,
+            "dlvLoadConfig": {
+                "followPointers": true,
+                "maxVariableRecurse": 1,
+                "maxStringLen": 64,
+                "maxArrayValues": 64,
+                "maxStructFields": -1
+            }
         }
     ]
 }
