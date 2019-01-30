@@ -53,7 +53,8 @@
         </ol>
         The entire process can take a few minutes, and will take longer if there are a lot of assets.
         <br>
-        <br> As the process is working, a regularly updated status message will be displayed. At end of the process, a report
+        <br> As the process is working, a regularly updated status message will be displayed. At end of the process, a
+        report
         will list the results.
     </div>
     <div id="action-go" class="mdl-card__actions mdl-card--border">
@@ -79,7 +80,7 @@
 <!-- <button id="clickMe">Get JSON</button> -->
 
 <p id="demo"></p>
-
+<button id="read">read</button>
 <div></div>
 
 <!-- Stop Button -->
@@ -171,6 +172,22 @@
         }
     ];
 
+    function getTypes() {
+        var sel = document.getElementById("sel-1")
+
+        alert ( sel.options[sel.selectedIndex].text)
+/*         var table = document.getElementById("mytab1");
+        for (var i = 0, row; row = table.rows[i]; i++) {
+            //iterate through rows
+            //rows would be accessed using the "row" variable assigned in the for loop
+            alert(table.rows[i].cells[1].innerHTML)
+//            for (var j = 0, col; col = row.cells[j]; j++) {
+                //iterate through columns
+                //columns would be accessed using the "col" variable assigned in the for loop
+  //          }
+        } */
+
+    }
 
     function getJSON() {
 
@@ -207,6 +224,7 @@
         var objreport = JSON.parse(JSON.stringify(theReport))
         var body = document.body,
             tbl = document.createElement('table');
+            tbl.id = "mytab1"
         tbl.className = 'mdl-data-table mdl-js-data-table mdl-data-table mdl-shadow--2dp'
         tbl.style.width = '100px';
 
@@ -218,8 +236,8 @@
         var hr = header.insertRow();
         hr.className = 'mdl-data-table__cell--non-numeric'
 
-        hr.insertCell().appendChild(document.createTextNode("Asset filenameName"))
-        hr.insertCell().appendChild(document.createTextNode("Local Location"))
+        hr.insertCell().appendChild(document.createTextNode("Asset Name"))
+        hr.insertCell().appendChild(document.createTextNode("Asset Type"))
         hr.insertCell().appendChild(document.createTextNode("Start State \r(Local vs CKM)"))
         hr.insertCell().appendChild(document.createTextNode("Process Result"))
         hr.insertCell().appendChild(document.createTextNode(""))
@@ -233,12 +251,26 @@
 
             var tr = tbl.insertRow();
 
+
             td = tr.insertCell();
             td.appendChild(document.createTextNode(objreport[i].NodeName));
 
-
             td = tr.insertCell();
-            td.appendChild(document.createTextNode(objreport[i].NodeLocation));
+
+            sel = document.createElement("select")
+            sel.id = "sel-1"
+            opt = document.createElement("option")
+            opt.text = "order item"
+            sel.appendChild(opt)
+            opt = document.createElement("option")
+            opt.text = "order set"
+            sel.appendChild(opt)
+            opt = document.createElement("option")
+            opt.text = "topic"
+            sel.appendChild(opt)
+
+
+            td.appendChild(sel)
 
             td = tr.insertCell();
             switch (objreport[i].NodeChanged) {
@@ -313,6 +345,7 @@
 
     //document.getElementById("clickMe").onclick = getJSON;
     document.getElementById("go").onclick = getJSON;
+    document.getElementById("read").onclick = getTypes;
 </script>
 
 </html>

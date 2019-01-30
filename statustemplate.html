@@ -29,13 +29,14 @@
       top: 1%;
       z-index: 999;
       border-width: 10px;
-
+      nodeDimensionsIncludeLabels: true;
     }
 
     body {
       padding: 20px;
       background: #fafafa;
       position: relative;
+     
     }
 
     .demo-card-wide.mdl-card {
@@ -262,7 +263,7 @@
     hr.className = 'mdl-data-table__cell--non-numeric'
 
     hr.insertCell().appendChild(document.createTextNode("Name"))
-    hr.insertCell().appendChild(document.createTextNode("Location"))
+    //hr.insertCell().appendChild(document.createTextNode("Location"))
     hr.insertCell().appendChild(document.createTextNode("Local State"))
     if (dryrun) {
       title = document.createTextNode("Planned Changes");
@@ -278,7 +279,7 @@
     hr.insertCell().appendChild(document.createTextNode("Commit Order"))
 
     var arrayLength = objreport.length;
-    var td;
+    var td, name;
 
 
 
@@ -287,11 +288,13 @@
       var tr = tbl.insertRow();
 
       td = tr.insertCell();
-      td.appendChild(document.createTextNode(objreport[i].NodeName));
+      name = objreport[i].NodeName
+      
+      td.appendChild(document.createTextNode(name.replace(".oet", "")));
 
 
-      td = tr.insertCell();
-      td.appendChild(document.createTextNode(objreport[i].NodeLocation));
+      /*       td = tr.insertCell();
+            td.appendChild(document.createTextNode(objreport[i].NodeLocation)); */
 
       td = tr.insertCell();
       switch (objreport[i].NodeChanged) {
@@ -324,11 +327,15 @@
             break;
           case 1:
             if ((objreport[i].NodeChildChanged == 1) && (objreport[i].NodeChanged < 1)) {
-              td.appendChild(document.createTextNode("Version Bump in CKM"));
+              //td.appendChild(document.createTextNode("Version Bump in CKM"));
             } else {
               td.appendChild(document.createTextNode("Committed to CKM"));
             }
             break;
+          case 2:
+            td.appendChild(document.createTextNode("Version Bump in CKM"));
+            break;
+
           default:
             td.appendChild(document.createTextNode("Unknown"));
             break;
@@ -342,11 +349,14 @@
             td.appendChild(document.createTextNode("Failed"));
             break;
           case 1:
-            if ((objreport[i].NodeChildChanged == 1) && (objreport[i].NodeChanged < 1)) {
-              td.appendChild(document.createTextNode("Version Bump in CKM"));
-            } else {
-              td.appendChild(document.createTextNode("Commit to CKM"));
-            }
+            /*             if ((objreport[i].NodeChildChanged == 1) && (objreport[i].NodeChanged < 1)) {
+                          td.appendChild(document.createTextNode("Version Bump in CKM"));
+                        } else { */
+            td.appendChild(document.createTextNode("Commit to CKM"));
+            //}
+            break;
+          case 2:
+            td.appendChild(document.createTextNode("Version Bump in CKM"));
             break;
           default:
             td.appendChild(document.createTextNode("Unknown"));
@@ -377,10 +387,11 @@
         var relationsLength = relations.length;
 
         for (var k = 0; k < relationsLength; k++) {
+          name = relations[k]
           if (k == relationsLength - 1) {
-            td.appendChild(document.createTextNode(relations[k]))
+            td.appendChild(document.createTextNode(name.replace(".oet", "")))
           } else {
-            td.appendChild(document.createTextNode(relations[k] + ", "))
+            td.appendChild(document.createTextNode(name.replace(".oet", "")+ ", "))
           }
 
         }
@@ -391,10 +402,11 @@
 
       if (versions != null) {
         for (var k = 0; k < versions.length; k++) {
+          name = versions[k]
           if (k == versions.length - 1) {
-            td.appendChild(document.createTextNode(versions[k]))
+            td.appendChild(document.createTextNode(name.replace(".oet", "")))
           } else {
-            td.appendChild(document.createTextNode(versions[k] + ", "))
+            td.appendChild(document.createTextNode(name.replace(".oet", "")+ ", "))
           }
 
         }
@@ -441,7 +453,7 @@
         name: 'dagre',
         rankDir: 'BT',
         labelpos: 'R',
-
+        nodeDimensionsIncludeLabels: true
       },
 
       style: [{

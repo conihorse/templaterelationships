@@ -19,8 +19,8 @@
                 "NodeHash": "",
                 "NodeIsLeaf": 0,
                 "NodeCommitOrder": 1,
-                "NodeIsCommitted": 1,
-                "NodeChanged": -1,
+                "NodeIsCommitted": 0,
+                "NodeChanged": 2,
                 "NodeCID": "",
                 "NodeParentList": [
                     "Menu Morning.oet"
