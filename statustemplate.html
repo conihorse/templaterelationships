@@ -20,16 +20,33 @@
   <!-- Material Design icon font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <style>
+
+    .mdl-button.mdl-button--colored {
+    color: rgba(239, 121, 45, 0.95);
+/*     box-shadow: 2px 2px 3px 0px rgb(148, 146, 146);
+    background-color: #f6dfcf7d; */
+    
+}
     #cy {
       width: inherit;
       height: inherit;
       position: inherit;
-      left: 1%;
+      /* left: 1%; */
       background: #ffffff;
-      top: 1%;
+      /* top: 1%; */
       z-index: 999;
-      border-width: 10px;
+      /* border-width: 10px; */
       nodeDimensionsIncludeLabels: true;
+    }
+
+    .areaheading {
+
+      font-family: "Roboto","Helvetica","Arial",sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    color: rgb(63,81,181);
     }
 
     body {
@@ -40,12 +57,12 @@
     }
 
     .demo-card-wide.mdl-card {
-      width: 512px;
+      width: 800px;
     }
 
     .demo-card-wide>.mdl-card__title {
       color: rgb(255, 255, 255);
-      height: 176px;
+      height: 276px;
       /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
       background: url('https://getmdl.io/assets/demos/welcome_card.jpg') center / cover;
     }
@@ -54,20 +71,20 @@
       color: rgb(255, 255, 255);
       background: rgb(255, 255, 255);
       height: 100px;
-      width: 512px;
+      width: 800px;
       /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
     }
 
-    .demo-card-wide>.mdl-card__menu {
+/*     .demo-card-wide>.mdl-card__menu {
       color: #fff;
     }
-  </style>
+ */  </style>
 
 </head>
 
 <div id="prepcard" class="demo-card-wide mdl-card mdl-shadow--2dp">
   <div class="mdl-card__title">
-    <h2 class="mdl-card__title-text">Precommit</h2>
+    <h2 class="mdl-card__title-text">Preparation</h2>
   </div>
   <div class="mdl-card__supporting-text">
     This screen starts the CKM upload process for <B>%%TICKET%%</B>
@@ -75,15 +92,15 @@
     <br>
     The entire process can take a few minutes and has two stages:
     <ol>
-      <li><b>Precommit:</b> Create a Report for the ticket, showing what will be updated to CKM</li>
-      <li><b>Commit</b>: Send changes to CKM in the correct order and show a report confirming the changes.</li>
+      <li><b>Preparation:</b> Create a Report for the ticket, showing what will be updated to CKM</li>
+      <li><b>Upload</b>: Send changes to CKM in the correct order and show a report confirming the changes.</li>
     </ol>
 
     As the process is working, a regularly updated status message will be displayed. Additionally a view
     of the template relations is shown below the stage report.
     <br>
-    <br><b></b><em>This is preview of the commit workflow, which is under development and not yet tested. There are
-      still some bugs to be worked out with the commit order, as well as others.</em></div></b>
+    <br><b></b><em>This is preview of the upload workflow, which is under development and not yet tested. There are
+      still some bugs to be worked out.</em></div></b>
 
 
   <div id="action-precommit" class="mdl-card__actions mdl-card--border">
@@ -91,32 +108,34 @@
       Get Started
     </a>
   </div>
-  <div class="mdl-card__menu">
+  <!--   <div class="mdl-card__menu">
     <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
       <i class="material-icons">share</i>
     </button>
-  </div>
+  </div> -->
 </div>
 
 
 <div id="commitcard" class="demo-card-wide mdl-card mdl-shadow--2dp" style="display:none">
   <!-- initally hidden -->
   <div class="mdl-card__title">
-    <h2 class="mdl-card__title-text">Commit?</h2>
+    <h2 class="mdl-card__title-text">Upload?</h2>
   </div>
   <div class="mdl-card__supporting-text">
-    The preparation process is complete, check the intended actions below and hit commit if you are ready to go!
+    The preparation process is complete, check the intended actions below and hit the button below if you are ready to
+    go!
   </div>
   <div id="action-commit" class="mdl-card__actions mdl-card--border">
     <a id="commit" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-      Commit
+      Upload to Repository
     </a>
   </div>
-  <div class="mdl-card__menu">
+  <!--   <div class="mdl-card__menu">
     <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
       <i class="material-icons">share</i>
     </button>
   </div>
+ -->
 </div>
 
 
@@ -128,25 +147,43 @@
 </div>
 <BR>
 
-<div id="table-results"></div>
-<br>
-<div id="graphcard" class="demo-statuscard  mdl-shadow--2dp" style="height:800px; width:800px; display:none" style="text-align:center">
-  <h3 style="z-index: 999">ticket asset relationship map</h3>
-  <div id="cy" style="display:inline-block"> </div>
-</div>
+<div id="graphcard" class="areaheading" style="display:none"><b>Connections and Actions</b>
+  <div class="demo-statuscard  mdl-shadow--2dp" style="height:400px; width:95%; display:inherit" style="text-align:center">
 
+    <div id="cy" style="display:inline-block"> </div>
+  </div>
+</div>
 <BR>
+
+<div id="table-results" style="width:95%; display:none">
+  <div id="table-heading" class="areaheading">test</div>
+</div>
+<br>
+
+
+<!-- <div id="dumpcard" class="demo-statuscard  mdl-shadow--2dp" style="display:inherit">
+</div>
+<BR> -->
+
 <!-- Stop Button -->
 <!-- <a href="#" onclick="window.clearInterval(int);return false;">Stop</a> -->
 <!-- <pre id="statusdata"></pre> -->
 <script type="text/javascript">
   var intTimer
+  var sessionReport
+  var g_projectlist
 
   function start_precommit() {
+
+    getProjects()
+
     $.getJSON("/precommit,%%SESSIONID%%", function () {
       document.getElementById("action-precommit").style.display = "none"
       document.getElementById("statuscard").style.display = "block"
-      intTimer = self.setInterval(getStatus, 1000);
+      document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+        " <br>Starting preparations...";
+
+      intTimer = self.setInterval(getStatus, 5000);
     })
   }
 
@@ -155,11 +192,68 @@
     document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
       " <br>Starting commit!";
 
-    $.getJSON("/commit,%%SESSIONID%%", function () {
-      document.getElementById("action-commit").style.display = "none"
-      document.getElementById("statuscard").style.display = "block"
-      intTimer = self.setInterval(getStatus, 1000);
-    })
+    var newAssetData = ""
+    var data = false
+    // go through session data and get type from each new asset in table
+
+    data = buildAssetData()
+
+    if (data[0] == true) {
+      //alert('success')
+      newAssetData = data[1]
+      //$.getJSON("/commit,%%SESSIONID%%,id1~type1~project1^id2~type2~project2", function () {
+
+      $.getJSON("/commit,%%SESSIONID%%," + newAssetData + "", function () {
+        document.getElementById("action-commit").style.display = "none"
+        document.getElementById("statuscard").style.display = "block"
+        intTimer = self.setInterval(getStatus, 5000);
+      })
+    } else {
+      //alert ("failure")
+    }
+
+  }
+
+  function buildAssetData() {
+    //alert( JSON.stringify(sessionReport) )
+
+
+    var arrayLength = sessionReport.length;
+    var td, name;
+    var assetdata = ""
+    var node, sel
+    var typetext, projecttext = ""
+
+
+    for (var i = 0; i < arrayLength; i++) {
+
+      node = sessionReport[i]
+
+      if (node.NodeChanged == 2) {
+        sel = document.getElementById(node.NodeID)
+        selprj = document.getElementById(node.NodeID + "_prj")
+
+        typetext = sel.options[sel.selectedIndex].text
+        projecttext =selprj.options[selprj.selectedIndex].text 
+        projectcid = selprj.options[selprj.selectedIndex].dataset.cid
+
+        if (typetext.includes("--")) {
+          alert("Please select a valid asset type for " + node.NodeName)
+          return [false, ""]
+        }
+
+        if (projecttext.includes("--")) {
+          alert("Please select a valid project for " + node.NodeName)
+          return [false, ""]
+        }
+
+        assetdata += node.NodeID + "~" + typetext + "~" + projectcid + "^"
+
+      }
+    }
+    //alert ('returning true')
+    return [true, assetdata]
+
   }
 
   function getStatus() {
@@ -167,6 +261,7 @@
     $.getJSON("/status,%%SESSIONID%%", function (status) {
 
       var objStatus = JSON.parse(JSON.stringify(status))
+
 
       if (objStatus.IsError) {
         document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
@@ -176,15 +271,16 @@
         return false;
       }
 
-      if (objStatus.ProcessingStage == 2) {
-        //        alert("prep is finished...")
-        //if( objStatus.IsFinishedCommit) { alert ("hmmm....")}
+      if (objStatus.ProcessingStage == 2) { // finished preprocessing
 
         document.getElementById("prepcard").style.display = "none"
         document.getElementById("commitcard").style.display = "inline-block"
+        document.getElementById("statuscard").style.display = "none"
 
         window.clearInterval(intTimer);
         $.getJSON("/report,%%SESSIONID%%", function (report) {
+
+          sessionReport = JSON.parse(JSON.stringify(report))
           document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
             " <br>Finished Preparation!";
           tableCreate(report, true)
@@ -194,34 +290,55 @@
           })
 
           return false
-
-          //var data = $(result).serializeArray()
         });
       }
 
-      if (objStatus.ProcessingStage == 4) {
-        //alert("commit finished!")
+      if (objStatus.ProcessingStage == 4) { // finished commit
         window.clearInterval(intTimer);
         $.getJSON("/report,%%SESSIONID%%", function (report) {
-          document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
-            " <br>Commit to CKM completed!";
-          tableCreate(report, false)
 
-          $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
-            graphCreate(nodes)
-          })
+          sessionReport = JSON.parse(JSON.stringify(report))
+          if (sessionReport.IsError) {
+            document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+              " <br>Commit to CKM FAILED!!!!!! :( " + sessionReport.StatusText;
+
+
+          } else {
+            document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+              " <br>Commit to CKM completed!";
+            tableCreate(sessionReport, false)
+
+            $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
+              graphCreate(nodes)
+            })
+
+          }
+
         })
         return false;
       }
 
+      /* 
+            $.getJSON("/report,%%SESSIONID%%", function (report) {
+              tableCreate(report, false)
 
-
+            })
+       */
 
       document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" +
         objStatus.Message +
         " ";
     });
   }
+
+  function dumpSessiondata(objStatus) {
+
+    document.getElementById("dumpcard").innerHTML = "" + new Date().toLocaleString() + " <br>" +
+      objStatus.WuaNodes[0].NodeName +
+      " hi...";
+
+  }
+
 
   function graphCreate(theNodesAndEdges) {
 
@@ -242,14 +359,17 @@
     }
   }
 
-  function tableCreate(theReport, dryrun) {
+  function tableCreate(objreport, dryrun) {
     var title
-    if (theReport == "") {
+    if (objreport == "") {
       return
     }
-    //alert("tableCreate")
-    var objreport = JSON.parse(JSON.stringify(theReport))
+
+    //var objreport = JSON.parse(JSON.stringify(theReport))
     var body = document.body
+
+    //sessionReport = objreport
+
     tbl = document.createElement('table');
     tbl.className = 'mdl-data-table mdl-js-data-table mdl-data-table mdl-shadow--2dp'
     tbl.style.width = '100px';
@@ -263,10 +383,11 @@
     hr.className = 'mdl-data-table__cell--non-numeric'
 
     hr.insertCell().appendChild(document.createTextNode("Name"))
-    //hr.insertCell().appendChild(document.createTextNode("Location"))
+    hr.insertCell().appendChild(document.createTextNode("Type"))
     hr.insertCell().appendChild(document.createTextNode("Local State"))
     if (dryrun) {
       title = document.createTextNode("Planned Changes");
+      title.className = "areaheading"
       hr.insertCell().appendChild(document.createTextNode("Planned Action"))
     } else {
       title = document.createTextNode("Change Report");
@@ -289,10 +410,54 @@
 
       td = tr.insertCell();
       name = objreport[i].NodeName
-      
+
       td.appendChild(document.createTextNode(name.replace(".oet", "")));
 
+      td = tr.insertCell();
+      if (objreport[i].NodeChanged == 2) {
 
+
+        sel = document.createElement("select")
+        sel.id = objreport[i].NodeID
+        opt = document.createElement("option")
+        opt.text = "-- Choose Type --"
+        sel.appendChild(opt)
+        opt = document.createElement("option")
+        opt.text = "Order Item"
+        sel.appendChild(opt)
+        opt = document.createElement("option")
+        opt.text = "Order Set"
+        sel.appendChild(opt)
+        opt = document.createElement("option")
+        opt.text = "Knowledge Topic"
+        sel.appendChild(opt)
+
+
+        td.appendChild(sel)
+
+        selprj = document.createElement("select")
+        selprj.id = objreport[i].NodeID + "_prj"
+
+        opt = document.createElement("option")
+        opt.text = "-- Choose Project --"
+        selprj.appendChild(opt)
+
+        var projectcount = g_projectlist.length;
+        for (var j = 0; j < projectcount; j++) {
+          project = g_projectlist[j]
+
+          opt = document.createElement("option")
+          opt.text = project.name
+          opt.dataset.cid = project.cid
+          selprj.appendChild(opt)
+
+        }
+        td.appendChild(selprj)
+
+      } else {
+
+        td.appendChild(document.createTextNode("Order Item"));
+      }
       /*       td = tr.insertCell();
             td.appendChild(document.createTextNode(objreport[i].NodeLocation)); */
 
@@ -391,7 +556,7 @@
           if (k == relationsLength - 1) {
             td.appendChild(document.createTextNode(name.replace(".oet", "")))
           } else {
-            td.appendChild(document.createTextNode(name.replace(".oet", "")+ ", "))
+            td.appendChild(document.createTextNode(name.replace(".oet", "") + ", "))
           }
 
         }
@@ -406,7 +571,7 @@
           if (k == versions.length - 1) {
             td.appendChild(document.createTextNode(name.replace(".oet", "")))
           } else {
-            td.appendChild(document.createTextNode(name.replace(".oet", "")+ ", "))
+            td.appendChild(document.createTextNode(name.replace(".oet", "") + ", "))
           }
 
         }
@@ -428,11 +593,23 @@
     while (tablelocation.firstChild) {
       tablelocation.removeChild(tablelocation.firstChild);
     }
-    tablelocation.appendChild(title)
+    var tableheading = document.getElementById("table-heading")
+    /* tableheading.appendChild(title) */
+
     tablelocation.appendChild(tbl);
+    tablelocation.style.display = "block"
+
+
     //body.appendChild(tbl);
   }
 
+  function getProjects() {
+    var project
+    $.getJSON("/projects", function (projects) {
+      g_projectlist = JSON.parse(JSON.stringify(projects))
+
+    })
+  }
 
 
   function displayGraph(nodes, edges) {

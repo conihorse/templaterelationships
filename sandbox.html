@@ -37,6 +37,11 @@
         .demo-card-wide>.mdl-card__menu {
             color: #fff;
         }
+
+        .cygraph {
+            position: absolute;
+            background: blue;
+        }
     </style>
 </head>
 
@@ -74,8 +79,14 @@
         <b>2019/01/09 12;12</b> - checkin gthe sausage sfor AM/diner/templates/section/Bacon, Eggs & Hash Browns.oet
     </div>
 </div>
+<div id="table-results"></div>
+<br>
+<div id="graphcard" class="demo-statuscard  mdl-shadow--2dp" style="height:800px; width:800px; " style="text-align:center">
+    <h3 style="z-index: 999">ticket asset relationship map</h3>
+    <div class="cygraph" id="cy" style="display:inline-block"> </div>
+</div>
 
-
+<div class="cygraph" id="cy2" style="display:inherit"> </div>
 
 <!-- <button id="clickMe">Get JSON</button> -->
 
@@ -175,17 +186,17 @@
     function getTypes() {
         var sel = document.getElementById("sel-1")
 
-        alert ( sel.options[sel.selectedIndex].text)
-/*         var table = document.getElementById("mytab1");
-        for (var i = 0, row; row = table.rows[i]; i++) {
-            //iterate through rows
-            //rows would be accessed using the "row" variable assigned in the for loop
-            alert(table.rows[i].cells[1].innerHTML)
-//            for (var j = 0, col; col = row.cells[j]; j++) {
-                //iterate through columns
-                //columns would be accessed using the "col" variable assigned in the for loop
-  //          }
-        } */
+        alert(sel.options[sel.selectedIndex].text)
+        /*         var table = document.getElementById("mytab1");
+                for (var i = 0, row; row = table.rows[i]; i++) {
+                    //iterate through rows
+                    //rows would be accessed using the "row" variable assigned in the for loop
+                    alert(table.rows[i].cells[1].innerHTML)
+        //            for (var j = 0, col; col = row.cells[j]; j++) {
+                        //iterate through columns
+                        //columns would be accessed using the "col" variable assigned in the for loop
+          //          }
+                } */
 
     }
 
@@ -224,7 +235,7 @@
         var objreport = JSON.parse(JSON.stringify(theReport))
         var body = document.body,
             tbl = document.createElement('table');
-            tbl.id = "mytab1"
+        tbl.id = "mytab1"
         tbl.className = 'mdl-data-table mdl-js-data-table mdl-data-table mdl-shadow--2dp'
         tbl.style.width = '100px';
 
