@@ -1,4 +1,5 @@
 <html>
+<title>Repository Upload</title>
 
 <head>
 
@@ -29,14 +30,62 @@
 }
     #cy {
       width: inherit;
-      height: inherit;
-      position: inherit;
+      height: 99%;
+      position: left;
       /* left: 1%; */
       background: #ffffff;
-      /* top: 1%; */
+      top: 1%;
       z-index: 999;
       /* border-width: 10px; */
       nodeDimensionsIncludeLabels: true;
+    }
+
+    .textarea {
+      rows: 3;
+    }
+
+    .bluedot {
+      height: 20px;
+      width: 20px;
+      background-color: #A6D6FD;
+      border-radius: 50%; 
+      border-color: white;
+      display: inline-block;
+    }
+
+    .reddot {
+      height: 20px;
+      width: 20px;
+      background-color:#FF9189;
+      border-radius: 50%;
+      border-color: white;      
+      display: inline-block;
+    }
+
+    .orangedot {
+      height: 20px;
+      width: 20px;
+      background-color: #FDD7A6;
+      border-radius: 50%;
+      border-color: white;      
+      display: inline-block;
+
+    }
+
+    .changemessage {
+        border-color: #dbdbdb;
+       /*  background-color: #dbdbdb; */
+        /* box-shadow: inset -1px -1px black; */
+
+        border-style: hidden;
+        padding: 8px;
+        width: -webkit-fill-available;
+        color: rgba(0, 0, 0, 0.54);
+        FONT-FAMILY: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        height: 100%;
+        width: 100%;
     }
 
     .areaheading {
@@ -50,28 +99,52 @@
     }
 
     body {
-      padding: 20px;
-      background: #fafafa;
+      padding: 20px; 
+/*       margin-left: 20px;
+      margin-top: 20px;
+ */      background: #fafafa;
       position: relative;
-     
+      width: auto;
+      min-height: auto;
     }
 
     .demo-card-wide.mdl-card {
-      width: 800px;
+      width: 100%;
+    }
+
+    table {
+      width : 100%;
+      table-layout: fixed;
+      white-space: initial;
     }
 
     .demo-card-wide>.mdl-card__title {
       color: rgb(255, 255, 255);
       height: 276px;
       /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
-      background: url('https://getmdl.io/assets/demos/welcome_card.jpg') center / cover;
+      /* background: url('https://getmdl.io/assets/demos/welcome_card.jpg') center / cover; */
+      background: url('https://www.ceati.com/images/dam.jpg') center / cover;      
+      
     }
-
+    .mdl-data-table {
+      white-space: initial;
+    }
+    
+    .mdl-data-table td {
+      text-align: start;
+    }
     .demo-statuscard {
       color: rgb(255, 255, 255);
       background: rgb(255, 255, 255);
       height: 100px;
-      width: 800px;
+      width: 100%;
+      /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
+    }
+    .changedetailcard {
+      color: rgb(255, 255, 255);
+      background: rgb(255, 255, 255);
+      height: 200px;
+      width: 100%;
       /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
     }
 
@@ -87,20 +160,22 @@
     <h2 class="mdl-card__title-text">Preparation</h2>
   </div>
   <div class="mdl-card__supporting-text">
-    This screen starts the CKM upload process for <B>%%TICKET%%</B>
+    This screen automates the Repository upload process for <B>%%TICKET%%</B>
     <br>
     <br>
-    The entire process can take a few minutes and has two stages:
+    The process can take a few minutes and has two stages:
     <ol>
-      <li><b>Preparation:</b> Create a Report for the ticket, showing what will be updated to CKM</li>
-      <li><b>Upload</b>: Send changes to CKM in the correct order and show a report confirming the changes.</li>
+      <li><b>Preparation:</b> analyse the assets' changes and relationships and show a report of what will be updated
+        to the Repository,</li>
+      <li><b>Upload</b>: send changes to the Repository in the correct order and show a report confirming the changes.</li>
     </ol>
 
-    As the process is working, a regularly updated status message will be displayed. Additionally a view
-    of the template relations is shown below the stage report.
+    As the process is happening, a regularly updated status message will be displayed.
+    <br><br>
+    When preparations are complete, a report and graph will show the intended actions and asset relationships. This can
+    be then checked before the actual upload occurs.
     <br>
-    <br><b></b><em>This is preview of the upload workflow, which is under development and not yet tested. There are
-      still some bugs to be worked out.</em></div></b>
+    <br><b></b><em>This is preview of the upload workflow, which is under development and not fully tested.</em></div></b>
 
 
   <div id="action-precommit" class="mdl-card__actions mdl-card--border">
@@ -138,6 +213,24 @@
  -->
 </div>
 
+<div id="nothingcard" class="demo-card-wide mdl-card mdl-shadow--2dp" style="display:none">
+  <!-- initally hidden -->
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Finished!</h2>
+  </div>
+  <div class="mdl-card__supporting-text">
+    The preparation process is complete, but there are no planned actions as all assets are unchanged.
+  </div>
+  <!--   <div class="mdl-card__menu">
+    <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+      <i class="material-icons">share</i>
+    </button>
+  </div>
+ -->
+</div>
+
+
+
 
 <div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" style="display:none">
   <!-- initally hidden -->
@@ -145,20 +238,28 @@
 
   </div>
 </div>
-<BR>
 
-<div id="graphcard" class="areaheading" style="display:none"><b>Connections and Actions</b>
-  <div class="demo-statuscard  mdl-shadow--2dp" style="height:400px; width:95%; display:inherit" style="text-align:center">
+
+<!-- <div id="graphcard" class="areaheading" style="display:none"><b>Connections and Actions</b> -->
+<div id="graphcard" class="areaheading" style="display:none"><b></b>
+  <div class="demo-statuscard  mdl-shadow--2dp" style="height:400px; width:100%; display:inherit" style="text-align:center">
 
     <div id="cy" style="display:inline-block"> </div>
   </div>
 </div>
-<BR>
 
-<div id="table-results" style="width:95%; display:none">
+
+<div id="table-results" style="width:100%; display:none">
   <div id="table-heading" class="areaheading">test</div>
 </div>
 <br>
+<!-- <div class="mdl-card__supporting-text"> -->
+
+<div id="changedescription" class="changedetailcard  mdl-shadow--2dp" style="display:none">
+  <!--   <img src="https://www.w3schools.com/images/colorpicker.gif"> -->
+  <textarea name="changedetail" rows="3" class="changemessage">%%CHANGETEXT%%</textarea>
+
+</div>
 
 
 <!-- <div id="dumpcard" class="demo-statuscard  mdl-shadow--2dp" style="display:inherit">
@@ -190,7 +291,7 @@
 
   function start_commit() {
     document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
-      " <br>Starting commit!";
+      " <br>Starting upload to Repository!";
 
     var newAssetData = ""
     var data = false
@@ -201,9 +302,10 @@
     if (data[0] == true) {
       //alert('success')
       newAssetData = data[1]
+      commitmessage = ""
       //$.getJSON("/commit,%%SESSIONID%%,id1~type1~project1^id2~type2~project2", function () {
 
-      $.getJSON("/commit,%%SESSIONID%%," + newAssetData + "", function () {
+      $.getJSON("/commit,%%SESSIONID%%," + newAssetData + "," + commitmessage, function () {
         document.getElementById("action-commit").style.display = "none"
         document.getElementById("statuscard").style.display = "block"
         intTimer = self.setInterval(getStatus, 5000);
@@ -234,7 +336,7 @@
         selprj = document.getElementById(node.NodeID + "_prj")
 
         typetext = sel.options[sel.selectedIndex].text
-        projecttext =selprj.options[selprj.selectedIndex].text 
+        projecttext = selprj.options[selprj.selectedIndex].text
         projectcid = selprj.options[selprj.selectedIndex].dataset.cid
 
         if (typetext.includes("--")) {
@@ -274,7 +376,7 @@
       if (objStatus.ProcessingStage == 2) { // finished preprocessing
 
         document.getElementById("prepcard").style.display = "none"
-        document.getElementById("commitcard").style.display = "inline-block"
+
         document.getElementById("statuscard").style.display = "none"
 
         window.clearInterval(intTimer);
@@ -283,11 +385,17 @@
           sessionReport = JSON.parse(JSON.stringify(report))
           document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
             " <br>Finished Preparation!";
-          tableCreate(report, true)
+          var commitready = tableCreate(report, true)
 
           $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
             graphCreate(nodes)
           })
+
+          if (commitready == true) {
+            document.getElementById("commitcard").style.display = "inline-block"
+          } else {
+            document.getElementById("nothingcard").style.display = "inline-block"
+          }
 
           return false
         });
@@ -300,12 +408,12 @@
           sessionReport = JSON.parse(JSON.stringify(report))
           if (sessionReport.IsError) {
             document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
-              " <br>Commit to CKM FAILED!!!!!! :( " + sessionReport.StatusText;
+              " <br>Upload to Repository FAILED!!!!!! :( " + sessionReport.StatusText;
 
 
           } else {
             document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
-              " <br>Commit to CKM completed!";
+              " <br>Upload to Repository completed!";
             tableCreate(sessionReport, false)
 
             $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
@@ -361,10 +469,26 @@
 
   function tableCreate(objreport, dryrun) {
     var title
-    if (objreport == "") {
-      return
-    }
+    var CommitReady = false
+    var NewAssetsIncluded = false
 
+
+    if (objreport == "") {
+      return false
+    }
+    var arrayLength = objreport.length;
+
+    for (var i = 0; i < arrayLength; i++) {
+      if (objreport[i].NodeCommitIntended > 0) {
+        CommitReady = true
+      }
+
+      if (objreport[i].NodeChanged > 1) { // we have a new asset, so need the type column
+        NewAssetsIncluded = true
+      }
+
+
+    }
     //var objreport = JSON.parse(JSON.stringify(theReport))
     var body = document.body
 
@@ -372,7 +496,8 @@
 
     tbl = document.createElement('table');
     tbl.className = 'mdl-data-table mdl-js-data-table mdl-data-table mdl-shadow--2dp'
-    tbl.style.width = '100px';
+    //tbl.style.width = '100px';
+    tbl.style.tablelayout = 'fixed'
 
     var header = tbl.createTHead()
     header.className = 'mdl-data-table__cell--non-numeric'
@@ -380,26 +505,33 @@
     //header.insertCell().appendChild(document.createTextNode("Name"))
 
     var hr = header.insertRow();
-    hr.className = 'mdl-data-table__cell--non-numeric'
+    hr.style.fontWeight = "bold"
+
+    //hr.className = 'mdl-data-table__cell--non-numeric'
 
     hr.insertCell().appendChild(document.createTextNode("Name"))
-    hr.insertCell().appendChild(document.createTextNode("Type"))
-    hr.insertCell().appendChild(document.createTextNode("Local State"))
+    if (NewAssetsIncluded && dryrun) {
+      hr.insertCell().appendChild(document.createTextNode("Type / Project"))
+    }
+
     if (dryrun) {
+      hr.insertCell().appendChild(document.createTextNode("Local State"))
       title = document.createTextNode("Planned Changes");
       title.className = "areaheading"
+      hr.insertCell().appendChild(document.createTextNode(""))
       hr.insertCell().appendChild(document.createTextNode("Planned Action"))
     } else {
       title = document.createTextNode("Change Report");
+      hr.insertCell().appendChild(document.createTextNode(""))
       hr.insertCell().appendChild(document.createTextNode("Action Performed"))
     }
 
-    hr.insertCell().appendChild(document.createTextNode("CKM Location"))
-    hr.insertCell().appendChild(document.createTextNode("Embedded Within"))
-    hr.insertCell().appendChild(document.createTextNode("Released Within"))
-    hr.insertCell().appendChild(document.createTextNode("Commit Order"))
+    hr.insertCell().appendChild(document.createTextNode("Repository Link"))
+    hr.insertCell().appendChild(document.createTextNode("Embedded In"))
+    hr.insertCell().appendChild(document.createTextNode("Released In"))
+    hr.insertCell().appendChild(document.createTextNode("Upload Order"))
 
-    var arrayLength = objreport.length;
+
     var td, name;
 
 
@@ -410,78 +542,100 @@
 
       td = tr.insertCell();
       name = objreport[i].NodeName
-
       td.appendChild(document.createTextNode(name.replace(".oet", "")));
 
-      td = tr.insertCell();
-      if (objreport[i].NodeChanged == 2) {
+
+      if (NewAssetsIncluded && dryrun) {
+        td = tr.insertCell();
+        if (objreport[i].NodeChanged == 2) {
 
 
-        sel = document.createElement("select")
-        sel.id = objreport[i].NodeID
-        opt = document.createElement("option")
-        opt.text = "-- Choose Type --"
-        sel.appendChild(opt)
-        opt = document.createElement("option")
-        opt.text = "Order Item"
-        sel.appendChild(opt)
-        opt = document.createElement("option")
-        opt.text = "Order Set"
-        sel.appendChild(opt)
-        opt = document.createElement("option")
-        opt.text = "Knowledge Topic"
-        sel.appendChild(opt)
+          sel = document.createElement("select")
+          sel.id = objreport[i].NodeID
+          opt = document.createElement("option")
+          opt.text = "-- Type --"
+          sel.appendChild(opt)
+          opt = document.createElement("option")
+          opt.text = "Order Item"
+          sel.appendChild(opt)
+          opt = document.createElement("option")
+          opt.text = "Order Set"
+          sel.appendChild(opt)
+          opt = document.createElement("option")
+          opt.text = "Knowledge Topic"
+          sel.appendChild(opt)
 
+          sel.style.width = "100px"
+          td.appendChild(sel)
 
-        td.appendChild(sel)
-
-        selprj = document.createElement("select")
-        selprj.id = objreport[i].NodeID + "_prj"
-
-        opt = document.createElement("option")
-        opt.text = "-- Choose Project --"
-        selprj.appendChild(opt)
-
-        var projectcount = g_projectlist.length;
-        for (var j = 0; j < projectcount; j++) {
-          project = g_projectlist[j]
+          selprj = document.createElement("select")
+          selprj.id = objreport[i].NodeID + "_prj"
 
           opt = document.createElement("option")
-          opt.text = project.name
-          opt.dataset.cid = project.cid
+          opt.text = "-- Project --"
           selprj.appendChild(opt)
 
+          var projectcount = g_projectlist.length;
+          for (var j = 0; j < projectcount; j++) {
+            project = g_projectlist[j]
+
+            opt = document.createElement("option")
+            opt.text = project.name
+            opt.dataset.cid = project.cid
+            selprj.appendChild(opt)
+
+          }
+          selprj.style.width = "100px"
+          td.appendChild(selprj)
+
+        } else {
+
+          td.appendChild(document.createTextNode("-"));
         }
-        td.appendChild(selprj)
 
-      } else {
-
-        td.appendChild(document.createTextNode("Order Item"));
       }
       /*       td = tr.insertCell();
             td.appendChild(document.createTextNode(objreport[i].NodeLocation)); */
 
-      td = tr.insertCell();
-      switch (objreport[i].NodeChanged) {
-        case -1:
-          td.appendChild(document.createTextNode("Not Local"));
-          break;
-        case 0:
-          td.appendChild(document.createTextNode("Unedited"));
-          break;
-        case 1:
-          td.appendChild(document.createTextNode("Edited"));
-          break;
-        case 2:
-          td.appendChild(document.createTextNode("Created"));
-          break;
-        default:
-          td.appendChild(document.createTextNode("Unknown"));
-          break;
+      if (dryrun) {
+        td = tr.insertCell();
+        switch (objreport[i].NodeChanged) {
+          case -1:
+            td.appendChild(document.createTextNode("Not Local"));
+            break;
+          case 0:
+            td.appendChild(document.createTextNode("Unedited"));
+            break;
+          case 1:
+            td.appendChild(document.createTextNode("Edited"));
+            break;
+          case 2:
+            td.appendChild(document.createTextNode("Created"));
+            break;
+          default:
+            td.appendChild(document.createTextNode("Unknown"));
+            break;
+        }
+
       }
 
+      td = tr.insertCell();
+      dot = document.createElement("span")
+      switch (objreport[i].NodeCommitIntended) {
+        case -1:
+          dot.className = "bluedot"
+          break;
+        case 1:
+          dot.className = "reddot" //}
+          break;
+        case 2:
+          dot.className = "orangedot"
+          break;
+      }
+      td.appendChild(dot)
 
       td = tr.insertCell();
+
       if (!dryrun) {
         switch (objreport[i].NodeIsCommitted) {
           case -1:
@@ -494,11 +648,11 @@
             if ((objreport[i].NodeChildChanged == 1) && (objreport[i].NodeChanged < 1)) {
               //td.appendChild(document.createTextNode("Version Bump in CKM"));
             } else {
-              td.appendChild(document.createTextNode("Committed to CKM"));
+              td.appendChild(document.createTextNode("Uploaded to Repository"));
             }
             break;
           case 2:
-            td.appendChild(document.createTextNode("Version Bump in CKM"));
+            td.appendChild(document.createTextNode("Refreshed in Repository"));
             break;
 
           default:
@@ -506,9 +660,11 @@
             break;
         }
       } else {
+
         switch (objreport[i].NodeCommitIntended) {
           case -1:
             td.appendChild(document.createTextNode("None"));
+
             break;
           case 0:
             td.appendChild(document.createTextNode("Failed"));
@@ -517,17 +673,21 @@
             /*             if ((objreport[i].NodeChildChanged == 1) && (objreport[i].NodeChanged < 1)) {
                           td.appendChild(document.createTextNode("Version Bump in CKM"));
                         } else { */
-            td.appendChild(document.createTextNode("Commit to CKM"));
+            td.appendChild(document.createTextNode("Upload to Repository"));
             //}
             break;
           case 2:
-            td.appendChild(document.createTextNode("Version Bump in CKM"));
+            td.appendChild(document.createTextNode("Refresh in Repository"));
             break;
           default:
             td.appendChild(document.createTextNode("Unknown"));
             break;
         }
+
       }
+
+
+
       td = tr.insertCell();
 
       if ((objreport[i].NodeChanged == 2) && (dryrun)) { // asset isn't in ckm yet, so no link
@@ -538,7 +698,7 @@
         var link = document.createElement("a");
         link.setAttribute('target', '_blank');
         link.setAttribute("href", "https://ahsckm.ca/ckm/#showTemplate_" + objreport[i].NodeCID); // 1175.132.9052)
-        var linkText = document.createTextNode("Open in CKM");
+        var linkText = document.createTextNode("View");
         link.appendChild(linkText);
 
         // Add the link to the previously created TableCell.
@@ -599,7 +759,7 @@
     tablelocation.appendChild(tbl);
     tablelocation.style.display = "block"
 
-
+    return CommitReady
     //body.appendChild(tbl);
   }
 
@@ -615,21 +775,22 @@
   function displayGraph(nodes, edges) {
 
     //alert(JSON.parse(nodes))
-    var elements = {
+/*     var elements = {
       nodes,
       edges
-    }
+    } */
 
     var cy = window.cy = cytoscape({
       container: document.getElementById('cy'),
 
       boxSelectionEnabled: false,
       autounselectify: true,
+      wheelSensitivity: 0.1,
 
       layout: {
         name: 'dagre',
         rankDir: 'BT',
-        labelpos: 'R',
+        //labelpos: 'R',
         nodeDimensionsIncludeLabels: true
       },
 
@@ -646,10 +807,14 @@
             'background-color': '#11479e',
             //'background-color': '#ff0000',
             /*             'text-valign': 'center',
-                        'text-halign': 'right',
+               
              */
             'border-color': 'data(bg)',
-            'label': 'data(id)'
+            'label': 'data(id)',
+            /*             'text-halign': 'right',
+                         'text-valign': 'center',  */
+            'text-outline-color': '#fff',
+            'text-outline-width': 1
           }
         },
 
@@ -663,14 +828,15 @@
             'line-color': 'data(color)',
             'target-arrow-color': 'data(arrowcolor)',
             'line-dash-pattern': [6, 3],
-            'line-style': 'data(style)'
+            'line-style': 'data(style)',
+            /* 'labelpos': 'r' */
           }
         }
       ],
 
       elements: {
-        nodes,
-        edges
+        nodes: nodes,
+        edges: edges
 
       }
 
