@@ -5,5 +5,7 @@
 	"Port":					"8081",
 	"TestDataPath":			"./Test Data/Where-used/",
 	"HTMLGraphTemplate":	"graphtemplate.html",
-	"HTMLStatusTemplate":	"statustemplate.html"
+	"HTMLStatusTemplate":	"statustemplate.html",
+	"User":					"jon.beeby",
+	"Password":				"Pa55word"
 }

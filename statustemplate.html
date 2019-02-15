@@ -21,13 +21,27 @@
   <!-- Material Design icon font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <style>
-
+    @media print {
+        a[href]:after {
+          content: none !important;
+        }
+      }
     .mdl-button.mdl-button--colored {
     color: rgba(239, 121, 45, 0.95);
 /*     box-shadow: 2px 2px 3px 0px rgb(148, 146, 146);
     background-color: #f6dfcf7d; */
     
 }
+
+/*       .mdl-card__supporting-text {
+          color: rgba(0,0,0.95);
+          font-size: 1rem;
+          line-height: 18px;
+          overflow: hidden;
+          padding: 16px;
+          width: 90%;
+      } */
+
     #cy {
       width: inherit;
       height: 99%;
@@ -35,7 +49,7 @@
       /* left: 1%; */
       background: #ffffff;
       top: 1%;
-      z-index: 999;
+      z-index: 990;
       /* border-width: 10px; */
       nodeDimensionsIncludeLabels: true;
     }
@@ -61,6 +75,38 @@
       border-color: white;      
       display: inline-block;
     }
+
+    .greendot {
+      height: 20px;
+      width: 20px;
+      background-color: rgb(64, 165, 38);
+      border-radius: 50%;
+      border-color: white;      
+      display: inline-block;
+
+    }
+
+    .lightgreendot {
+      height: 20px;
+      width: 20px;
+      background-color: #C7E2C0;
+      border-radius: 50%;
+      border-color: white;      
+      display: inline-block;
+
+    }
+
+    .greydot {
+
+      height: 20px;
+      width: 20px;
+      background-color: #dadee8;
+      border-radius: 50%;
+      border-color: white;      
+      display: inline-block;
+
+    }
+
 
     .orangedot {
       height: 20px;
@@ -123,8 +169,9 @@
       height: 276px;
       /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
       /* background: url('https://getmdl.io/assets/demos/welcome_card.jpg') center / cover; */
-      background: url('https://www.ceati.com/images/dam.jpg') center / cover;      
-      
+      /* background: url('https://www.ceati.com/images/dam.jpg') center / cover;       */
+      /* background: url('https://i1.wp.com/www.learning-mind.com/wp-content/uploads/2018/03/abstract-thinking.jpg') center / cover;        */
+      background: url('http://www.wallpapereast.com/static/images/abstract_wallpaper_images_background_3077_high_quality.jpg') center / cover ;       
     }
     .mdl-data-table {
       white-space: initial;
@@ -157,7 +204,7 @@
 
 <div id="prepcard" class="demo-card-wide mdl-card mdl-shadow--2dp">
   <div class="mdl-card__title">
-    <h2 class="mdl-card__title-text">Preparation</h2>
+    <h2 class="mdl-card__title-text">Preparing for Upload</h2>
   </div>
   <div class="mdl-card__supporting-text">
     This screen automates the Repository upload process for <B>%%TICKET%%</B>
@@ -194,7 +241,7 @@
 <div id="commitcard" class="demo-card-wide mdl-card mdl-shadow--2dp" style="display:none">
   <!-- initally hidden -->
   <div class="mdl-card__title">
-    <h2 class="mdl-card__title-text">Upload?</h2>
+    <h2 class="mdl-card__title-text">OK to Upload?</h2>
   </div>
   <div class="mdl-card__supporting-text">
     The preparation process is complete, check the intended actions below and hit the button below if you are ready to
@@ -213,13 +260,48 @@
  -->
 </div>
 
+<div id="failcard" class="demo-card-wide mdl-card mdl-shadow--2dp" style="display:none">
+  <!-- initally hidden -->
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Upload FAILED!</h2>
+  </div>
+  <div class="mdl-card__supporting-text">
+    The upload of the assets to the Repository ran into problems....)
+  </div>
+  <!--   <div class="mdl-card__menu">
+    <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+      <i class="material-icons">share</i>
+    </button>
+  </div>
+ -->
+</div>
+
+
+<div id="okcard" class="demo-card-wide mdl-card mdl-shadow--2dp" style="display:none">
+  <!-- initally hidden -->
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Upload Completed!</h2>
+  </div>
+  <div class="mdl-card__supporting-text">
+    The upload of the assets to the Repository has been completed without problems (this screen can be closed)
+  </div>
+  <!--   <div class="mdl-card__menu">
+    <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+      <i class="material-icons">share</i>
+    </button>
+  </div>
+ -->
+</div>
+
+
+
 <div id="nothingcard" class="demo-card-wide mdl-card mdl-shadow--2dp" style="display:none">
   <!-- initally hidden -->
   <div class="mdl-card__title">
     <h2 class="mdl-card__title-text">Finished!</h2>
   </div>
   <div class="mdl-card__supporting-text">
-    The preparation process is complete, but there are no planned actions as all assets are unchanged.
+    The preparation process is complete. There are no planned actions as all assets are unchanged.
   </div>
   <!--   <div class="mdl-card__menu">
     <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
@@ -239,14 +321,19 @@
   </div>
 </div>
 
-
+<!-- <button id="fit" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Fit</button> -->
 <!-- <div id="graphcard" class="areaheading" style="display:none"><b>Connections and Actions</b> -->
-<div id="graphcard" class="areaheading" style="display:none"><b></b>
-  <div class="demo-statuscard  mdl-shadow--2dp" style="height:400px; width:100%; display:inherit" style="text-align:center">
 
-    <div id="cy" style="display:inline-block"> </div>
+<div id="graphcard" class="demo-statuscard  mdl-shadow--2dp" style="height:400px; width:100%; display:none" style="text-align:center">
+  <div id="cy" style="display:inline-flex"> </div>
+  <div id="expandgraph" style="z-index:999">
+    <a id="expandbutton" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+      Enlarge graph
+    </a>
   </div>
+
 </div>
+
 
 
 <div id="table-results" style="width:100%; display:none">
@@ -264,14 +351,14 @@
 
 <!-- <div id="dumpcard" class="demo-statuscard  mdl-shadow--2dp" style="display:inherit">
 </div>
-<BR> -->
+ --><BR>
 
 <!-- Stop Button -->
 <!-- <a href="#" onclick="window.clearInterval(int);return false;">Stop</a> -->
 <!-- <pre id="statusdata"></pre> -->
 <script type="text/javascript">
   var intTimer
-  var sessionReport
+  var g_sessionReport
   var g_projectlist
 
   function start_precommit() {
@@ -317,19 +404,19 @@
   }
 
   function buildAssetData() {
-    //alert( JSON.stringify(sessionReport) )
+    //alert( JSON.stringify(g_sessionReport) )
 
 
-    var arrayLength = sessionReport.length;
+    var arrayLength = g_sessionReport.length;
     var td, name;
     var assetdata = ""
     var node, sel
     var typetext, projecttext = ""
-
+    var cy;
 
     for (var i = 0; i < arrayLength; i++) {
 
-      node = sessionReport[i]
+      node = g_sessionReport[i]
 
       if (node.NodeChanged == 2) {
         sel = document.getElementById(node.NodeID)
@@ -382,15 +469,17 @@
         window.clearInterval(intTimer);
         $.getJSON("/report,%%SESSIONID%%", function (report) {
 
-          sessionReport = JSON.parse(JSON.stringify(report))
+          g_sessionReport = JSON.parse(JSON.stringify(report))
           document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
             " <br>Finished Preparation!";
           var commitready = tableCreate(report, true)
 
-          $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
-            graphCreate(nodes)
-          })
-
+          graphCreate2()
+          /*           alert("old method")
+                    $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
+                      graphCreate(nodes)
+                    })
+           */
           if (commitready == true) {
             document.getElementById("commitcard").style.display = "inline-block"
           } else {
@@ -405,22 +494,30 @@
         window.clearInterval(intTimer);
         $.getJSON("/report,%%SESSIONID%%", function (report) {
 
-          sessionReport = JSON.parse(JSON.stringify(report))
-          if (sessionReport.IsError) {
+          g_sessionReport = JSON.parse(JSON.stringify(report))
+          if (g_sessionReport.IsError) {
             document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
-              " <br>Upload to Repository FAILED!!!!!! :( " + sessionReport.StatusText;
+              " <br>Upload to Repository FAILED!!!!!! :( " + g_sessionReport.StatusText;
 
+            document.getElementById("commitcard").style.display = "none"
+            document.getElementById("failcard").style.display = "inline-block"
 
           } else {
             document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
               " <br>Upload to Repository completed!";
-            tableCreate(sessionReport, false)
 
-            $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
-              graphCreate(nodes)
-            })
-
+            document.getElementById("statuscard").style.display = "none"
+            document.getElementById("commitcard").style.display = "none"
+            document.getElementById("okcard").style.display = "inline-block"
           }
+          tableCreate(g_sessionReport, false)
+
+          /*             $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
+                        graphCreate(nodes)
+                      })
+           */
+          graphCreate2()
+
 
         })
         return false;
@@ -447,6 +544,130 @@
 
   }
 
+
+  function graphCreate2() {
+
+    var arrayLength = g_sessionReport.length
+    var nodecolor = ""
+    var nodes = "",
+      edges = "";
+
+    for (var i = 0; i < arrayLength; i++) {
+
+
+      switch (g_sessionReport[i].NodeCommitIntended) {
+        case 0, -1:
+
+          nodecolor = "#4eadfc\""
+          break
+        case 1:
+          nodecolor = "#f10\""
+          if (g_sessionReport[i].NodeIsCommitted > 0) {
+            nodecolor = "rgb(64, 165, 38)\""
+          }
+          break
+        case 2:
+          nodecolor = "#fcb04e\""
+          if (g_sessionReport[i].NodeIsCommitted > 0) {
+            nodecolor = "#8FC681\""
+          }
+
+
+
+          break
+          /*         case 1:
+                    nodecolor = "#0f0\""
+                    break
+           */
+          /*         case 0:
+                    nodecolor = "#f00\""
+           */
+      }
+
+/*       if( g_sessionReport[i].NodeChanged == -1 ) // node not local 
+      {
+        nodecolor = "#dadee8\""
+      } */
+
+      nodes += '{"data":{"id":"' + g_sessionReport[i].NodeName.replace(".oet", "") + '","bg":"' + nodecolor + "}},"
+    }
+
+    for (var i = 0; i < arrayLength; i++) {
+      node = g_sessionReport[i]
+
+
+
+      if (node.NodeParentList != null) {
+        parrayLength = node.NodeParentList.length
+        for (var p = 0; p < parrayLength; p++) {
+          edges +=
+            '{ "data": {"style":"solid", "color":"rgba(239, 121, 45, 0.95)", "arrowcolor": "rgba(239, 121, 45, 0.95)", "source": "' +
+            node.NodeName.replace(".oet", "") + '", "target": "' + node.NodeParentList[p].replace(".oet", "") +
+            '" } },'
+
+        }
+
+      }
+      if (node.NodeReleasedList != null) {
+
+        varrayLength = node.NodeReleasedList.length
+        for (var v = 0; v < varrayLength; v++) {
+          for (var p = 0; p < parrayLength; p++) {
+            edges += '{ "data": {"style":"dashed", "color":"#b2b0a9", "arrowcolor": "#b2b0a9", "source": "' + node.NodeName
+              .replace(".oet", "") + '", "target": "' + node.NodeReleasedList[v].replace(".oet", "") + '" } },'
+
+          }
+
+
+
+
+        }
+      }
+
+
+
+    }
+
+    /*     for _, r := range data.WuaNodes {
+    		r.NodeName = strings.Replace(r.NodeName, ".oet", "", -1)
+    		for _, p := range r.NodeParentList {
+    			p = strings.Replace(p, ".oet", "", -1)
+    			edges += "{ \"data\": { \"style\": \"solid\",  \"color\": \"rgba(239, 121, 45, 0.95)\",  \"arrowcolor\": \"rgba(239, 121, 45, 0.95)\", \"source\": \"" + r.NodeName + "\", \"target\": \"" + p + "\" } },"
+    		}
+    		for _, v := range r.NodeReleasedList {
+    			v = strings.Replace(v, ".oet", "", -1)
+    			edges += "{ \"data\": { \"style\": \"dashed\", \"color\": \"#b2b0a9\",  \"arrowcolor\": \"#b2b0a9\", \"source\": \"" + r.NodeName + "\", \"target\": \"" + v + "\" } },"
+    		}
+
+    	}
+     */
+
+
+    var edgeobj, nodeobj
+
+    if (nodes.length > 0) {
+      nodes = "[" + nodes.slice(0, -1) + "]"
+      nodeobj = JSON.parse(nodes)
+    }
+
+    if (edges.length > 0) {
+      edges = "[" + edges.slice(0, -1) + "]"
+      edgeobj = JSON.parse(edges)
+    }
+    // edges = "[" + edges.slice(0, -1) + "]"    
+
+
+
+    /*     alert( nodeobj)
+
+
+        nodeobj = JSON.parse(JSON.stringify(nodes))
+        alert( nodeobj)
+     */
+
+    document.getElementById("graphcard").style.display = "block"
+    displayGraph(nodeobj, edgeobj);
+  }
 
   function graphCreate(theNodesAndEdges) {
 
@@ -486,13 +707,9 @@
       if (objreport[i].NodeChanged > 1) { // we have a new asset, so need the type column
         NewAssetsIncluded = true
       }
-
-
     }
-    //var objreport = JSON.parse(JSON.stringify(theReport))
-    var body = document.body
 
-    //sessionReport = objreport
+    var body = document.body
 
     tbl = document.createElement('table');
     tbl.className = 'mdl-data-table mdl-js-data-table mdl-data-table mdl-shadow--2dp'
@@ -627,12 +844,25 @@
           break;
         case 1:
           dot.className = "reddot" //}
+          if (objreport[i].NodeIsCommitted == 1) {
+            dot.className = "greendot"
+          }
+
           break;
         case 2:
           dot.className = "orangedot"
+          if (objreport[i].NodeIsCommitted == 1) {
+            dot.className = "lightgreendot"
+          }
+
           break;
       }
-      td.appendChild(dot)
+
+/*       if ( objreport[i].NodeChanged == -1 ) {
+        dot.className = "greydot"
+      }
+
+ */      td.appendChild(dot)
 
       td = tr.insertCell();
 
@@ -775,16 +1005,17 @@
   function displayGraph(nodes, edges) {
 
     //alert(JSON.parse(nodes))
-/*     var elements = {
-      nodes,
-      edges
-    } */
+    /*     var elements = {
+          nodes,
+          edges
+        } */
 
-    var cy = window.cy = cytoscape({
+    cy = window.cy = cytoscape({
       container: document.getElementById('cy'),
 
       boxSelectionEnabled: false,
       autounselectify: true,
+      userZoomingEnabled: false,
       wheelSensitivity: 0.1,
 
       layout: {
@@ -803,8 +1034,8 @@
             'border-color': 'data(bg)',
             'border-width': 20,
             'border-opacity': 0.5,
-
-            'background-color': '#11479e',
+            // 'background-color': '#fff',
+            //'background-color': '#11479e',
             //'background-color': '#ff0000',
             /*             'text-valign': 'center',
                
@@ -845,8 +1076,14 @@
   };
 
   document.getElementById("precommit").onclick = start_precommit;
-  document.getElementById("commit").onclick =
-    start_commit;
+  document.getElementById("commit").onclick = start_commit;
+
+  document.getElementById("expandbutton").onclick = function () {
+    console.log('cy=', cy);
+    document.getElementById("graphcard").style.width = '100%'
+    document.getElementById("graphcard").style.height = '100%'
+    cy.fit();;
+  }
 </script>
 
 

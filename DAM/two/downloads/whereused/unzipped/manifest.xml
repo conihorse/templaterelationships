@@ -1,0 +1,51 @@
+<templateFileSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.openehr.org/v1">
+   <cid>1175.132.12805</cid>
+   <versionAsset>7</versionAsset>
+   <templateName>n</templateName>
+   <templateId>029efec3-22cb-427e-a708-109dcf7fe7b6</templateId>
+   <rootArchetypeId>openEHR-EHR-SECTION.adhoc.v1</rootArchetypeId>
+   <creationTime>08-Jan-2019</creationTime>
+   <modificationTime>10-Jan-2019</modificationTime>
+   <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.12805_7</directLink>
+   <logMessage>testing commit process</logMessage>
+   <ckmResource>
+      <cid>1175.132.12799</cid>
+      <versionAsset>17</versionAsset>
+      <resourceMainId>2af9866b-1250-4d2d-99af-51b36f749c67</resourceMainId>
+      <resourceMainDisplayName>a</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2019-01-08T09:55:13-0700</creationTime>
+      <modificationTime>2019-01-10T08:30:03-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.12799_17</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.132.12802</cid>
+      <versionAsset>13</versionAsset>
+      <resourceMainId>cba911ea-d905-451f-97ea-b64a8eb525e8</resourceMainId>
+      <resourceMainDisplayName>q</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2019-01-08T10:50:09-0700</creationTime>
+      <modificationTime>2019-01-10T08:30:09-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.12802_13</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.132.12801</cid>
+      <versionAsset>10</versionAsset>
+      <resourceMainId>2da434a8-47d7-4215-91d5-829e717dcfbb</resourceMainId>
+      <resourceMainDisplayName>r</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2019-01-08T10:38:41-0700</creationTime>
+      <modificationTime>2019-01-10T08:30:49-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.12801_10</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.108.90</cid>
+      <versionAsset>3</versionAsset>
+      <resourceMainId>openEHR-EHR-SECTION.adhoc.v1</resourceMainId>
+      <resourceMainDisplayName>Ad hoc heading</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2017-04-12T20:15:16-0600</creationTime>
+      <modificationTime>2018-05-24T09:42:13-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.90_3</directLink>
+   </ckmResource>
+</templateFileSet>
