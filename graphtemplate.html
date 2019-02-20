@@ -37,7 +37,7 @@
     <script>
         window.addEventListener('DOMContentLoaded', function () {
 
-             var cy = window.cy = cytoscape({
+            var cy = window.cy = cytoscape({
                 container: document.getElementById('cy'),
 
                 boxSelectionEnabled: false,
@@ -53,7 +53,8 @@
                         'border-color': 'data(bg)',
                         'border-width': 20,
                         'border-opacity': 0.5,
-                        'label': 'data(name)'
+                        'label': 'data(name)',
+                        'background-color': 'data(bgcolor)'
                     })
 
                     .selector('edge')
@@ -64,19 +65,20 @@
                         'border-width': 10,
                         'line-color': '#ffaaaa',
                         //'target-arrow-color': '#ffaaaa',
-                        'target-arrow-color':'data(arrowcolor)',
+                        'target-arrow-color': 'data(arrowcolor)',
                         'minlen': 10,
                         'line-color': 'data(color)',
-                        'line-dash-pattern': [6,3],
-//                        'line-color': 'data(color)',                        
-                        'line-style': 'data(style)',          
+                        'line-dash-pattern': [6, 3],
+                        //                        'line-color': 'data(color)',                        
+                        'line-style': 'data(style)',
 
 
                     }),
                 layout: {
                     name: 'dagre',
-                    rankDir: 'BT'/* ,
-                    labelpos: 'R', */
+                    rankDir: 'BT'
+                    /* ,
+                                        labelpos: 'R', */
 
                 },
 
@@ -91,12 +93,15 @@
                         {
                             data: {
                                 id: 'bird',
-                                bg: '#00f'
+                                bg: '#00f',
+                                bgcolor: 'white' // not local
                             }
                         },
                         {
                             data: {
-                                id: 'ladybug'
+                                id: 'ladybug',
+                                name: 'ladybug',
+                                bgcolor: 'white'
                             }
                         },
                         {
@@ -106,7 +111,10 @@
                         },
                         {
                             data: {
-                                id: 'rose'
+                                id: 'rose',
+                                bgcolor: 'white',
+                                bg: 'purple',
+                                name: 'rose'
                             }
                         },
                         {
@@ -129,7 +137,7 @@
                             data: {
                                 source: 'cat',
                                 target: 'bird',
-                                width:  100,
+                                width: 100,
                                 color: '#ffaaaa',
                                 arrowcolor: '#ffaaaa'
                             }
@@ -178,14 +186,14 @@
                         }
                     ]
                 }
-            }); 
+            });
 
         });
     </script>
 </head>
 
 <body>
-    
+
 
     <div id="cy"></div>
 

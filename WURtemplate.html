@@ -1478,16 +1478,13 @@
 
             cy = window.cy = cytoscape({
                 container: document.getElementById('cy'),
-
-                //boxSelectionEnabled: false,
                 autounselectify: true,
-                //                userZoomingEnabled: false,
                 wheelSensitivity: 0.1,
 
                 layout: {
                     name: 'dagre',
                     rankDir: 'BT',
-                    //labelpos: 'R',
+
                     nodeDimensionsIncludeLabels: true
                 },
 
@@ -1500,16 +1497,9 @@
                             'border-color': 'data(bg)',
                             'border-width': 20,
                             'border-opacity': 0.5,
-
-                            //'background-color': '#fff',
-                            //'background-color': '#ff0000',
-                            /*             'text-valign': 'center',
-                               
-                             */
+                            'background-color': 'data(bgcolor)',
                             'border-color': 'data(bg)',
                             'label': 'data(id)',
-                            /*             'text-halign': 'right',
-                                         'text-valign': 'center',  */
                             'text-outline-color': '#fff',
                             'text-outline-width': 1
                         }

@@ -89,7 +89,9 @@ type sessionData struct {
 	ProcessingStage  int    // [0,1,2,3,4] not started, finished precommit, finished precommit, started commit, finished commit
 	IsError          bool
 	NewAssetMetadata string // passed from client
-	ckmToken         string // passed from client, used to identify user to CKM/Repository
+	//ckmToken         string // passed from client, used to identify user to CKM/Repository
+	authUser     string
+	authPassword string
 }
 
 var gSessionDataList []*sessionData // global array of session data, shared across threads but only one will write to it..... i think....
@@ -230,8 +232,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			if thisSessionData != nil {
 				changesetFolder = thisSessionData.sessionConfig.ChangesetPath + "/" + params[1] // ticket'
 				mapTicketTemplates2(thisSessionData.sessionConfig.MirrorCkmPath, thisSessionData)
+				getHashAndChangedStatus2(thisSessionData, true)
+				walktree(thisSessionData)
 				printMap(*thisSessionData)
-				fmt.Fprintln(w, sendWUVToBrowser(thisSessionData.sessionID))
+				//fmt.Fprintln(w, sendWUVToBrowser(thisSessionData.sessionID))
+				fmt.Fprintln(w, sendReportToBrowser(thisSessionData.sessionID))
 			} else {
 				setSessionFailure("ticket-view-report-json: couldn't get SessionData (check session id is passed in on uri)", thisSessionData)
 			}
@@ -270,7 +275,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		template, err := readLines(thisSessionData.sessionConfig.HTMLStatusTemplate)
 
-		if len(params) < 4 {
+		if len(params) < 5 {
 			setSessionFailure("Exiting due to lack of parameters passed in (check change detail * auth token)...", &thisSessionData)
 			return
 
@@ -290,10 +295,29 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				log.Println("change detail = " + thisSessionData.ChangeDetail)
 			}
 
-			if len(params) > 3 {
-				str := params[3]
-				thisSessionData.ckmToken = str
-				log.Println("ckm token = " + thisSessionData.ckmToken)
+			if len(params) > 4 {
+				sUser := params[3] // user
+				sPW := params[4]   // password
+
+				data, err := base64.StdEncoding.DecodeString(sPW)
+				if err != nil {
+					fmt.Println("pw decode error:", err)
+					return
+				}
+				fmt.Printf("%q\n", data)
+				thisSessionData.authPassword = string(data)
+
+				data, err = base64.StdEncoding.DecodeString(sUser)
+				if err != nil {
+					fmt.Println("error:", err)
+					return
+				}
+				fmt.Printf("%q\n", data)
+				thisSessionData.authUser = string(data)
+
+				/* 				thisSessionData.ckmToken = str
+				   				log.Println("ckm token = " + thisSessionData.ckmToken)
+				*/
 			}
 
 			var line string
@@ -302,6 +326,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				line = strings.Replace(line, "%%TICKET%%", changesetFolder, -1)
 				line = strings.Replace(line, "%%SESSIONID%%", thisSessionData.sessionID, -1)
 				line = strings.Replace(line, "%%CHANGETEXT%%", thisSessionData.ChangeDetail, -1)
+				line = strings.Replace(line, "%%DOCUMENTLOAD%%", "", -1)
+
 				fmt.Fprintln(w, line)
 			}
 		}
@@ -310,7 +336,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	case param0 == "get-related":
 		thisSessionData.ChangesetFolder = thisSessionData.sessionConfig.ChangesetPath + "/" + params[1]
-		thisSessionData.ckmToken = params[2]
+		//thisSessionData.ckmToken = params[2]
 		if checkEnvironment(thisSessionData) == false {
 			setSessionFailure("Exiting due to environment/config issues...", &thisSessionData)
 			return
@@ -343,14 +369,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				templateid := node.NodeID
 				// get cid
 
-				templateexists, cid := ckmGetCidFromID(templateid, thisSessionData.ckmToken)
+				templateexists, cid := ckmGetCidFromID(templateid, &thisSessionData)
 
 				if templateexists {
 
 					log.Printf("id: " + templateid + " cid: " + cid)
 					// get template filepack url
 
-					filepack := ckmGetTemplateFilepackURL(cid, thisSessionData.ckmToken)
+					filepack := ckmGetTemplateFilepackURL(cid, &thisSessionData)
 					log.Printf("filepack = " + filepack)
 					// retrieve filepack
 					filepackname := TicketWorkingFolderPath + "/" + cid + ".zip"
@@ -390,8 +416,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			setSessionFailure("Exiting due to environment/config issues...", &thisSessionData)
 			return
 		}
-
-		template, err := readLines("WURtemplate.html")
+		template, err := readLines(thisSessionData.sessionConfig.HTMLStatusTemplate)
+		//template, err := readLines("WURtemplate.html")
 
 		if err == nil {
 			var line string
@@ -400,6 +426,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				line = strings.Replace(line, "%%TICKET%%", thisSessionData.ChangesetFolder, -1)
 				line = strings.Replace(line, "%%SESSIONID%%", thisSessionData.sessionID, -1)
 				line = strings.Replace(line, "%%CHANGETEXT%%", thisSessionData.ChangeDetail, -1)
+				line = strings.Replace(line, "%%DOCUMENTLOAD%%", "window.addEventListener('DOMContentLoaded', get_graph);", -1)
 				fmt.Fprintln(w, line)
 			}
 		}
@@ -468,7 +495,7 @@ func commitProcessing(changesetFolder string, mirrorpath string, data *sessionDa
 				log.Println("going to commit this: " + node.NodeName)
 
 				if node.NodeValidated < 0 {
-					if !ckmValidateTemplate(&data.WuaNodes[idx], data.ckmToken) {
+					if !ckmValidateTemplate(&data.WuaNodes[idx], data) {
 						data.WuaNodes[idx].NodeValidated = 0
 						setSessionFailure("commitProcessing : ERROR validate template failed for "+data.WuaNodes[idx].NodeName, data)
 						problems = true
@@ -529,15 +556,23 @@ func commitProcessing(changesetFolder string, mirrorpath string, data *sessionDa
 }
 
 func precommitProcessing( /* changesetFolder string, */ mirrorpath string, data *sessionData) {
-	// TODO  get missing assets.
-
-	//changesetFolder := data.ChangesetFolder
 
 	updateSessionStatus("Building template maps", data)
+
 	mapTicketTemplates2( /* "./"+data.ChangesetFolder+"/", */ mirrorpath, data)
+
 	updateSessionStatus("Getting template metadata from CKM (hashes, cids, etc)", data)
 
-	getHashAndChangedStatus(data)
+	getHashAndChangedStatus2(data, false)
+	walktree(data)
+	setCommitOrder(data)
+
+	log.Println(data.nodeOrderList)
+	data.ProcessingStage = 2
+	return
+}
+
+func walktree( data *sessionData) {
 
 	// walk down tree, starting at each head node
 	for i := 0; i < len(data.WuaNodes); i++ {
@@ -555,12 +590,6 @@ func precommitProcessing( /* changesetFolder string, */ mirrorpath string, data 
 			mergeTraverseList(treeorder, data)
 		}
 	}
-
-	setCommitOrder(data)
-	log.Println(data.nodeOrderList)
-	data.ProcessingStage = 2
-	return
-
 }
 
 func setCommitOrder(data *sessionData) {
@@ -650,19 +679,27 @@ func moveFiles(changesetFolder, assetType, WorkingFolderPath string) string {
 	return stdout
 }
 
-func ckmGetTemplateFilepackURL(cid, token string) (filesetURL string) {
+func ckmGetTemplateFilepackURL(cid string, data *sessionData) (filesetURL string) {
 
-	if data, err := ckmGetContentPlain("https://ahsckm.ca/ckm/rest/v1/templates/"+cid+"/file-set-url", token); err != nil {
+	if contentdata, err := ckmGetContentPlain("https://ahsckm.ca/ckm/rest/v1/templates/"+cid+"/file-set-url", data); err != nil {
 		log.Printf("Failed to get XML: %v", err)
 	} else {
 		//check(err)
-		log.Println("Received XML:" + string(data))
-		return string(data)
+		log.Println("Received XML:" + string(contentdata))
+		return string(contentdata)
 	}
 	return ""
 }
 
-func ckmGetCidFromID(id string, token string) (status bool, cid string) {
+func cacheGetCidFromID(id string, data *sessionData) (status bool, cid string) {
+
+	// TODO implement local cache
+	//	return true, "fake"
+	status, cid = ckmGetCidFromID(id, data)
+	return status, cid
+}
+
+func ckmGetCidFromID(id string, data *sessionData) (status bool, cid string) {
 
 	req, err := retryablehttp.NewRequest("GET", "https://ahsckm.ca/ckm/rest/v1/templates/citeable-identifier/"+id, nil)
 	if err != nil {
@@ -670,7 +707,9 @@ func ckmGetCidFromID(id string, token string) (status bool, cid string) {
 	}
 	req.Header.Set("Accept", "text/plain")
 	//req.Header.Set("Authorization", "Basic "+token)
-	req.Header.Set("JSESSIONID", token)
+
+	req.SetBasicAuth(data.authUser, data.authPassword)
+	//req.Header.Set("JSESSIONID", token)
 	client := retryablehttp.NewClient()
 	client.CheckRetry = defaultRetryPolicy
 	resp, err := client.Do(req)
@@ -686,13 +725,13 @@ func ckmGetCidFromID(id string, token string) (status bool, cid string) {
 		return false, ""
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	bodydata, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		println()
 		return false, ""
 	}
 
-	return true, string(data)
+	return true, string(bodydata)
 }
 
 func parseParentsTree(ParentTree []string, TicketWorkingFolderPath string, data *sessionData) {
@@ -707,14 +746,14 @@ func parseParentsTree(ParentTree []string, TicketWorkingFolderPath string, data 
 		templateid := (string)(el.Content)
 		// get cid
 
-		templateexists, cid := ckmGetCidFromID(templateid, data.ckmToken)
+		templateexists, cid := ckmGetCidFromID(templateid, data)
 
 		if templateexists {
 
 			log.Printf("id: " + templateid + " cid: " + cid)
 			// get template filepack url
 
-			filepack := ckmGetTemplateFilepackURL(cid, data.ckmToken)
+			filepack := ckmGetTemplateFilepackURL(cid, data)
 			log.Printf("filepack = " + filepack)
 			// retrieve filepack
 			filepackname := TicketWorkingFolderPath + "/" + cid + ".zip"
@@ -789,14 +828,15 @@ func ckmDownloadFile(filepath string, url string) error {
 	return nil
 }
 
-func ckmGetContentPlain(url string, token string) ([]byte, error) {
+func ckmGetContentPlain(url string, data *sessionData) ([]byte, error) {
 	req, err := retryablehttp.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("ckmGetContentPlain: http.NewRequest() failed:  %v", err)
 	}
 	req.Header.Set("Accept", "text/plain")
 	//req.Header.Set("Authorization", "Basic "+token)
-	req.Header.Set("JSESSIONID", token)
+	//req.Header.Set("JSESSIONID", token)
+	req.SetBasicAuth(data.authUser, data.authPassword)
 
 	client := retryablehttp.NewClient()
 	client.CheckRetry = defaultRetryPolicy
@@ -807,21 +847,22 @@ func ckmGetContentPlain(url string, token string) ([]byte, error) {
 	}
 
 	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("ckmGetContentPlain: Read body: %v", err)
 	}
-	return data, nil
+	return body, nil
 }
 
-func ckmGetContentXML(url, token string) ([]byte, error) {
+func ckmGetContentXML(url string, data *sessionData) ([]byte, error) {
 	req, err := retryablehttp.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("ckmGetContentXML: http.NewRequest() failed:  %v", err)
 	}
 	req.Header.Set("Accept", "application/xml")
 	//	req.Header.Set("Authorization", "Basic "+token)
-	req.Header.Set("JSESSIONID", token)
+	//req.Header.Set("JSESSIONID", token)
+	req.SetBasicAuth(data.authUser, data.authPassword)
 
 	client := retryablehttp.NewClient()
 	client.CheckRetry = defaultRetryPolicy
@@ -832,11 +873,11 @@ func ckmGetContentXML(url, token string) ([]byte, error) {
 	}
 
 	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
+	bodydata, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("ckmGetContentXML: Read body: %v", err)
 	}
-	return data, nil
+	return bodydata, nil
 }
 
 func loadTestData(path string, data *sessionData) []string {
@@ -1319,36 +1360,39 @@ func templateInSessionNodes(templateID string, data *sessionData) int {
 
 }
 
-func addVersionToNode( node *nodeDefinition, parent string, data *sessionData) bool {
+func addVersionToNode(node *nodeDefinition, sVersionFilename string, data *sessionData) bool {
 
 	// find the node in the session list
-	idx := templateInSessionNodes(node.NodeID,data)
-	if (idx > -1) {
-		data.WuaNodes[idx].NodeReleasedList = append( data.WuaNodes[idx].NodeReleasedList, parent)
+	idx := templateInSessionNodes(node.NodeID, data)
+	if idx > -1 {
+		for _, version := range data.WuaNodes[idx].NodeReleasedList {
+			if version == sVersionFilename {
+				return true // version might be already recorded, can happen if matches are fonud locally and in mirror
+			}
+		}
+		data.WuaNodes[idx].NodeReleasedList = append(data.WuaNodes[idx].NodeReleasedList, sVersionFilename)
 		return true
 	}
 	return false
 }
 
-
-func addParentToNode( node *nodeDefinition, sParentFilename string, data *sessionData) bool {
+func addParentToNode(node *nodeDefinition, sParentFilename string, data *sessionData) bool {
 
 	// find the node in the session list
-	idx := templateInSessionNodes(node.NodeID,data)
-	if (idx > -1) {
+	idx := templateInSessionNodes(node.NodeID, data)
+	if idx > -1 {
 		for _, parent := range data.WuaNodes[idx].NodeParentList {
 			if parent == sParentFilename {
 				return true // parent might be already recorded, can happen if matches are fonud locally and in mirror
 			}
 		}
-		data.WuaNodes[idx].NodeParentList = append( data.WuaNodes[idx].NodeParentList, sParentFilename)
+		data.WuaNodes[idx].NodeParentList = append(data.WuaNodes[idx].NodeParentList, sParentFilename)
 		return true
 	}
 	return false
 }
 
 func initNode(node *nodeDefinition, sCurrentTemplateFilename, sCurrentTemplateID string, data *sessionData) (isNew bool, idx int) {
-
 
 	node.NodeName = sCurrentTemplateFilename
 	node.NodeID = sCurrentTemplateID
@@ -1408,7 +1452,7 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 			trimmedparent := filepath.Base(parent)
 
 			//node.NodeParentList = append(node.NodeParentList, trimmedparent)
-			addParentToNode(node,trimmedparent,data)
+			addParentToNode(node, trimmedparent, data)
 
 			// create a new node / relation
 			var parentNode nodeDefinition
@@ -1441,7 +1485,7 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 			trimmedparent := filepath.Base(parent)
 
 			//node.NodeReleasedList = append(node.NodeReleasedList, trimmedparent)
-			addVersionToNode(node,trimmedparent,data)
+			addVersionToNode(node, trimmedparent, data)
 
 			// create a new node / relation
 			var parentNode nodeDefinition
@@ -1544,8 +1588,8 @@ func mapTicketTemplates2(mirrorPath string, data *sessionData) {
 			// create node
 			var node nodeDefinition
 			trimmedfile := filepath.Base(file)
-			isNew, _ := initNode(&node,trimmedfile,templateID,data)
-			if( isNew ) {
+			isNew, _ := initNode(&node, trimmedfile, templateID, data)
+			if isNew {
 				templateToNode(&node, data)
 			}
 		}
@@ -1571,9 +1615,7 @@ func mapTicketTemplates(mirrorPath string, data *sessionData) {
 
 }
 
-// get hashs for local and ckm files, compare them and update NodeChanged status on node
-func getHashAndChangedStatus(data *sessionData) {
-
+func getHashAndChangedStatus2(data *sessionData, quick bool) {
 	var files []string
 
 	files = getLocalTemplateList(data.ChangesetFolder)
@@ -1591,11 +1633,22 @@ func getHashAndChangedStatus(data *sessionData) {
 				data.WuaNodes[i].NodeHash = hash
 				data.WuaNodes[i].NodeLocation = file
 
-				templateexists, cid := ckmGetCidFromID(data.WuaNodes[i].NodeID, data.ckmToken) // check template exists in ckm
+				ckmHash := ""
+				templateexists := false
+				cid := ""
+
+				if !quick {
+
+					templateexists, cid = cacheGetCidFromID(data.WuaNodes[i].NodeID, data)
+				} else {
+					templateexists = true
+				}
 
 				if templateexists {
 					data.WuaNodes[i].NodeCID = cid
-					ckmHash := ckmGetHash(data.WuaNodes[i].NodeCID, data.ckmToken)
+
+					ckmHash = cacheGetHash(data.WuaNodes[i], data)
+
 					switch {
 					case (ckmHash != data.WuaNodes[i].NodeHash):
 						data.WuaNodes[i].NodeChanged = 1
@@ -1607,6 +1660,7 @@ func getHashAndChangedStatus(data *sessionData) {
 				} else {
 					data.WuaNodes[i].NodeChanged = 2 // template doesn't exist in CKM, see ckmCommitNewTemplate()
 				}
+
 			}
 		}
 	}
@@ -1633,18 +1687,53 @@ func hashTemplate(file string) string {
 
 }
 
-func ckmGetHash(cid, token string) string {
-	if data, err := ckmGetContentXML("https://ahsckm.ca/ckm/rest/v1/templates/"+cid+"/hash", token); err != nil {
+func findTemplateInMirror(node nodeDefinition, data *sessionData) (isFound bool, path string) {
+
+	foundfiles := grepDir("<id>"+node.NodeID, data.sessionConfig.MirrorCkmPath)
+	results := strings.Split(foundfiles, "\n")
+
+	foundfile := ""
+
+	for i := range results {
+		result := results[i]
+		parts := strings.Split(result, ":")
+		foundfile = parts[0]
+		foundfile = strings.TrimSpace(foundfile)
+		if foundfile != "" {
+			log.Println("findTemplateInMirror foundfile - " + foundfile)
+			parentID := findTemplateID(foundfile)
+			if parentID == node.NodeID {
+				return true, foundfile
+			}
+		}
+	}
+	return false, ""
+}
+
+func cacheGetHash(node nodeDefinition, data *sessionData) string {
+
+	// find file in mirror
+	inMirror, path := findTemplateInMirror(node, data)
+
+	if inMirror {
+		return hashTemplate(path) // generate the hash for the local file
+	} else {
+		return ckmGetHash(node.NodeCID, data)
+	}
+}
+
+func ckmGetHash(cid string, data *sessionData) string {
+	if contentdata, err := ckmGetContentXML("https://ahsckm.ca/ckm/rest/v1/templates/"+cid+"/hash", data); err != nil {
 		log.Printf("Failed to get XML: %v", err)
 	} else {
-		log.Println("Received XML:" + string(data))
-		return string(data)
+		log.Println("Received XML:" + string(contentdata))
+		return string(contentdata)
 	}
 
 	return ""
 }
 
-func ckmValidateTemplate(node *nodeDefinition, token string) bool {
+func ckmValidateTemplate(node *nodeDefinition, data *sessionData) bool {
 
 	templatesource, err := readLines(node.NodeLocation)
 	initialfail := false
@@ -1661,7 +1750,8 @@ func ckmValidateTemplate(node *nodeDefinition, token string) bool {
 	}
 
 	//req.Header.Set("Authorization", "Basic "+token)
-	req.Header.Set("JSESSIONID", token)
+	//req.Header.Set("JSESSIONID", token)
+	req.SetBasicAuth(data.authUser, data.authPassword)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/xml")
 
@@ -1681,13 +1771,13 @@ func ckmValidateTemplate(node *nodeDefinition, token string) bool {
 
 	// need to read the validation report....
 
-	data, err := ioutil.ReadAll(resp.Body)
+	bodydata, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return false
 	}
 
 	var report validationReport
-	err = json.Unmarshal(data, &report)
+	err = json.Unmarshal(bodydata, &report)
 	if err == nil {
 		if len(report) > 0 {
 			if report[0].ValidationSeverity != "" {
@@ -1730,7 +1820,8 @@ func ckmCommitNewTemplate(node *nodeDefinition, data *sessionData) bool {
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/xml")
 	//req.Header.Set("Authorization", "Basic "+data.ckmToken)
-	req.Header.Set("JSESSIONID", data.ckmToken)
+	//req.Header.Set("JSESSIONID", data.ckmToken)
+	req.SetBasicAuth(data.authUser, data.authPassword)
 
 	client := retryablehttp.NewClient()
 	client.CheckRetry = defaultRetryPolicy
@@ -1800,7 +1891,7 @@ func defaultRetryPolicy(ctx context.Context, resp *http.Response, err error) (bo
 func ckmGetTemplateTemporarily(node *nodeDefinition, data *sessionData) (success bool, path string) {
 	// get the file and write it to the working dir and return the path
 
-	templateexists, cid := ckmGetCidFromID(node.NodeID, data.ckmToken) // check template exists in ckm
+	templateexists, cid := ckmGetCidFromID(node.NodeID, data) // check template exists in ckm
 	path = data.ChangesetFolder + "/" + data.sessionConfig.WorkingFolderPath + "/" + node.NodeName
 	if templateexists {
 		node.NodeCID = cid
@@ -1852,7 +1943,8 @@ func ckmCommitRevisedTemplate(node *nodeDefinition, data *sessionData) bool {
 	req.Header.Set("Accept", "application/xml")
 	req.Header.Set("Content-Type", "application/xml")
 	//req.Header.Set("Authorization", "Basic "+data.ckmToken)
-	req.Header.Set("JSESSIONID", data.ckmToken)
+	//req.Header.Set("JSESSIONID", data.ckmToken)
+	req.SetBasicAuth(data.authUser, data.authPassword)
 
 	client := retryablehttp.NewClient()
 	client.CheckRetry = defaultRetryPolicy
@@ -1897,15 +1989,6 @@ func processTreeTopFirst(relation *nodeDefinition, isTop bool, nodeOrderList *[]
 		relation.NodeCommitIntended = 1
 		log.Println(relation.NodeName + " has changed, so we intent to commit it [1]")
 		// validation moved to commit phase, as templates with new embedded templates cannot be validated.
-		/* 		if relation.NodeValidated < 0 {
-			if !ckmValidateTemplate(relation) {
-				relation.NodeValidated = 0
-				//updateSessionStatus("processTreeChildFirst : ERROR validate template failed for "+relation.NodeName, data)
-				setSessionFailure("processTreeChildFirst : ERROR validate template failed for "+relation.NodeName, data)
-			}
-			relation.NodeValidated = 1
-		} */
-
 		bumpparent = true
 	}
 
@@ -1922,18 +2005,8 @@ func processTreeTopFirst(relation *nodeDefinition, isTop bool, nodeOrderList *[]
 					log.Println(thechildnode.NodeName + " or its decendant has changed, so " + relation.NodeName + " needs a bump")
 
 					if relation.NodeCommitIntended < 1 {
-						relation.NodeCommitIntended = 2
-
-						// validate
 						// validation moved to commit phase, as templates with new embedded templates cannot be validated.
-/* 						if relation.NodeValidated < 0 {
-							if !ckmValidateTemplate(relation, data.ckmToken) {
-								relation.NodeValidated = 0
-								updateSessionStatus("processTreeTopFirst : ERROR validate template failed for "+relation.NodeName, data)
-							}
-							relation.NodeValidated = 1
-						}
- */
+						relation.NodeCommitIntended = 2
 					}
 				}
 
@@ -1995,12 +2068,17 @@ func sendWUVToBrowser(statusSessionID string) string {
 				break
 			}
 		}
+		/*
+			nodemodifier := "" */
 
 		if found {
 			nodecolor = "#4eadfc\""
 		} else {
 			nodecolor = "#dadee8\""
 		}
+
+		//if
+
 		nodes += "{ \"data\": { \"id\": \"" + strings.Replace(data.WuaNodes[s].NodeName, ".oet", "", -1) + "\", \"bg\": \"" + nodecolor + " } },"
 	}
 	for _, r := range data.WuaNodes {

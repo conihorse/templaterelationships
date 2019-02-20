@@ -26,6 +26,344 @@
           content: none !important;
         }
       }
+
+      /*!
+ * Load Awesome v1.1.0 (http://github.danielcardoso.net/load-awesome/)
+ * Copyright 2015 Daniel Cardoso <@DanielCardoso>
+ * Licensed under MIT
+ */
+.la-pacman,
+.la-pacman > div {
+    position: relative;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+.la-pacman {
+    display: block;
+    font-size: 0;
+    color: #fff;
+}
+.la-pacman.la-dark {
+    /* color: #333; */
+    color: #73A3CA
+}
+.la-pacman > div {
+    display: inline-block;
+    float: none;
+    background-color: currentColor;
+    border: 0 solid currentColor;
+}
+.la-pacman {
+    width: 32px;
+    height: 32px;
+}
+.la-pacman > div:nth-child(1),
+.la-pacman > div:nth-child(2) {
+    width: 0;
+    height: 0;
+    background: transparent;
+    border-style: solid;
+    border-width: 16px;
+    border-right-color: transparent;
+    border-radius: 100%;
+    -webkit-animation: pacman-rotate-half-up .5s 0s infinite;
+       -moz-animation: pacman-rotate-half-up .5s 0s infinite;
+         -o-animation: pacman-rotate-half-up .5s 0s infinite;
+            animation: pacman-rotate-half-up .5s 0s infinite;
+}
+.la-pacman > div:nth-child(2) {
+    margin-top: -32px;
+    -webkit-animation-name: pacman-rotate-half-down;
+       -moz-animation-name: pacman-rotate-half-down;
+         -o-animation-name: pacman-rotate-half-down;
+            animation-name: pacman-rotate-half-down;
+}
+.la-pacman > div:nth-child(3),
+.la-pacman > div:nth-child(4),
+.la-pacman > div:nth-child(5),
+.la-pacman > div:nth-child(6) {
+    position: absolute;
+    top: 50%;
+    left: 200%;
+    width: 8px;
+    height: 8px;
+    border-radius: 100%;
+    opacity: 0;
+    -webkit-animation: pacman-balls 2s 0s infinite linear;
+       -moz-animation: pacman-balls 2s 0s infinite linear;
+         -o-animation: pacman-balls 2s 0s infinite linear;
+            animation: pacman-balls 2s 0s infinite linear;
+}
+.la-pacman > div:nth-child(3) {
+    -webkit-animation-delay: -1.44s;
+       -moz-animation-delay: -1.44s;
+         -o-animation-delay: -1.44s;
+            animation-delay: -1.44s;
+}
+.la-pacman > div:nth-child(4) {
+    -webkit-animation-delay: -1.94s;
+       -moz-animation-delay: -1.94s;
+         -o-animation-delay: -1.94s;
+            animation-delay: -1.94s;
+}
+.la-pacman > div:nth-child(5) {
+    -webkit-animation-delay: -2.44s;
+       -moz-animation-delay: -2.44s;
+         -o-animation-delay: -2.44s;
+            animation-delay: -2.44s;
+}
+.la-pacman > div:nth-child(6) {
+    -webkit-animation-delay: -2.94s;
+       -moz-animation-delay: -2.94s;
+         -o-animation-delay: -2.94s;
+            animation-delay: -2.94s;
+}
+.la-pacman.la-sm {
+    width: 16px;
+    height: 16px;
+}
+.la-pacman.la-sm > div:nth-child(1),
+.la-pacman.la-sm > div:nth-child(2) {
+    border-width: 8px;
+}
+.la-pacman.la-sm > div:nth-child(2) {
+    margin-top: -16px;
+}
+.la-pacman.la-sm > div:nth-child(3),
+.la-pacman.la-sm > div:nth-child(4),
+.la-pacman.la-sm > div:nth-child(5),
+.la-pacman.la-sm > div:nth-child(6) {
+    width: 4px;
+    height: 4px;
+}
+.la-pacman.la-2x {
+    width: 64px;
+    height: 64px;
+}
+.la-pacman.la-2x > div:nth-child(1),
+.la-pacman.la-2x > div:nth-child(2) {
+    border-width: 32px;
+}
+.la-pacman.la-2x > div:nth-child(2) {
+    margin-top: -64px;
+}
+.la-pacman.la-2x > div:nth-child(3),
+.la-pacman.la-2x > div:nth-child(4),
+.la-pacman.la-2x > div:nth-child(5),
+.la-pacman.la-2x > div:nth-child(6) {
+    width: 16px;
+    height: 16px;
+}
+.la-pacman.la-3x {
+    width: 96px;
+    height: 96px;
+}
+.la-pacman.la-3x > div:nth-child(1),
+.la-pacman.la-3x > div:nth-child(2) {
+    border-width: 48px;
+}
+.la-pacman.la-3x > div:nth-child(2) {
+    margin-top: -96px;
+}
+.la-pacman.la-3x > div:nth-child(3),
+.la-pacman.la-3x > div:nth-child(4),
+.la-pacman.la-3x > div:nth-child(5),
+.la-pacman.la-3x > div:nth-child(6) {
+    width: 24px;
+    height: 24px;
+}
+/*
+ * Animations
+ */
+@-webkit-keyframes pacman-rotate-half-up {
+    0%,
+    100% {
+        -webkit-transform: rotate(270deg);
+                transform: rotate(270deg);
+    }
+    50% {
+        -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+    }
+}
+@-moz-keyframes pacman-rotate-half-up {
+    0%,
+    100% {
+        -moz-transform: rotate(270deg);
+             transform: rotate(270deg);
+    }
+    50% {
+        -moz-transform: rotate(360deg);
+             transform: rotate(360deg);
+    }
+}
+@-o-keyframes pacman-rotate-half-up {
+    0%,
+    100% {
+        -o-transform: rotate(270deg);
+           transform: rotate(270deg);
+    }
+    50% {
+        -o-transform: rotate(360deg);
+           transform: rotate(360deg);
+    }
+}
+@keyframes pacman-rotate-half-up {
+    0%,
+    100% {
+        -webkit-transform: rotate(270deg);
+           -moz-transform: rotate(270deg);
+             -o-transform: rotate(270deg);
+                transform: rotate(270deg);
+    }
+    50% {
+        -webkit-transform: rotate(360deg);
+           -moz-transform: rotate(360deg);
+             -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+    }
+}
+@-webkit-keyframes pacman-rotate-half-down {
+    0%,
+    100% {
+        -webkit-transform: rotate(90deg);
+                transform: rotate(90deg);
+    }
+    50% {
+        -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+    }
+}
+@-moz-keyframes pacman-rotate-half-down {
+    0%,
+    100% {
+        -moz-transform: rotate(90deg);
+             transform: rotate(90deg);
+    }
+    50% {
+        -moz-transform: rotate(0deg);
+             transform: rotate(0deg);
+    }
+}
+@-o-keyframes pacman-rotate-half-down {
+    0%,
+    100% {
+        -o-transform: rotate(90deg);
+           transform: rotate(90deg);
+    }
+    50% {
+        -o-transform: rotate(0deg);
+           transform: rotate(0deg);
+    }
+}
+@keyframes pacman-rotate-half-down {
+    0%,
+    100% {
+        -webkit-transform: rotate(90deg);
+           -moz-transform: rotate(90deg);
+             -o-transform: rotate(90deg);
+                transform: rotate(90deg);
+    }
+    50% {
+        -webkit-transform: rotate(0deg);
+           -moz-transform: rotate(0deg);
+             -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+    }
+}
+@-webkit-keyframes pacman-balls {
+    0% {
+        left: 200%;
+        opacity: 0;
+        -webkit-transform: translateY(-50%);
+                transform: translateY(-50%);
+    }
+    5% {
+        opacity: .5;
+    }
+    66% {
+        opacity: 1;
+    }
+    67% {
+        opacity: 0;
+    }
+    100% {
+        left: 0;
+        -webkit-transform: translateY(-50%);
+                transform: translateY(-50%);
+    }
+}
+@-moz-keyframes pacman-balls {
+    0% {
+        left: 200%;
+        opacity: 0;
+        -moz-transform: translateY(-50%);
+             transform: translateY(-50%);
+    }
+    5% {
+        opacity: .5;
+    }
+    66% {
+        opacity: 1;
+    }
+    67% {
+        opacity: 0;
+    }
+    100% {
+        left: 0;
+        -moz-transform: translateY(-50%);
+             transform: translateY(-50%);
+    }
+}
+@-o-keyframes pacman-balls {
+    0% {
+        left: 200%;
+        opacity: 0;
+        -o-transform: translateY(-50%);
+           transform: translateY(-50%);
+    }
+    5% {
+        opacity: .5;
+    }
+    66% {
+        opacity: 1;
+    }
+    67% {
+        opacity: 0;
+    }
+    100% {
+        left: 0;
+        -o-transform: translateY(-50%);
+           transform: translateY(-50%);
+    }
+}
+@keyframes pacman-balls {
+    0% {
+        left: 200%;
+        opacity: 0;
+        -webkit-transform: translateY(-50%);
+           -moz-transform: translateY(-50%);
+             -o-transform: translateY(-50%);
+                transform: translateY(-50%);
+    }
+    5% {
+        opacity: .5;
+    }
+    66% {
+        opacity: 1;
+    }
+    67% {
+        opacity: 0;
+    }
+    100% {
+        left: 0;
+        -webkit-transform: translateY(-50%);
+           -moz-transform: translateY(-50%);
+             -o-transform: translateY(-50%);
+                transform: translateY(-50%);
+    }
+}
     .mdl-button.mdl-button--colored {
     color: rgba(239, 121, 45, 0.95);
 /*     box-shadow: 2px 2px 3px 0px rgb(148, 146, 146);
@@ -202,6 +540,29 @@
 
 </head>
 
+<!-- <a id="getgraph" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+  Get Graph
+</a>
+ -->
+
+<div id="WUVcard" class="mdl-card__supporting-text" style="display:none" style="height:10px; width:100%;">
+  <b>Where Used View for %%TICKET%%</b> <br> Please note that due this graph being tuned for performance, there may be minor differences between this graph and the Upload Process graph. If so, the Upload Graph should take presedence.
+</div>
+
+<div id="WUVloader" class="mdl-card__supporting-text" style="display:none" style="height:10px; width:100%;">
+  <div class="la-pacman la-dark la-3x">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+</div>
+
+</div>
+
+
+
 <div id="prepcard" class="demo-card-wide mdl-card mdl-shadow--2dp">
   <div class="mdl-card__title">
     <h2 class="mdl-card__title-text">Preparing for Upload</h2>
@@ -326,14 +687,13 @@
 
 <div id="graphcard" class="demo-statuscard  mdl-shadow--2dp" style="height:400px; width:100%; display:none" style="text-align:center">
   <div id="cy" style="display:inline-flex"> </div>
-  <div id="expandgraph" style="z-index:999">
+  <!--   <div id="expandgraph" style="z-index:999">
     <a id="expandbutton" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
       Enlarge graph
-    </a>
-  </div>
-
+    </a> -->
 </div>
 
+</div>
 
 
 <div id="table-results" style="width:100%; display:none">
@@ -360,10 +720,13 @@
   var intTimer
   var g_sessionReport
   var g_projectlist
+  var g_zooming, g_boxselection
 
   function start_precommit() {
 
     getProjects()
+    g_zooming = false
+    g_boxselection = false
 
     $.getJSON("/precommit,%%SESSIONID%%", function () {
       document.getElementById("action-precommit").style.display = "none"
@@ -371,10 +734,60 @@
       document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
         " <br>Starting preparations...";
 
-      intTimer = self.setInterval(getStatus, 5000);
+      intTimer = self.setInterval(getStatus, 1000);
     })
   }
 
+
+  function get_graph() {
+    g_zooming = true
+    g_boxselection = true
+
+    document.getElementById("graphcard").style.width = '100%'
+    document.getElementById("graphcard").style.height = '92%'
+    //    cy.fit();;
+
+    document.getElementById("prepcard").style.display = "none"
+    document.getElementById("WUVcard").style.display = "inline-block"
+    document.getElementById("WUVloader").style.display = "inline-block"
+    //    document.getElementById("WUVcard").style.height = "50px"
+
+    var url = "/ticket-view-report-json,%%TICKET%%,%%SESSIONID%%"
+
+    $.getJSON(url, function (report) {
+
+
+      g_sessionReport = JSON.parse(JSON.stringify(report))
+      if (g_sessionReport.IsError) {
+
+        document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+          " <br>Upload to Repository FAILED!!!!!! :( " + g_sessionReport.StatusText;
+
+        document.getElementById("commitcard").style.display = "none"
+        document.getElementById("failcard").style.display = "inline-block"
+
+      } else {
+        document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
+          " <br>Upload to Repository completed!";
+
+        document.getElementById("statuscard").style.display = "none"
+        document.getElementById("commitcard").style.display = "none"
+        document.getElementById("okcard").style.display = "inline-block"
+        document.getElementById("WUVloader").style.display = "none"
+      }
+      //tableCreate(g_sessionReport, false)
+
+      /*             $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
+                    graphCreate(nodes)
+                  })
+       */
+      graphCreate2()
+      document.getElementById("statuscard").style.display = "none"
+      document.getElementById("okcard").style.display = "none"
+
+    })
+
+  }
 
   function start_commit() {
     document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
@@ -395,7 +808,7 @@
       $.getJSON("/commit,%%SESSIONID%%," + newAssetData + "," + commitmessage, function () {
         document.getElementById("action-commit").style.display = "none"
         document.getElementById("statuscard").style.display = "block"
-        intTimer = self.setInterval(getStatus, 5000);
+        intTimer = self.setInterval(getStatus, 1000);
       })
     } else {
       //alert ("failure")
@@ -558,18 +971,18 @@
       switch (g_sessionReport[i].NodeCommitIntended) {
         case 0, -1:
 
-          nodecolor = "#4eadfc\""
+          nodecolor = "#4eadfc\"" // blue
           break
         case 1:
           nodecolor = "#f10\""
           if (g_sessionReport[i].NodeIsCommitted > 0) {
-            nodecolor = "rgb(64, 165, 38)\""
+            nodecolor = "rgb(64, 165, 38)\"" // green
           }
           break
         case 2:
           nodecolor = "#fcb04e\""
           if (g_sessionReport[i].NodeIsCommitted > 0) {
-            nodecolor = "#8FC681\""
+            nodecolor = "#8FC681\"" // light green
           }
 
 
@@ -583,13 +996,17 @@
                     nodecolor = "#f00\""
            */
       }
+      nodelocalmodifier = ''
 
-/*       if( g_sessionReport[i].NodeChanged == -1 ) // node not local 
+      if (g_sessionReport[i].NodeChanged == -1) // node not local 
       {
-        nodecolor = "#dadee8\""
-      } */
+        //nodelocalmodifier = ",\"bgcolor\":\"white\","
+        nodelocalmodifier = ',"bgcolor":"white"'
+        // nodelocalmodifier = ''
+      }
 
-      nodes += '{"data":{"id":"' + g_sessionReport[i].NodeName.replace(".oet", "") + '","bg":"' + nodecolor + "}},"
+      nodes += '{"data":{"id":"' + g_sessionReport[i].NodeName.replace(".oet", "") + '"' + nodelocalmodifier +
+        ',"bg":"' + nodecolor + "}},"
     }
 
     for (var i = 0; i < arrayLength; i++) {
@@ -599,9 +1016,36 @@
 
       if (node.NodeParentList != null) {
         parrayLength = node.NodeParentList.length
+
+
+        var linecolor = ""
+
+        if (node.NodeCommitIntended > 0) {
+          // --- update line ---          
+
+          linecolor = "rgba(239, 121, 45, 0.95)" // change flow
+
+
+          //linecolor ="#f10"
+        } else {
+          // --- regular line ---
+
+          //linecolor = "rgba(239, 121, 45, 0.95)"  
+          //linecolor = "#B4D4D4" // light blue
+          //linecolor = "#837B7B" // dark grey
+
+          //linecolor = "#A6D6FD" // cold blue
+          linecolor = "#73A3CA" // GREY BLUE
+
+
+
+        }
+
+
         for (var p = 0; p < parrayLength; p++) {
           edges +=
-            '{ "data": {"style":"solid", "color":"rgba(239, 121, 45, 0.95)", "arrowcolor": "rgba(239, 121, 45, 0.95)", "source": "' +
+            '{ "data": {"style":"solid", "width":"' + linewidth + '", "color":"' + linecolor + '", "arrowcolor": "' +
+            linecolor + '", "source": "' +
             node.NodeName.replace(".oet", "") + '", "target": "' + node.NodeParentList[p].replace(".oet", "") +
             '" } },'
 
@@ -858,11 +1302,12 @@
           break;
       }
 
-/*       if ( objreport[i].NodeChanged == -1 ) {
-        dot.className = "greydot"
-      }
+      /*       if ( objreport[i].NodeChanged == -1 ) {
+              dot.className = "greydot"
+            }
 
- */      td.appendChild(dot)
+       */
+      td.appendChild(dot)
 
       td = tr.insertCell();
 
@@ -1002,7 +1447,7 @@
   }
 
 
-  function displayGraph(nodes, edges) {
+  function displayGraph(nodes, edges, zooming) {
 
     //alert(JSON.parse(nodes))
     /*     var elements = {
@@ -1013,9 +1458,9 @@
     cy = window.cy = cytoscape({
       container: document.getElementById('cy'),
 
-      boxSelectionEnabled: false,
+      boxSelectionEnabled: g_boxselection,
       autounselectify: true,
-      userZoomingEnabled: false,
+      userZoomingEnabled: g_zooming,
       wheelSensitivity: 0.1,
 
       layout: {
@@ -1034,6 +1479,7 @@
             'border-color': 'data(bg)',
             'border-width': 20,
             'border-opacity': 0.5,
+            'background-color': 'data(bgcolor)',
             // 'background-color': '#fff',
             //'background-color': '#11479e',
             //'background-color': '#ff0000',
@@ -1075,15 +1521,20 @@
 
   };
 
+
+
   document.getElementById("precommit").onclick = start_precommit;
   document.getElementById("commit").onclick = start_commit;
+  //  document.getElementById("getgraph").onclick = get_graph;
+  %%DOCUMENTLOAD%%
 
-  document.getElementById("expandbutton").onclick = function () {
-    console.log('cy=', cy);
-    document.getElementById("graphcard").style.width = '100%'
-    document.getElementById("graphcard").style.height = '100%'
-    cy.fit();;
-  }
+  /*   document.getElementById("expandbutton").onclick = function () {
+      console.log('cy=', cy);
+      document.getElementById("graphcard").style.width = '100%'
+      document.getElementById("graphcard").style.height = '100%'
+      cy.fit();;
+    }
+   */
 </script>
 
 
