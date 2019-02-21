@@ -1,0 +1,11 @@
+<DAM>
+<RepositoryData>
+<RepositoryName>CKCMFK-977</RepositoryName>
+<Description>Repository Testing for DAM Tool</Description>
+<TemplatesPath>Q:\DAM\PRD\CKCMFK-977\templates</TemplatesPath>
+<ArchetypesPath>Q:\DAM\PRD\CKCMFK-977\archetypes</ArchetypesPath>
+<WorkingArchetypesPath />
+<CkmApiUrl>https://ahsckm.ca/ckm/rest/v1/</CkmApiUrl>
+<CkmApiBatchSize>300</CkmApiBatchSize>
+</RepositoryData>
+</DAM>

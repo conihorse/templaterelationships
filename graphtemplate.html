@@ -40,7 +40,7 @@
             var cy = window.cy = cytoscape({
                 container: document.getElementById('cy'),
 
-                boxSelectionEnabled: false,
+                boxSelectionEnabled: true,
                 autounselectify: true,
 
 
@@ -54,14 +54,16 @@
                         'border-width': 20,
                         'border-opacity': 0.5,
                         'label': 'data(name)',
-                        'background-color': 'data(bgcolor)'
+                        'background-color': 'data(bgcolor)',
+                        'text-max-width': 10,
+                        'text-wrap': 'wrap'
                     })
 
                     .selector('edge')
                     .css({
                         'curve-style': 'bezier',
-                        'width': 5,
-                        'target-arrow-shape': 'triangle',
+                        'width': 12,
+                        'target-arrow-shape': 'arrow',
                         'border-width': 10,
                         'line-color': '#ffaaaa',
                         //'target-arrow-color': '#ffaaaa',
@@ -71,6 +73,12 @@
                         'line-dash-pattern': [6, 3],
                         //                        'line-color': 'data(color)',                        
                         'line-style': 'data(style)',
+                        'target-label': 'data(notee)',
+/*                         'label': 'data(notee)', */
+                        'font-size': 10,
+                        'text-border-style': 'dotted',
+                        'text-background-color': 'black',
+                        'text-border-opacity': 5
 
 
                     }),
@@ -86,7 +94,9 @@
                     nodes: [{
                             data: {
                                 id: 'cat',
-                                name: 'tiddles',
+                                name: 'tiddles the silly cat',
+
+                                shape: 'triangle',
                                 bg: '#0f0'
                             }
                         },
@@ -94,7 +104,9 @@
                             data: {
                                 id: 'bird',
                                 bg: '#00f',
-                                bgcolor: 'white' // not local
+                                bgcolor: 'white', // not local
+                                shape: 'triange',
+
                             }
                         },
                         {
@@ -137,9 +149,12 @@
                             data: {
                                 source: 'cat',
                                 target: 'bird',
-                                width: 100,
+                                width: '100px',
                                 color: '#ffaaaa',
-                                arrowcolor: '#ffaaaa'
+                                arrowcolor: '#ffaaaa',
+                                notee: "asset released not edited",
+                                
+                                
                             }
                         },
                         {

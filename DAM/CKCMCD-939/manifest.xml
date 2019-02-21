@@ -1,0 +1,31 @@
+<templateFileSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.openehr.org/v1">
+   <cid>1175.132.7417</cid>
+   <versionAsset>1</versionAsset>
+   <templateName>Diagnostic Imaging - Computed Tomography - CT Lower Extremity Bilateral Order</templateName>
+   <templateId>f4dd955a-b5de-4bf6-9b24-fb04efb26969</templateId>
+   <rootArchetypeId>openEHR-EHR-INSTRUCTION.service_request.v1</rootArchetypeId>
+   <creationTime>21-Jun-2018</creationTime>
+   <modificationTime>21-Jun-2018</modificationTime>
+   <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.7417_1</directLink>
+   <logMessage>20180614proceed-if-outdated-resources-used=false</logMessage>
+   <ckmResource>
+      <cid>1175.108.281</cid>
+      <versionAsset>3</versionAsset>
+      <resourceMainId>openEHR-EHR-INSTRUCTION.service_request.v1</resourceMainId>
+      <resourceMainDisplayName>Service request</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2018-04-20T11:07:41-0600</creationTime>
+      <modificationTime>2018-05-04T15:13:39-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.281_3</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.108.275</cid>
+      <versionAsset>3</versionAsset>
+      <resourceMainId>openEHR-EHR-CLUSTER.service_request_information.v1</resourceMainId>
+      <resourceMainDisplayName>Service request information</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2018-03-23T14:21:30-0600</creationTime>
+      <modificationTime>2018-04-20T15:34:51-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.275_3</directLink>
+   </ckmResource>
+</templateFileSet>

@@ -1019,6 +1019,7 @@
 
 
         var linecolor = ""
+        var linewidth = "10"
 
         if (node.NodeCommitIntended > 0) {
           // --- update line ---          
@@ -1054,15 +1055,20 @@
       }
       if (node.NodeReleasedList != null) {
 
+
+
+
+
+
         varrayLength = node.NodeReleasedList.length
         for (var v = 0; v < varrayLength; v++) {
-          for (var p = 0; p < parrayLength; p++) {
+        // if node has been edited/bumped, check if released copy is unchanged, if so create warning
+/*             if(node.NodeCommitIntended>0){
+              versionstatus := function() int { return 0 }
+            } */
+
             edges += '{ "data": {"style":"dashed", "color":"#b2b0a9", "arrowcolor": "#b2b0a9", "source": "' + node.NodeName
               .replace(".oet", "") + '", "target": "' + node.NodeReleasedList[v].replace(".oet", "") + '" } },'
-
-          }
-
-
 
 
         }
@@ -1491,7 +1497,10 @@
             /*             'text-halign': 'right',
                          'text-valign': 'center',  */
             'text-outline-color': '#fff',
-            'text-outline-width': 1
+            'text-outline-width': 2,
+            'text-max-width': 10,
+                        'text-wrap': 'wrap'
+
           }
         },
 
@@ -1499,9 +1508,9 @@
           selector: 'edge',
           style: {
             'curve-style': 'bezier',
-            'width': 8,
+            'width': 5,
             'target-arrow-shape': 'triangle',
-            'border-width': 15,
+            'border-width': 10,
             'line-color': 'data(color)',
             'target-arrow-color': 'data(arrowcolor)',
             'line-dash-pattern': [6, 3],
