@@ -6,8 +6,8 @@
 
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
 
-  <script src="https://unpkg.com/cytoscape/dist/cytoscape.umd.js"></script>
-
+  <!-- <script src="https://unpkg.com/cytoscape/dist/cytoscape.umd.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.4.2/cytoscape.min.js"></script>
   <!-- for testing with local version of cytoscape.js -->
   <!--    <script src="../cytoscape.js/build/cytoscape.js"></script> -->
 
@@ -20,6 +20,13 @@
   <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
   <!-- Material Design icon font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script src="https://unpkg.com/popper.js@1.14.7/dist/umd/popper.js"></script>
+    
+    
+    
+  <script src="https://cytoscape.org/cytoscape.js-popper/cytoscape-popper.js"></script>
+  <script src="https://unpkg.com/tippy.js@4.0.1/umd/index.all.min.js"></script>
+
   <style>
     @media print {
         a[href]:after {
@@ -504,7 +511,7 @@
 
     .demo-card-wide>.mdl-card__title {
       color: rgb(255, 255, 255);
-      height: 276px;
+      height: 150px;
       /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
       /* background: url('https://getmdl.io/assets/demos/welcome_card.jpg') center / cover; */
       /* background: url('https://www.ceati.com/images/dam.jpg') center / cover;       */
@@ -520,7 +527,8 @@
     }
     .demo-statuscard {
       color: rgb(255, 255, 255);
-      background: rgb(255, 255, 255);
+      /* background: rgb(255, 255, 255); */
+      background: #E6FCFD
       height: 100px;
       width: 100%;
       /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
@@ -546,7 +554,8 @@
  -->
 
 <div id="WUVcard" class="mdl-card__supporting-text" style="display:none" style="height:10px; width:100%;">
-  <b>Where Used View for %%TICKET%%</b> <br> Please note that due this graph being tuned for performance, there may be minor differences between this graph and the Upload Process graph. If so, the Upload Graph should take presedence.
+  <b>Where Used View for %%TICKET%%</b> <br> Please note that due this graph being tuned for performance, there may be
+  minor differences between this graph and the Upload Process graph. If so, the Upload Graph should take presedence.
 </div>
 
 <div id="WUVloader" class="mdl-card__supporting-text" style="display:none" style="height:10px; width:100%;">
@@ -557,7 +566,7 @@
     <div></div>
     <div></div>
     <div></div>
-</div>
+  </div>
 
 </div>
 
@@ -570,16 +579,13 @@
   <div class="mdl-card__supporting-text">
     This screen automates the Repository upload process for <B>%%TICKET%%</B>
     <br>
-    <br>
     The process can take a few minutes and has two stages:
     <ol>
       <li><b>Preparation:</b> analyse the assets' changes and relationships and show a report of what will be updated
         to the Repository,</li>
       <li><b>Upload</b>: send changes to the Repository in the correct order and show a report confirming the changes.</li>
     </ol>
-
     As the process is happening, a regularly updated status message will be displayed.
-    <br><br>
     When preparations are complete, a report and graph will show the intended actions and asset relationships. This can
     be then checked before the actual upload occurs.
     <br>
@@ -694,7 +700,28 @@
 </div>
 
 </div>
+<br>
+<div id="table-tools" style="width:100%; display:none">
+  <a id="bulkedit" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+    Batch Edit: Project & Type
+  </a>
+</div>
+<div id="bulkdetailscard" class="demo-statuscard  mdl-shadow--2dp" style="display:none">
+  <!-- initally hidden -->
+  <div class="mdl-card__supporting-text" style="display: block;">
+    <b>Batch Choices</b><br>These choices will be used for all assets below with type/project left unassigned. Any assignments in the table below
+    will override these batch choices.
+  </div>
+  <div id="bulkdetailscontrols" style="  display: block;
+                padding-top: 0px;
+                border-top-width: 20px;
+                padding-left: 20px;
+                padding-bottom: 0px;
+                height: 18px; ">
 
+    ></div>
+
+</div>
 
 <div id="table-results" style="width:100%; display:none">
   <div id="table-heading" class="areaheading">test</div>
@@ -721,6 +748,87 @@
   var g_sessionReport
   var g_projectlist
   var g_zooming, g_boxselection
+
+  /*   function getBatchAssetType() {
+      sel = document.getElementById("bulk-asset")
+      return sel.options[sel.selectedIndex].text
+
+      selprj = document.getElementById(node.NodeID + "bulk-project")
+      bulklocation.appendChild(getProjectOptions("bulk-project")); 
+
+
+      projecttext = selprj.options[selprj.selectedIndex].text
+      projectcid = selprj.options[selprj.selectedIndex].dataset.cid
+
+      
+    }
+    
+    
+   */
+  function getTypeOptions(nodeid) {
+
+    sel = document.createElement("select")
+    //sel.id = objreport[i].NodeID
+    sel.id = nodeid
+    opt = document.createElement("option")
+    opt.text = "-- Type --"
+    sel.appendChild(opt)
+    opt = document.createElement("option")
+    opt.text = "Order Item"
+    sel.appendChild(opt)
+    opt = document.createElement("option")
+    opt.text = "Order Set"
+    sel.appendChild(opt)
+    opt = document.createElement("option")
+    opt.text = "Knowledge Topic"
+    sel.appendChild(opt)
+
+    sel.style.width = "100px"
+    //td.appendChild(sel)
+    return sel
+
+
+  }
+
+  function getProjectOptions(nodeid) {
+
+    selprj = document.createElement("select")
+    selprj.id = nodeid + "_prj"
+
+    opt = document.createElement("option")
+    opt.text = "-- Project --"
+    selprj.appendChild(opt)
+
+    var projectcount = g_projectlist.length;
+    for (var j = 0; j < projectcount; j++) {
+      project = g_projectlist[j]
+
+      opt = document.createElement("option")
+      opt.text = project.name
+      opt.dataset.cid = project.cid
+      selprj.appendChild(opt)
+
+    }
+    selprj.style.width = "100px"
+    return selprj
+
+  }
+
+  function bulkedit() {
+
+    var bulklocation = document.getElementById("bulkdetailscontrols")
+
+    while (bulklocation.firstChild) {
+      bulklocation.removeChild(bulklocation.firstChild);
+    }
+
+    bulklocation.appendChild(getTypeOptions("bulk-asset"));
+    bulklocation.appendChild(getProjectOptions("bulk-project"));
+    bulklocation.style.display = "block"
+
+    document.getElementById("bulkdetailscard").style.display = "block"
+
+  }
 
   function start_precommit() {
 
@@ -840,13 +948,31 @@
         projectcid = selprj.options[selprj.selectedIndex].dataset.cid
 
         if (typetext.includes("--")) {
-          alert("Please select a valid asset type for " + node.NodeName)
-          return [false, ""]
+          selBulkType = document.getElementById("bulk-asset")
+          bulktypetext = selBulkType.options[selBulkType.selectedIndex].text
+          if (bulktypetext.includes("--")) {
+            alert ("Please select a valid asset type for " + node.NodeName + ", or set in batch options.")
+            return [false, ""]
+
+          } else {
+            typetext = bulktypetext
+          }
         }
 
         if (projecttext.includes("--")) {
-          alert("Please select a valid project for " + node.NodeName)
-          return [false, ""]
+
+          selBulkPrj = document.getElementById("bulk-project_prj")
+          bulprjcid = selBulkPrj.options[selBulkPrj.selectedIndex].dataset.cid
+          bulprjtext = selBulkPrj.options[selBulkPrj.selectedIndex].text
+
+          if (bulprjtext.includes("--")) {
+            alert("Please select a valid project for " + node.NodeName + ", or set in batch options.")
+            return [false, ""]
+
+          } else {
+            projectcid = bulprjcid
+          }
+
         }
 
         assetdata += node.NodeID + "~" + typetext + "~" + projectcid + "^"
@@ -920,6 +1046,7 @@
               " <br>Upload to Repository completed!";
 
             document.getElementById("statuscard").style.display = "none"
+
             document.getElementById("commitcard").style.display = "none"
             document.getElementById("okcard").style.display = "inline-block"
           }
@@ -931,7 +1058,7 @@
            */
           graphCreate2()
 
-
+          document.getElementById("bulkdetailscard").style.display = "none"
         })
         return false;
       }
@@ -958,12 +1085,14 @@
   }
 
 
+  
+
   function graphCreate2() {
 
     var arrayLength = g_sessionReport.length
     var nodecolor = ""
-    var nodes = "",
-      edges = "";
+    var nodes = "", edges = "";
+    var sourcenode;
 
     for (var i = 0; i < arrayLength; i++) {
 
@@ -984,25 +1113,14 @@
           if (g_sessionReport[i].NodeIsCommitted > 0) {
             nodecolor = "#8FC681\"" // light green
           }
-
-
-
           break
-          /*         case 1:
-                    nodecolor = "#0f0\""
-                    break
-           */
-          /*         case 0:
-                    nodecolor = "#f00\""
-           */
       }
       nodelocalmodifier = ''
 
-      if (g_sessionReport[i].NodeChanged == -1) // node not local 
+      /* if (g_sessionReport[i].NodeChanged == -1) // node not local  */
+      if (g_sessionReport[i].NodeIsLocal == 0) // node not local       
       {
-        //nodelocalmodifier = ",\"bgcolor\":\"white\","
         nodelocalmodifier = ',"bgcolor":"white"'
-        // nodelocalmodifier = ''
       }
 
       nodes += '{"data":{"id":"' + g_sessionReport[i].NodeName.replace(".oet", "") + '"' + nodelocalmodifier +
@@ -1011,37 +1129,17 @@
 
     for (var i = 0; i < arrayLength; i++) {
       node = g_sessionReport[i]
-
-
-
       if (node.NodeParentList != null) {
         parrayLength = node.NodeParentList.length
-
-
         var linecolor = ""
         var linewidth = "10"
 
         if (node.NodeCommitIntended > 0) {
           // --- update line ---          
-
           linecolor = "rgba(239, 121, 45, 0.95)" // change flow
-
-
-          //linecolor ="#f10"
         } else {
-          // --- regular line ---
-
-          //linecolor = "rgba(239, 121, 45, 0.95)"  
-          //linecolor = "#B4D4D4" // light blue
-          //linecolor = "#837B7B" // dark grey
-
-          //linecolor = "#A6D6FD" // cold blue
           linecolor = "#73A3CA" // GREY BLUE
-
-
-
         }
-
 
         for (var p = 0; p < parrayLength; p++) {
           edges +=
@@ -1051,48 +1149,40 @@
             '" } },'
 
         }
-
       }
+
+      edgeWarnings =[]
+
       if (node.NodeReleasedList != null) {
-
-
-
-
-
-
         varrayLength = node.NodeReleasedList.length
+        //releasedcolour = "#E0DE35" // yellowish
+        releasedcolour = "#b2b0a9" // grey
+
+
         for (var v = 0; v < varrayLength; v++) {
-        // if node has been edited/bumped, check if released copy is unchanged, if so create warning
-/*             if(node.NodeCommitIntended>0){
-              versionstatus := function() int { return 0 }
-            } */
+          edgeid = node.NodeName + node.NodeReleasedList[v]
+          WarningNeeded = false
 
-            edges += '{ "data": {"style":"dashed", "color":"#b2b0a9", "arrowcolor": "#b2b0a9", "source": "' + node.NodeName
-              .replace(".oet", "") + '", "target": "' + node.NodeReleasedList[v].replace(".oet", "") + '" } },'
+          if( node.NodeCommitIntended > 0 ) { // if this node is either changed or bumped, check if released copy has been edited, if not add 
+            // for each released version, find its node and check whether it's been modified.
+            for (var nodeidx = 0; nodeidx < arrayLength; nodeidx++) {
+              sourcenode = g_sessionReport[nodeidx]
+              if( sourcenode.NodeName == node.NodeReleasedList[v] ) {
+                if (sourcenode.NodeCommitIntended < 1 ) { // looks like the released version is unchanged
+                  // flag a warning on the edge/relationship to the released version
+                  edgeWarnings.push(edgeid)
+                }
 
+              }
+            }
+          }
 
+          // if node has been edited/bumped, check if released copy is unchanged, if so create warning
+          edges += '{ "data": { "id":"' + edgeid + '","style":"dashed", "color":"' + releasedcolour + '", "arrowcolor": "' + releasedcolour + '", "source": "' + node.NodeName
+            .replace(".oet", "") + '", "target": "' + node.NodeReleasedList[v].replace(".oet", "") + '" } },'
         }
       }
-
-
-
     }
-
-    /*     for _, r := range data.WuaNodes {
-    		r.NodeName = strings.Replace(r.NodeName, ".oet", "", -1)
-    		for _, p := range r.NodeParentList {
-    			p = strings.Replace(p, ".oet", "", -1)
-    			edges += "{ \"data\": { \"style\": \"solid\",  \"color\": \"rgba(239, 121, 45, 0.95)\",  \"arrowcolor\": \"rgba(239, 121, 45, 0.95)\", \"source\": \"" + r.NodeName + "\", \"target\": \"" + p + "\" } },"
-    		}
-    		for _, v := range r.NodeReleasedList {
-    			v = strings.Replace(v, ".oet", "", -1)
-    			edges += "{ \"data\": { \"style\": \"dashed\", \"color\": \"#b2b0a9\",  \"arrowcolor\": \"#b2b0a9\", \"source\": \"" + r.NodeName + "\", \"target\": \"" + v + "\" } },"
-    		}
-
-    	}
-     */
-
-
     var edgeobj, nodeobj
 
     if (nodes.length > 0) {
@@ -1104,20 +1194,28 @@
       edges = "[" + edges.slice(0, -1) + "]"
       edgeobj = JSON.parse(edges)
     }
-    // edges = "[" + edges.slice(0, -1) + "]"    
-
-
-
-    /*     alert( nodeobj)
-
-
-        nodeobj = JSON.parse(JSON.stringify(nodes))
-        alert( nodeobj)
-     */
 
     document.getElementById("graphcard").style.display = "block"
     displayGraph(nodeobj, edgeobj);
+
+
+    displayGraphWarnings( edgeWarnings ) 
+
   }
+
+  function displayGraphWarnings( edgeWarnings ) {
+    
+    len = edgeWarnings.length
+    
+    for (i = 0; i < len; i++) {
+      //alert( edgeWarnings[i] )
+      id = edgeWarnings[i]
+      //alert( "check unmodified copy : " + id )
+      makeTippy( cy.getElementById(id), 'Warning: copy not changed' ).show()
+    }
+
+  }
+
 
   function graphCreate(theNodesAndEdges) {
 
@@ -1156,6 +1254,8 @@
 
       if (objreport[i].NodeChanged > 1) { // we have a new asset, so need the type column
         NewAssetsIncluded = true
+        //document.getElementById("table-tools").style.display = "block"
+        bulkedit()
       }
     }
 
@@ -1216,44 +1316,8 @@
         td = tr.insertCell();
         if (objreport[i].NodeChanged == 2) {
 
-
-          sel = document.createElement("select")
-          sel.id = objreport[i].NodeID
-          opt = document.createElement("option")
-          opt.text = "-- Type --"
-          sel.appendChild(opt)
-          opt = document.createElement("option")
-          opt.text = "Order Item"
-          sel.appendChild(opt)
-          opt = document.createElement("option")
-          opt.text = "Order Set"
-          sel.appendChild(opt)
-          opt = document.createElement("option")
-          opt.text = "Knowledge Topic"
-          sel.appendChild(opt)
-
-          sel.style.width = "100px"
-          td.appendChild(sel)
-
-          selprj = document.createElement("select")
-          selprj.id = objreport[i].NodeID + "_prj"
-
-          opt = document.createElement("option")
-          opt.text = "-- Project --"
-          selprj.appendChild(opt)
-
-          var projectcount = g_projectlist.length;
-          for (var j = 0; j < projectcount; j++) {
-            project = g_projectlist[j]
-
-            opt = document.createElement("option")
-            opt.text = project.name
-            opt.dataset.cid = project.cid
-            selprj.appendChild(opt)
-
-          }
-          selprj.style.width = "100px"
-          td.appendChild(selprj)
+          td.appendChild(getTypeOptions(objreport[i].NodeID))
+          td.appendChild(getProjectOptions(objreport[i].NodeID))
 
         } else {
 
@@ -1414,12 +1478,8 @@
           } else {
             td.appendChild(document.createTextNode(name.replace(".oet", "") + ", "))
           }
-
         }
-
-
       }
-
 
       td = tr.insertCell();
       if (objreport[i].NodeCommitOrder < 0) {
@@ -1434,14 +1494,12 @@
     while (tablelocation.firstChild) {
       tablelocation.removeChild(tablelocation.firstChild);
     }
-    var tableheading = document.getElementById("table-heading")
-    /* tableheading.appendChild(title) */
 
+    var tableheading = document.getElementById("table-heading")
     tablelocation.appendChild(tbl);
     tablelocation.style.display = "block"
 
     return CommitReady
-    //body.appendChild(tbl);
   }
 
   function getProjects() {
@@ -1454,12 +1512,6 @@
 
 
   function displayGraph(nodes, edges, zooming) {
-
-    //alert(JSON.parse(nodes))
-    /*     var elements = {
-          nodes,
-          edges
-        } */
 
     cy = window.cy = cytoscape({
       container: document.getElementById('cy'),
@@ -1499,7 +1551,7 @@
             'text-outline-color': '#fff',
             'text-outline-width': 2,
             'text-max-width': 10,
-                        'text-wrap': 'wrap'
+            'text-wrap': 'wrap'
 
           }
         },
@@ -1530,20 +1582,34 @@
 
   };
 
+  var makeTippy = function(thenode, text){
+    return tippy( thenode.popperRef(), {
+      content: function(){
+        var div = document.createElement('div');
+
+        div.innerHTML = "<b>Info</b><br>Released copy unedited.";
+        //div.innerHTML = '<img src="http://localhost/warning-yellow.png" width="32" height="32">'
+
+        return div;
+      },
+      trigger: 'manual',
+      arrow: true,
+      animation: 'fade',
+      placement: 'bottom',
+      hideOnClick: false,
+      multiple: true,
+      sticky: true
+    } );
+  };
 
 
   document.getElementById("precommit").onclick = start_precommit;
   document.getElementById("commit").onclick = start_commit;
-  //  document.getElementById("getgraph").onclick = get_graph;
+  document.getElementById("bulkedit").onclick = bulkedit;
   %%DOCUMENTLOAD%%
 
-  /*   document.getElementById("expandbutton").onclick = function () {
-      console.log('cy=', cy);
-      document.getElementById("graphcard").style.width = '100%'
-      document.getElementById("graphcard").style.height = '100%'
-      cy.fit();;
-    }
-   */
+
+
 </script>
 
 

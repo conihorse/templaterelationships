@@ -13,6 +13,18 @@
     <script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
     <script src="https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"></script>
 
+    
+    
+    <script src="https://unpkg.com/popper.js@1.14.7/dist/umd/popper.js"></script>
+    
+    
+    
+    <script src="http://localhost/cytoscape-popper.js"></script>
+    <script src="https://unpkg.com/tippy.js@4.0.1/umd/index.all.min.js"></script>
+    
+    
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@4.0.1/index.css" />
+    
     <style>
         body {
             font-family: helvetica;
@@ -33,6 +45,32 @@
             font-size: 1em;
         }
     </style>
+    	<style>
+            body {
+                font-family: helvetica neue, helvetica, liberation sans, arial, sans-serif;
+                font-size: 14px
+            }
+    
+            #cy {
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                z-index: 1;
+            }
+    
+            h1 {
+                opacity: 0.5;
+                font-size: 1em;
+                font-weight: bold;
+            }
+    
+            /* makes sticky faster; disable if you want animated tippies */
+            .tippy-popper {
+                transition: none !important;
+            }
+        </style>
 
     <script>
         window.addEventListener('DOMContentLoaded', function () {
@@ -84,7 +122,7 @@
                     }),
                 layout: {
                     name: 'dagre',
-                    rankDir: 'BT'
+                     rankDir: 'BT' 
                     /* ,
                                         labelpos: 'R', */
 
@@ -94,7 +132,7 @@
                     nodes: [{
                             data: {
                                 id: 'cat',
-                                name: 'tiddles the silly cat',
+                                name: 'tiddles',
 
                                 shape: 'triangle',
                                 bg: '#0f0'
@@ -152,6 +190,7 @@
                                 width: '100px',
                                 color: '#ffaaaa',
                                 arrowcolor: '#ffaaaa',
+                                id: 'ab',
                                 notee: "asset released not edited",
                                 
                                 
@@ -202,6 +241,42 @@
                     ]
                 }
             });
+
+
+
+			var a = cy.getElementById('cat');
+			var b = cy.getElementById('bird');
+			var ab = cy.getElementById('ab');
+
+			var makeTippy = function(thenode, text){
+				return tippy( thenode.popperRef(), {
+					content: function(){
+						var div = document.createElement('div');
+
+						div.innerHTML = text;
+
+						return div;
+					},
+					trigger: 'manual',
+					arrow: true,
+					placement: 'bottom',
+					hideOnClick: false,
+					multiple: true,
+					sticky: true
+				} );
+			};
+
+			var tippyA = makeTippy(a, 'foo');
+
+			tippyA.show();
+
+			var tippyB = makeTippy(b, 'bar');
+
+			tippyB.show();
+
+			var tippyAB = makeTippy(ab, 'baz');
+
+			tippyAB.show();
 
         });
     </script>

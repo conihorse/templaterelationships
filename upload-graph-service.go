@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	/* "aqwari.net/xml/xmltree" */
 	"github.com/Tkanos/gonfig"
 	"github.com/beevik/etree"
 	"github.com/hashicorp/go-retryablehttp"
@@ -71,6 +70,7 @@ type nodeDefinition struct {
 	NodeStatusMessage  string   // if something goes wrong....
 	NodeType           string   // for new assets committed to ckm (set in client -> commit)
 	NodeProjectCID     string   // for new assets committed to ckm (set in client -> commit)
+	NodeIsLocal        int      // [0,1] - ckm/mirror, local
 }
 
 type sessionData struct {
@@ -235,7 +235,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				getHashAndChangedStatus3(thisSessionData, true)
 
 				walktree(thisSessionData)
-				printMap(*thisSessionData)
+				//printMap(*thisSessionData)
 				//fmt.Fprintln(w, sendWUVToBrowser(thisSessionData.sessionID))
 				fmt.Fprintln(w, sendReportToBrowser(thisSessionData.sessionID))
 			} else {
@@ -494,7 +494,7 @@ func commitProcessing(changesetFolder string, mirrorpath string, data *sessionDa
 		for idx, node := range data.WuaNodes {
 			if node.NodeCommitOrder == commitidx { // commit nodes in the correct order
 				// commit this node
-				updateSessionStatus("Going to commit this: "+node.NodeName, data)
+				updateSessionStatus("Working to commit this: "+node.NodeName, data)
 
 				if node.NodeValidated < 0 {
 
@@ -508,6 +508,8 @@ func commitProcessing(changesetFolder string, mirrorpath string, data *sessionDa
 						data.WuaNodes[idx].NodeValidated = 1
 					}
 				}
+
+				traceability(&node, data)
 
 				if node.NodeChanged == 2 {
 					// new ndoe
@@ -595,24 +597,18 @@ func walktree(data *sessionData) {
 			log.Println("*** node order list after " + data.WuaNodes[i].NodeName + " ***")
 			log.Println(data.nodeOrderList)
 			log.Println("*** ********************* ***")
-
 		}
 	}
 }
 
 func setCommitOrder(data *sessionData) {
-
 	// for each node in the nodeOrderList
-
 	// check if it is to be committed, if so set its order
-
 	order := 1
-
 	for _, node := range data.nodeOrderList {
 		for idx, nodedef := range data.WuaNodes {
 			if node == nodedef.NodeName {
 				if nodedef.NodeCommitIntended > 0 || nodedef.NodeChanged > 0 {
-					//nodedef.NodeCommitOrder = order
 					data.WuaNodes[idx].NodeCommitOrder = order
 					order++
 				}
@@ -662,7 +658,7 @@ func mergeTraverseList(treeorder []string, data *sessionData) {
 									data.nodeOrderList[insertpos] = node
 									log.Println( data.nodeOrderList )
 			*/
-			data.nodeOrderList = append(data.nodeOrderList, node) // TODO - EXPERIMENT....
+			data.nodeOrderList = append(data.nodeOrderList, node) // TODO - .... (update: seems to work ok?)
 		}
 
 	}
@@ -751,7 +747,8 @@ func ckmGetCidFromID(id string, data *sessionData) (status bool, cid string) {
 
 	return true, string(bodydata)
 }
-/* 
+
+/*
 func parseParentsTree(ParentTree []string, TicketWorkingFolderPath string, data *sessionData) {
 
 	stringByte := strings.Join(ParentTree, "\x20") // x20 = space and x00 = null
@@ -898,7 +895,7 @@ func ckmGetContentXML(url string, data *sessionData) ([]byte, error) {
 	return bodydata, nil
 }
 
-func loadTestData(path string, data *sessionData) []string {
+/* func loadTestData(path string, data *sessionData) []string {
 
 	var files []string
 
@@ -922,7 +919,7 @@ func loadTestData(path string, data *sessionData) []string {
 	}
 
 	return nil
-}
+} */
 
 func unzip(src, dest string) error {
 	r, err := zip.OpenReader(src)
@@ -1041,8 +1038,8 @@ func findParentTemplates(id string, file string, ckmMirror string /* ticketDir s
 	var foundlocalfiles = grepDir("template_id=\""+id, ticketDir)
 	results := strings.Split(foundlocalfiles+"\n"+foundfiles, "\n")
 
-	var foundversions = grepDir("{AHSID~"+id, ckmMirror) // TODO move traceability token to .config
-	var foundlocalversions = grepDir("{AHSID~"+id, ticketDir)
+	var foundversions = grepDir("{~AHSID~"+id, ckmMirror) // TODO move traceability token to .config
+	var foundlocalversions = grepDir("{~AHSID~"+id, ticketDir)
 	versions := strings.Split(foundlocalversions+"\n"+foundversions, "\n")
 
 	data.relationsetXML = append(data.relationsetXML, "<template><filename>"+file+"</filename><id>"+id+"</id><contained-in>")
@@ -1158,7 +1155,7 @@ func printMap(data sessionData) string {
 }
 
 // navigates through xml tree recursively and appends child->parent relationships to map
-func mapTemplate(el *etree.Element, data *sessionData) bool {
+/* func mapTemplate(el *etree.Element, data *sessionData) bool {
 
 	var slParents []*etree.Element
 	var slVersions []*etree.Element
@@ -1272,8 +1269,8 @@ func mapTemplate(el *etree.Element, data *sessionData) bool {
 
 	return true
 }
-
-func mapWhereUsedXML(ParentTree []string, data *sessionData) {
+*/
+/* func mapWhereUsedXML(ParentTree []string, data *sessionData) {
 	// TODO: multiple root templates
 	doc := etree.NewDocument()
 	sXML := strings.Join(ParentTree, "\x20")
@@ -1291,7 +1288,7 @@ func mapWhereUsedXML(ParentTree []string, data *sessionData) {
 		}
 	}
 }
-
+*/
 // readLines reads a whole file into memory
 // and returns a slice of its lines.
 func readLines(path string) ([]string, error) {
@@ -1410,7 +1407,7 @@ func addParentToNode(node *nodeDefinition, sParentFilename string, data *session
 	return false
 }
 
-func initNode(node *nodeDefinition, sCurrentTemplateFilename, sCurrentTemplateID, sCurrentFilePath string, data *sessionData) (isNew bool, idx int) {
+func initNode(node *nodeDefinition, sCurrentTemplateFilename, sCurrentTemplateID, sCurrentFilePath string, nLocal int, data *sessionData) (isNew bool, idx int) {
 
 	node.NodeName = sCurrentTemplateFilename
 	node.NodeID = sCurrentTemplateID
@@ -1420,6 +1417,7 @@ func initNode(node *nodeDefinition, sCurrentTemplateFilename, sCurrentTemplateID
 	node.NodeCommitIntended = -1 // not yet processed by precommit
 	node.NodeIsCommitted = -1    // not yet processed by commit
 	node.NodeValidated = -1      // not yet processed by precommit
+	node.NodeIsLocal = nLocal
 
 	idx = templateInSessionNodes(node.NodeID, data)
 
@@ -1431,6 +1429,8 @@ func initNode(node *nodeDefinition, sCurrentTemplateFilename, sCurrentTemplateID
 	// if node is new, add it to session list
 	data.WuaNodes = append(data.WuaNodes, *node)
 	idx = len(data.WuaNodes) - 1
+
+	//traceability(node, data)
 
 	return true, idx
 }
@@ -1448,8 +1448,8 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 	var foundlocalfiles = grepDir("template_id=\""+node.NodeID, ticketDir)
 	results := strings.Split(foundlocalfiles+"\n"+foundfiles, "\n")
 
-	var foundversions = grepDir("{AHSID~"+node.NodeID, data.sessionConfig.MirrorCkmPath) // TODO move traceability token to .config
-	var foundlocalversions = grepDir("{AHSID~"+node.NodeID, ticketDir)
+	var foundversions = grepDir("{~AHSID~"+node.NodeID, data.sessionConfig.MirrorCkmPath) // TODO move traceability token to .config
+	var foundlocalversions = grepDir("{~AHSID~"+node.NodeID, ticketDir)
 	versions := strings.Split(foundlocalversions+"\n"+foundversions, "\n")
 
 	// add the parents to the node
@@ -1463,6 +1463,13 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 		result := results[i]
 		parts := strings.Split(result, ":")
 		parent = parts[0]
+		nLocal := 1
+
+		if strings.Contains(parent, data.sessionConfig.MirrorCkmPath) { 
+			nLocal = 0 // if it is in the ckm mirror, it's not local
+		}
+
+
 		parent = strings.TrimSpace(parent)
 
 		if parent != "" {
@@ -1475,7 +1482,7 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 
 			// create a new node / relation
 			var parentNode nodeDefinition
-			isNew, _ := initNode(&parentNode, trimmedparent, parentID, parent, data)
+			isNew, _ := initNode(&parentNode, trimmedparent, parentID, parent, nLocal, data)
 			if isNew {
 				templateToNode(&parentNode, data)
 			}
@@ -1493,10 +1500,18 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 		parent = parts[0]
 		parent = strings.TrimSpace(parent)
 
+
 		// remove the source template from the results.
 		if strings.Contains(parent, node.NodeName) {
 			continue
 		}
+		
+		nLocal := 0 
+
+		if strings.Contains(parent, data.sessionConfig.MirrorCkmPath) { 
+			nLocal = 1
+		}
+
 
 		if parent != "" {
 			log.Println("templateToNode version - " + parent)
@@ -1508,7 +1523,7 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 
 			// create a new node / relation
 			var parentNode nodeDefinition
-			isNew, _ := initNode(&parentNode, trimmedparent, parentID, parent, data)
+			isNew, _ := initNode(&parentNode, trimmedparent, parentID, parent, nLocal, data)
 			if isNew {
 				templateToNode(&parentNode, data)
 			}
@@ -1517,79 +1532,6 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 
 	}
 	return true
-
-	///---------------------------------------------------------------
-	/*
-		if id == "" {
-			log.Printf("findParentTemplates failure....no id passed in")
-			return false
-		}
-
-		log.Printf("findParentTemplates( " + id + " / " + file)
-
-		var foundfiles = grepDir("template_id=\""+id, ckmMirror)
-		var foundlocalfiles = grepDir("template_id=\""+id, ticketDir)
-		results := strings.Split(foundlocalfiles+"\n"+foundfiles, "\n")
-
-		var foundversions = grepDir("{AHSID~"+id, ckmMirror) // TODO move traceability token to .config
-		var foundlocalversions = grepDir("{AHSID~"+id, ticketDir)
-		versions := strings.Split(foundlocalversions+"\n"+foundversions, "\n")
-
-		data.relationsetXML = append(data.relationsetXML, "<template><filename>"+file+"</filename><id>"+id+"</id><contained-in>")
-
-		parent := ""
-
-		for i := range results {
-			result := results[i]
-			parts := strings.Split(result, ":")
-			parent = parts[0]
-			parent = strings.TrimSpace(parent)
-
-			if parent != "" {
-				log.Println("findParentTemplates parent - " + parent)
-				parentID := findTemplateID(parent)
-				trimmedparent := filepath.Base(parent)
-
-				findParentTemplates(parentID, trimmedparent, ckmMirror, data)
-			}
-		}
-		data.relationsetXML = append(data.relationsetXML, "</contained-in>")
-		data.relationsetXML = append(data.relationsetXML, "<released-in>")
-
-		for j := range versions {
-			version := versions[j]
-			if version == "" {
-				continue
-			}
-
-			parts := strings.Split(version, ":")
-			parent = parts[0]
-			parent = strings.TrimSpace(parent)
-
-			// remove the source template from the results.
-			if strings.Contains(parent, file) {
-				continue
-			}
-
-			if parent != "" {
-				log.Println("findParentTemplates version - " + parent)
-				parentID := findTemplateID(parent)
-				trimmedparent := filepath.Base(parent)
-
-				findParentTemplates(parentID, trimmedparent, ckmMirror , data)
-			}
-
-		}
-		data.relationsetXML = append(data.relationsetXML, "</released-in>")
-
-		data.relationsetXML = append(data.relationsetXML, "</template>")
-
-		if len(results) > 1 {
-			return true
-
-		}
-		return false */
-
 }
 
 func mapTicketTemplates2(mirrorPath string, data *sessionData) {
@@ -1597,7 +1539,8 @@ func mapTicketTemplates2(mirrorPath string, data *sessionData) {
 	var files []string
 	files = getLocalTemplateList(data.ChangesetFolder)
 	if files != nil {
-
+		nLocal := 1 // all local files
+		
 		for _, file := range files {
 			log.Printf("mapTicketTemplates2: " + file)
 			updateSessionStatus("Mapping Asset : "+file, data)
@@ -1607,7 +1550,7 @@ func mapTicketTemplates2(mirrorPath string, data *sessionData) {
 			// create node
 			var node nodeDefinition
 			trimmedfile := filepath.Base(file)
-			isNew, _ := initNode(&node, trimmedfile, templateID, file, data)
+			isNew, _ := initNode(&node, trimmedfile, templateID, file, nLocal, data)
 			if isNew {
 				templateToNode(&node, data)
 			}
@@ -1615,25 +1558,6 @@ func mapTicketTemplates2(mirrorPath string, data *sessionData) {
 	}
 
 }
-
-/* func mapTicketTemplates(mirrorPath string, data *sessionData) {
-
-	var files []string
-	files = getLocalTemplateList(data.ChangesetFolder)
-	if files != nil {
-
-		for _, file := range files {
-			log.Printf("loadTicketTemplates: " + file)
-			updateSessionStatus("Mapping Asset : "+file, data)
-
-			templateID := findTemplateID(file)
-			findParentTemplates(templateID, filepath.Base(file), mirrorPath , data)
-			mapWhereUsedXML(data.relationsetXML, data)
-		}
-	}
-
-}
-*/
 func getHashAndChangedStatus3(data *sessionData, quick bool) {
 
 	for i := 0; i < len(data.WuaNodes); i++ {
@@ -1683,7 +1607,7 @@ func getHashAndChangedStatus3(data *sessionData, quick bool) {
 
 }
 
-func getHashAndChangedStatus2(data *sessionData, quick bool) {
+/* func getHashAndChangedStatus2(data *sessionData, quick bool) {
 	var files []string
 
 	files = getLocalTemplateList(data.ChangesetFolder)
@@ -1737,7 +1661,7 @@ func getHashAndChangedStatus2(data *sessionData, quick bool) {
 		}
 	}
 }
-
+ */
 // returns md5 hash for file, using (linux) standard utility (md5sum)
 func hashTemplate(file string) string {
 
@@ -2086,7 +2010,10 @@ func processTreeTopFirst(relation *nodeDefinition, isTop bool, nodeOrderList *[]
 
 func ckmGetTemplateOET(node nodeDefinition, targetfile string) error { // TODO check return code / 404 issue
 
+	log.Println("ckmGetTemplateOET: " + targetfile)
 	// Get the data
+	
+
 	client := retryablehttp.NewClient()
 	client.CheckRetry = defaultRetryPolicy
 	resp, err := client.Get("https://ahsckm.ca/ckm/rest/v1/templates/" + node.NodeCID + "/oet")
@@ -2261,4 +2188,117 @@ func backupTicket(data sessionData) string {
 
 	stdout := outbuf.String()
 	return stdout
+}
+
+func traceability(node *nodeDefinition, data *sessionData) bool {
+
+	// check pre-existing
+	//  Search for {~AHSID
+	//  If present quit, else continue
+
+	//var found string
+
+/* 	found = grepFile(node.NodeLocation, "{~AHSID")
+
+	if len(found) > 1 {
+		log.Println("traceability: " + node.NodeName + " already contains AHSID.")
+		return true // don't need to modify the template, all is good...
+	} */
+
+	doc := etree.NewDocument()
+	if err := doc.ReadFromFile(node.NodeLocation); err != nil {
+		setSessionFailure("traceability: "+err.Error()+": "+node.NodeName+" failed to read contents ("+node.NodeLocation+")", data)
+		return false
+	}
+
+	var elTemplate *etree.Element
+	var theBaseAnnotations *etree.Element 
+
+
+	// get template structure
+	elTemplate = doc.SelectElement("template")
+	if elTemplate != nil {
+		elDefinition := elTemplate.SelectElement("definition")
+
+		if elDefinition != nil {
+
+			idxDefinition := elDefinition.Index()
+
+			baseArchetype := elDefinition.SelectAttrValue("archetype_id", "")
+			if( baseArchetype != "" ){
+				log.Println("traceability: " + node.NodeName + " contains " + baseArchetype + " structure.")
+
+				// does the template have annotations on the base node?
+
+				elAnnotationsCollection := elTemplate.SelectElements("annotations")
+				if( elAnnotationsCollection != nil ) {
+					for _, anAnnotationSet := range(elAnnotationsCollection) { // there may be multiple annotation elements with different xpaths
+						pathAnnoation := anAnnotationSet.SelectAttr("path")
+						if pathAnnoation.Value == "[" + baseArchetype + "]" { // we're looking for the one for the main/base archetype
+							// found it.
+							theBaseAnnotations = anAnnotationSet
+						}
+					}
+				} 
+
+				if( theBaseAnnotations == nil ) {
+					theBaseAnnotations = etree.NewElement("annotations")
+					theBaseAnnotations.CreateAttr( "path", "[" + baseArchetype + "]")	
+				}
+
+				elTemplate.InsertChildAt(idxDefinition, theBaseAnnotations)					
+
+				elBaseAnnotationItems := theBaseAnnotations.SelectElement("items")
+				if( elBaseAnnotationItems == nil ) {
+					// create the annotation collection
+					elBaseAnnotationItems = theBaseAnnotations.CreateElement("items")
+
+				}
+
+				// check all the item/keys
+				elBaseAnnotationItemCollection := elBaseAnnotationItems.SelectElements("item")
+				for _, anAnnotationPair  := range( elBaseAnnotationItemCollection ) {
+					if strings.Contains( anAnnotationPair.SelectElement("value").Text(), "{~AHSID~" ) {
+						// already existing.
+						updateSessionStatus("traceability: already existing in " + node.NodeName, data)						
+						return true
+					}
+				}
+
+				elAnnotationItem := elBaseAnnotationItems.CreateElement("item")
+				elAnnotationItem.CreateElement("key").SetText("Technical.ﻩ Technical Traceability")
+				elAnnotationItem.CreateElement("value").SetText("{~AHSID~" + node.NodeID + "~NAME~" + node.NodeName +"}")				
+			
+				err := doc.WriteToFile(node.NodeLocation)
+				if (err != nil) {
+					setSessionFailure( "traceability: failed to write out updated template " + node.NodeName, data)
+					return false
+				}
+				updateSessionStatus("traceability: added to " + node.NodeName, data)
+				return true
+			}
+		} else {
+			setSessionFailure("traceability: elDefinition := elTemplate.SelectElement() failed", data)
+			return false
+	
+		}
+		
+
+	} else {
+		setSessionFailure("traceability: 1elTemplate = doc.SelectElement() failed", data)
+		return false
+
+	}
+
+
+
+
+	/*
+	   check annotation structure
+	     Search for
+	     <annotations path="[openEHR-EHR-SECTION.adhoc.v1]">
+	      If not present insert structure and cont, else cont
+	*/
+
+	return false
 }
