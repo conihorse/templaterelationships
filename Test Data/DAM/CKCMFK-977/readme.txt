@@ -1,0 +1,2 @@
+This is the template file set for template Mock Two Test Smart Group( 00c2c4d4-805b-4a70-a6e4-5d9d3b457360, revision 1), exported from the Clinical Knowledge Manager.
+Export time: Wed Feb 20 22:30:58 MST 2019

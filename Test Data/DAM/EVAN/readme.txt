@@ -1,0 +1,2 @@
+This is the template file set for template LAB Cytogenetic Analysis Order( 5fb76f09-b7d4-4ed6-a1ca-199d81fd2496, revision 1), exported from the Clinical Knowledge Manager.
+Export time: Fri Feb 01 14:58:13 MST 2019

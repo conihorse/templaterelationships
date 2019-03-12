@@ -12,20 +12,24 @@
 
     <script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
     <script src="https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"></script>
+
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
     <style>
-/*         body {
+        /*         body {
             font-family: helvetica;
             font-size: 18px;
         } */
 
         #cy {
-            width: 100%;
+/*             width: 100%;
             height: 100%;
-            position: absolute;
-            left: 0;
+ */            position: inherit;
+ width: inherit;
+ height: inherit;
+/*             left: 0;
             top: 100;
-            z-index: 999;
-        }
+            //z-index: 999;
+ */        }
 
 /*         h1 {
             opacity: 0.5;
@@ -34,6 +38,8 @@
     </style>
 
     <script>
+
+
         function getstatus() {
 
             nodes = [{
@@ -75,13 +81,18 @@
 
             ];
             buildgraph(nodes, edges);
+            cy.zoomingEnabled(true)
+            cy.userZoomingEnabled(false)
+            cy.boxSelectionEnabled(true)
+            cy.selectionType('additive')
+
+
 
         };
 
         function buildgraph(nodes, edges) {
 
             //alert(JSON.parse(nodes))
-
             var cy = window.cy = cytoscape({
                 container: document.getElementById('cy'),
 
@@ -127,17 +138,67 @@
             });
 
         };
+
+        function resizer() {
+            cy.resize()
+            cy.fit()
+            let zm = cy.zoom()
+            document.getElementById("s1").value = zm
+            document.getElementById("header").innerHTML = zm; 
+
+        }
+
+
+        function maxit() {
+            document.getElementById("graphcard").style.width = '100%'
+            document.getElementById("graphcard").style.height = '1000px'
+            resizer()
+        }
+
+        function minit() {
+            document.getElementById("graphcard").style.width = '100%'
+            document.getElementById("graphcard").style.height = '200px'            
+            //document.getElementById("cy").style.height = '100%'                        
+            resizer()            
+        }
+
+        function init() {
+            
+            let i = document.getElementById("s1")
+            i.addEventListener('input', function () {
+                let zoomlevel = parseInt(i.value)
+                cy.zoom(zoomlevel)
+                document.getElementById("header").innerHTML = i.value; 
+                }, false);
+
+        }
+
     </script>
 
 
 
 </head>
 
-<body>
-    <h1>testgraph</h1>
-    <input id="clickMe" type="button" value="clickme" onclick="getstatus();" />
+<body onload="getstatus();init();" onresize="resizer()"></body>
+<div id="graph-tools" style="width:100%; display:block; align-content: center;">
+    <input class="mdl-slider mdl-js-slider" type="range" name="s1" id="s1" min="1" max="8" value="1" step="1">
+
+
+    <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="switch-1">
+        <input type="checkbox" id="switch-1" class="mdl-switch__input" checked>
+        <span class="mdl-switch__label"></span>
+    </label>
+</div>
+
+<h1 id="header">testgrfaph</h1>
+<input id="clickMe" type="button" value="fit" onclick="resizer();" />
+<input id="clickMe" type="button" value="max" onclick="maxit();" />
+<input id="clickMe" type="button" value="min" onclick="minit();" />
+<input id="clickMe" type="button" value="clear" onclick="cy.destroy();" />
+<div id="graphcard" class="demo-statuscard  mdl-shadow--2dp" style="height:50%; width:100%; display:flex" style="text-align:center">
     <div id="cy"></div>
-    <a href="#" onclick="alert('hi');">Get</a>
+</div>
+<!-- <a href="#" onclick="alert('hi');">Get</a> -->
 
 </body>
 

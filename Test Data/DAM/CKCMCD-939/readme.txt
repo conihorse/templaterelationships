@@ -1,0 +1,2 @@
+This is the template file set for template Diagnostic Imaging - Computed Tomography - CT Lower Extremity Bilateral Order( f4dd955a-b5de-4bf6-9b24-fb04efb26969, revision 1), exported from the Clinical Knowledge Manager.
+Export time: Wed Feb 20 15:41:07 MST 2019

@@ -1,6 +1,6 @@
 {
 	"MirrorCkmPath": 		"ckm-mirror",
-	"ChangesetPath": 		"DAM",
+	"ChangesetPath": 		"/mnt/nas/syncthing/AHS/CMIO Office/Clinical Content/Repository/TD Repositories",
 	"WorkingFolderPath":	"downloads/whereused",
 	"Port":					"8081",
 	"TestDataPath":			"./Test Data/Where-used/",

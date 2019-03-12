@@ -1,33 +1,20 @@
 <html>
 <title>Repository Upload</title>
-
 <head>
-
-
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
-
-  <!-- <script src="https://unpkg.com/cytoscape/dist/cytoscape.umd.js"></script> -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.4.2/cytoscape.min.js"></script>
-  <!-- for testing with local version of cytoscape.js -->
-  <!--    <script src="../cytoscape.js/build/cytoscape.js"></script> -->
-
   <script src="https://unpkg.com/dagre@0.7.4/dist/dagre.js"></script>
   <script src="https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-
-  <!-- Material Design Lite -->
   <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-  <!-- Material Design icon font -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <script src="https://unpkg.com/popper.js@1.14.7/dist/umd/popper.js"></script>
-    
-    
-    
   <script src="https://cytoscape.org/cytoscape.js-popper/cytoscape-popper.js"></script>
-  <script src="https://unpkg.com/tippy.js@4.0.1/umd/index.all.min.js"></script>
+  <script src="https://unpkg.com/tippy.js@4.0.1/umd/index.all.js"></script>
 
-  <style>
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">  
+
+<style>
     @media print {
         a[href]:after {
           content: none !important;
@@ -517,6 +504,7 @@
       /* background: url('https://www.ceati.com/images/dam.jpg') center / cover;       */
       /* background: url('https://i1.wp.com/www.learning-mind.com/wp-content/uploads/2018/03/abstract-thinking.jpg') center / cover;        */
       background: url('http://www.wallpapereast.com/static/images/abstract_wallpaper_images_background_3077_high_quality.jpg') center / cover ;       
+      background: url('http://beeby.ca/uploadservice-go.jpg') center / cover;
     }
     .mdl-data-table {
       white-space: initial;
@@ -527,9 +515,10 @@
     }
     .demo-statuscard {
       color: rgb(255, 255, 255);
-      /* background: rgb(255, 255, 255); */
-      background: #E6FCFD
-      height: 100px;
+      background: rgb(255, 255, 255); 
+      /* background: #E6FCFD; */
+
+      /* height: 100px; */
       width: 100%;
       /* background: url('https://34c84tlmchn2t7lm33f7h3ja-wpengine.netdna-ssl.com/wp-content/uploads/sites/11/2018/05/AHS-logo.jpg') center / cover; */
     }
@@ -548,11 +537,6 @@
 
 </head>
 
-<!-- <a id="getgraph" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-  Get Graph
-</a>
- -->
-
 <div id="WUVcard" class="mdl-card__supporting-text" style="display:none" style="height:10px; width:100%;">
   <b>Where Used View for %%TICKET%%</b> <br> Please note that due this graph being tuned for performance, there may be
   minor differences between this graph and the Upload Process graph. If so, the Upload Graph should take presedence.
@@ -569,8 +553,6 @@
   </div>
 
 </div>
-
-
 
 <div id="prepcard" class="demo-card-wide mdl-card mdl-shadow--2dp">
   <div class="mdl-card__title">
@@ -603,7 +585,6 @@
     </button>
   </div> -->
 </div>
-
 
 <div id="commitcard" class="demo-card-wide mdl-card mdl-shadow--2dp" style="display:none">
   <!-- initally hidden -->
@@ -661,7 +642,6 @@
 </div>
 
 
-
 <div id="nothingcard" class="demo-card-wide mdl-card mdl-shadow--2dp" style="display:none">
   <!-- initally hidden -->
   <div class="mdl-card__title">
@@ -678,37 +658,47 @@
  -->
 </div>
 
-
-
-
 <div id="statuscard" class="demo-statuscard  mdl-shadow--2dp" style="display:none">
   <!-- initally hidden -->
   <div id="statusdata" class="mdl-card__supporting-text">
 
   </div>
 </div>
-
-<!-- <button id="fit" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Fit</button> -->
-<!-- <div id="graphcard" class="areaheading" style="display:none"><b>Connections and Actions</b> -->
-
 <div id="graphcard" class="demo-statuscard  mdl-shadow--2dp" style="height:400px; width:100%; display:none" style="text-align:center">
-  <div id="cy" style="display:inline-flex"> </div>
-  <!--   <div id="expandgraph" style="z-index:999">
-    <a id="expandbutton" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-      Enlarge graph
-    </a> -->
-</div>
+    <div id="cy" style="display:inline-flex"> </div>
+  </div>
+  
+  
+<div id="graph-tools" class="demo-statuscard mdl-shadow--2dp" style="background: white; width:100%; display:none; align-content: center; padding-top:10px">
+  <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" style="margin:5px;" for="switch-size">
+    <input type="checkbox" id="switch-size" class="mdl-switch__input"  >
+    <span class="mdl-switch__label " style="color:rgba(0,0,0,.54);font-size:14">Graph Enlarge</span>
+  </label>
+
+  <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" style="margin:5px; " for="switch-1">
+    <input type="checkbox" id="switch-1" class="mdl-switch__input" >
+    <span class="mdl-switch__label " style="color:rgba(0,0,0,.54);font-size:14">Mouse-wheel zoom</span>
+  </label>
+
+  
+  <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" style="margin:5px; " for="switch-changes">
+    <input type="checkbox" id="switch-changes" class="mdl-switch__input" >
+    <span class="mdl-switch__label " style="color:rgba(0,0,0,.54);font-size:14">Changes Only</span>
+  </label>
+
 
 </div>
+  
+
 <br>
 <div id="table-tools" style="width:100%; display:none">
   <a id="bulkedit" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
     Batch Edit: Project & Type
   </a>
 </div>
-<div id="bulkdetailscard" class="demo-statuscard  mdl-shadow--2dp" style="display:none">
+<div id="bulkdetailscard" class="demo-statuscard  mdl-shadow--2dp" style="display:none; height: 80px;">
   <!-- initally hidden -->
-  <div class="mdl-card__supporting-text" style="display: block;">
+  <div class="mdl-card__supporting-text" style="display: block; padding-bottom: 5px;padding-top: 5px;">
     <b>Batch Choices</b><br>These choices will be used for all assets below with type/project left unassigned. Any assignments in the table below
     will override these batch choices.
   </div>
@@ -735,40 +725,56 @@
 
 </div>
 
+<BR>
 
-<!-- <div id="dumpcard" class="demo-statuscard  mdl-shadow--2dp" style="display:inherit">
-</div>
- --><BR>
 
-<!-- Stop Button -->
-<!-- <a href="#" onclick="window.clearInterval(int);return false;">Stop</a> -->
-<!-- <pre id="statusdata"></pre> -->
 <script type="text/javascript">
   var intTimer
   var g_sessionReport
   var g_projectlist
   var g_zooming, g_boxselection
+  var g_tips = []
+  var g_sizestate = "min"
 
-  /*   function getBatchAssetType() {
-      sel = document.getElementById("bulk-asset")
-      return sel.options[sel.selectedIndex].text
-
-      selprj = document.getElementById(node.NodeID + "bulk-project")
-      bulklocation.appendChild(getProjectOptions("bulk-project")); 
-
-
-      projecttext = selprj.options[selprj.selectedIndex].text
-      projectcid = selprj.options[selprj.selectedIndex].dataset.cid
-
-      
+  function resizer() {
+    if (typeof cy !== 'undefined') {
+            cy.resize()
+            cy.fit()
+            cy.center()
     }
-    
-    
-   */
+  //          let zm = cy.zoom()
+//            document.getElementById("s1").value = zm
+            //document.getElementById("header").innerHTML = zm; 
+        }
+
+
+  function graphsizer() {
+
+    if ( g_sizestate == "min" ) {
+      document.getElementById("graphcard").style.width = '100%'
+      document.getElementById("graphcard").style.height = '1000px'
+      resizer()
+      g_sizestate = "max"
+      //document.getElementById("sizer-button").innerText = "Shrink"
+
+    } else {
+
+/*       document.getElementById("graphcard").style.width = '100%'
+     document.getElementById("graphcard").style.height = '92%'
+ */
+ 
+       document.getElementById("graphcard").style.width = '100%'
+      document.getElementById("graphcard").style.height = '400px'            
+       resizer()          
+      g_sizestate = "min"        
+      //document.getElementById("sizer-button").innerText = "Enlarge"      
+    }
+
+  }
+
   function getTypeOptions(nodeid) {
 
     sel = document.createElement("select")
-    //sel.id = objreport[i].NodeID
     sel.id = nodeid
     opt = document.createElement("option")
     opt.text = "-- Type --"
@@ -784,10 +790,8 @@
     sel.appendChild(opt)
 
     sel.style.width = "100px"
-    //td.appendChild(sel)
+
     return sel
-
-
   }
 
   function getProjectOptions(nodeid) {
@@ -851,12 +855,16 @@
     g_zooming = true
     g_boxselection = true
 
-    document.getElementById("graphcard").style.width = '100%'
+    //g_sizestate = "max"
+//    graphsizer()
+     document.getElementById("graphcard").style.width = '100%'
     document.getElementById("graphcard").style.height = '92%'
-    //    cy.fit();;
+     //    cy.fit();;
 
     document.getElementById("prepcard").style.display = "none"
     document.getElementById("WUVcard").style.display = "inline-block"
+    document.getElementById("graph-tools").style.display = "none"
+    
     document.getElementById("WUVloader").style.display = "inline-block"
     //    document.getElementById("WUVcard").style.height = "50px"
 
@@ -882,6 +890,7 @@
         document.getElementById("commitcard").style.display = "none"
         document.getElementById("okcard").style.display = "inline-block"
         document.getElementById("WUVloader").style.display = "none"
+        
       }
       //tableCreate(g_sessionReport, false)
 
@@ -979,7 +988,6 @@
 
       }
     }
-    //alert ('returning true')
     return [true, assetdata]
 
   }
@@ -993,7 +1001,7 @@
 
       if (objStatus.IsError) {
         document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
-          " <br><b>ERROR!</b>";
+          " <br><b>ERROR!</b> " + objStatus.StatusText;
 
         window.clearInterval(intTimer);
         return false;
@@ -1011,14 +1019,12 @@
           g_sessionReport = JSON.parse(JSON.stringify(report))
           document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() +
             " <br>Finished Preparation!";
-          var commitready = tableCreate(report, true)
+
+            document.getElementById("graph-tools").style.display = "flex"
+            var commitready = tableCreate(report, true)
 
           graphCreate2()
-          /*           alert("old method")
-                    $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
-                      graphCreate(nodes)
-                    })
-           */
+
           if (commitready == true) {
             document.getElementById("commitcard").style.display = "inline-block"
           } else {
@@ -1050,29 +1056,17 @@
             document.getElementById("commitcard").style.display = "none"
             document.getElementById("okcard").style.display = "inline-block"
           }
+          document.getElementById("graph-tools").style.display = "flex"          
           tableCreate(g_sessionReport, false)
-
-          /*             $.getJSON("/nodes,%%SESSIONID%%", function (nodes) {
-                        graphCreate(nodes)
-                      })
-           */
           graphCreate2()
-
           document.getElementById("bulkdetailscard").style.display = "none"
         })
         return false;
       }
 
-      /* 
-            $.getJSON("/report,%%SESSIONID%%", function (report) {
-              tableCreate(report, false)
-
-            })
-       */
-
-      document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br>" +
+      document.getElementById("statusdata").innerHTML = "" + new Date().toLocaleString() + " <br><b>" +
         objStatus.Message +
-        " ";
+        "</b> ";
     });
   }
 
@@ -1089,44 +1083,62 @@
 
   function graphCreate2() {
 
+    
+
+
+    destroyGraphWarnings()
+
     var arrayLength = g_sessionReport.length
     var nodecolor = ""
     var nodes = "", edges = "";
     var sourcenode;
-
+    var edgeWarnings =[]
+    var hiddenNodes = ""
+    
+    // build nodes for graph
     for (var i = 0; i < arrayLength; i++) {
 
 
       switch (g_sessionReport[i].NodeCommitIntended) {
         case 0, -1:
 
-          nodecolor = "#4eadfc\"" // blue
+          nodecolor = "#4eadfc" // blue
+
+          if( document.getElementById("switch-changes").checked ) { // ignore unchanged assets
+            // 
+            // TODO: we will need to show assets pointed to only by version relationships 
+            hiddenNodes += g_sessionReport[i].NodeName + ' '
+            continue
+          }
           break
         case 1:
-          nodecolor = "#f10\""
+          nodecolor = "#f10"
           if (g_sessionReport[i].NodeIsCommitted > 0) {
-            nodecolor = "rgb(64, 165, 38)\"" // green
+            nodecolor = "rgb(64, 165, 38)" // green
           }
           break
         case 2:
-          nodecolor = "#fcb04e\""
+          nodecolor = "#fcb04e"
           if (g_sessionReport[i].NodeIsCommitted > 0) {
-            nodecolor = "#8FC681\"" // light green
+            nodecolor = "#8FC681" // light green
           }
           break
       }
-      nodelocalmodifier = ''
+      
+      nodelocalmodifier = ',"bgcolor":"'+nodecolor +'"'
 
       /* if (g_sessionReport[i].NodeChanged == -1) // node not local  */
       if (g_sessionReport[i].NodeIsLocal == 0) // node not local       
       {
         nodelocalmodifier = ',"bgcolor":"white"'
       }
+      
 
       nodes += '{"data":{"id":"' + g_sessionReport[i].NodeName.replace(".oet", "") + '"' + nodelocalmodifier +
-        ',"bg":"' + nodecolor + "}},"
+        ',"bg":"' + nodecolor + "\"}},"
     }
 
+    // build edges/lines for graph embedded relationships
     for (var i = 0; i < arrayLength; i++) {
       node = g_sessionReport[i]
       if (node.NodeParentList != null) {
@@ -1139,6 +1151,13 @@
           linecolor = "rgba(239, 121, 45, 0.95)" // change flow
         } else {
           linecolor = "#73A3CA" // GREY BLUE
+
+          if( document.getElementById("switch-changes").checked ) { // ignore unchanged assets
+            // 
+            // TODO: we will need to show assets pointed to only by version relationships 
+
+            continue
+          }
         }
 
         for (var p = 0; p < parrayLength; p++) {
@@ -1151,8 +1170,8 @@
         }
       }
 
-      edgeWarnings =[]
 
+     // build edges/lines for graph **released** relationships
       if (node.NodeReleasedList != null) {
         varrayLength = node.NodeReleasedList.length
         //releasedcolour = "#E0DE35" // yellowish
@@ -1160,6 +1179,13 @@
 
 
         for (var v = 0; v < varrayLength; v++) {
+
+
+          // avoid drawing edge for nodes that have been hidden, so check both nodes are not in hidden node list
+          if ( hiddenNodes.includes(node.NodeName) || hiddenNodes.includes( node.NodeReleasedList[v]) ) {
+            continue
+          }
+
           edgeid = node.NodeName + node.NodeReleasedList[v]
           WarningNeeded = false
 
@@ -1196,45 +1222,79 @@
     }
 
     document.getElementById("graphcard").style.display = "block"
+
     displayGraph(nodeobj, edgeobj);
-
-
     displayGraphWarnings( edgeWarnings ) 
+
+//    initGraphSwitches()
 
   }
 
   function displayGraphWarnings( edgeWarnings ) {
     
     len = edgeWarnings.length
+    var tip
+
+    for (i = 0; i < len; i++) {
+
+      id = edgeWarnings[i]
+      
+      tip = tippy( cy.getElementById(id).popperRef(), {
+        content: function(){
+          var div = document.createElement('div');
+
+          //div.innerHTML = "<b>Info</b><br>Released copy unedited.";
+          //div.innerHTML = '<img src="http://localhost/warning-yellow.png" width="32" height="32">'
+          div.innerHTML = '<img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Emblem-question-yellow.svg" width="18" height="18">'
+
+          return div;
+        },
+        trigger: 'manual',
+        arrow: true,
+        animation: 'fade',
+        placement: 'bottom',
+        hideOnClick: false,
+        multiple: true,
+        sticky: true
+      });
+      
+      g_tips.push(tip)      
+      
+      tip.show()
+    }
+
+  }
+
+  function showGraphWarnings(  ) {
+    len = g_tips.length
     
     for (i = 0; i < len; i++) {
-      //alert( edgeWarnings[i] )
-      id = edgeWarnings[i]
-      //alert( "check unmodified copy : " + id )
-      makeTippy( cy.getElementById(id), 'Warning: copy not changed' ).show()
-    }
+      tip = g_tips[i]
+      tip.hide()
+    } 
+  }
 
+  function destroyGraphWarnings(  ) {
+    len = g_tips.length
+    
+    for (i = 0; i < len; i++) {
+      tip = g_tips[i]
+      tip.destroy()
+    } 
+
+    g_tips = []
   }
 
 
-  function graphCreate(theNodesAndEdges) {
-
-    if (theNodesAndEdges == "") {
-      return
-    }
-    document.getElementById("graphcard").style.display = "block"
-    var objreport = JSON.parse(JSON.stringify(theNodesAndEdges))
-    //alert("parsed nodes")
-    var arrayLength = objreport.length;
-
-    if (arrayLength == 2) {
-
-      var nodes = objreport[0]
-      var edges = objreport[1]
-
-      displayGraph(nodes, edges);
-    }
+  function hideGraphWarnings(  ) {
+    len = g_tips.length
+    
+    for (i = 0; i < len; i++) {
+      tip = g_tips[i]
+      tip.hide()
+    } 
   }
+
 
   function tableCreate(objreport, dryrun) {
     var title
@@ -1297,6 +1357,7 @@
     hr.insertCell().appendChild(document.createTextNode("Embedded In"))
     hr.insertCell().appendChild(document.createTextNode("Released In"))
     hr.insertCell().appendChild(document.createTextNode("Upload Order"))
+    hr.insertCell().appendChild(document.createTextNode("Important Info"))
 
 
     var td, name;
@@ -1330,22 +1391,27 @@
 
       if (dryrun) {
         td = tr.insertCell();
-        switch (objreport[i].NodeChanged) {
-          case -1:
-            td.appendChild(document.createTextNode("Not Local"));
-            break;
-          case 0:
-            td.appendChild(document.createTextNode("Unedited"));
-            break;
-          case 1:
-            td.appendChild(document.createTextNode("Edited"));
-            break;
-          case 2:
-            td.appendChild(document.createTextNode("Created"));
-            break;
-          default:
-            td.appendChild(document.createTextNode("Unknown"));
-            break;
+        if( objreport[i].NodeIsLocal == 1 ) {
+            switch (objreport[i].NodeChanged) {
+/*             case -1:
+              td.appendChild(document.createTextNode("Not Local"));
+              break;
+ */            case 0:
+              td.appendChild(document.createTextNode("Unedited"));
+              break;
+            case 1:
+              td.appendChild(document.createTextNode("Edited"));
+              break;
+            case 2:
+              td.appendChild(document.createTextNode("Created"));
+              break;
+            default:
+              td.appendChild(document.createTextNode("Unknown"));
+              break;
+          }
+
+        } else {
+          td.appendChild(document.createTextNode("Not Local"));
         }
 
       }
@@ -1487,7 +1553,13 @@
       } else {
         td.appendChild(document.createTextNode(objreport[i].NodeCommitOrder));
       }
-
+      
+      td = tr.insertCell();
+      if (objreport[i].NodeRootEdited == 1 )  { // asset isn't in ckm yet, so no link
+        td.appendChild(document.createTextNode("Root node text edited!"));
+      } else {
+        td.appendChild(document.createTextNode("-"));
+      }
 
     }
     var tablelocation = document.getElementById("table-results")
@@ -1504,7 +1576,7 @@
 
   function getProjects() {
     var project
-    $.getJSON("/projects", function (projects) {
+    $.getJSON("/projects,%%SESSIONID%%" , function (projects) {
       g_projectlist = JSON.parse(JSON.stringify(projects))
 
     })
@@ -1512,19 +1584,18 @@
 
 
   function displayGraph(nodes, edges, zooming) {
-
+    //cytoscape.warnings(false)
     cy = window.cy = cytoscape({
       container: document.getElementById('cy'),
 
       boxSelectionEnabled: g_boxselection,
       autounselectify: true,
       userZoomingEnabled: g_zooming,
-      wheelSensitivity: 0.1,
+      //wheelSensitivity: 0.1,
 
       layout: {
         name: 'dagre',
         rankDir: 'BT',
-        //labelpos: 'R',
         nodeDimensionsIncludeLabels: true
       },
 
@@ -1538,16 +1609,8 @@
             'border-width': 20,
             'border-opacity': 0.5,
             'background-color': 'data(bgcolor)',
-            // 'background-color': '#fff',
-            //'background-color': '#11479e',
-            //'background-color': '#ff0000',
-            /*             'text-valign': 'center',
-               
-             */
-            'border-color': 'data(bg)',
+            
             'label': 'data(id)',
-            /*             'text-halign': 'right',
-                         'text-valign': 'center',  */
             'text-outline-color': '#fff',
             'text-outline-width': 2,
             'text-max-width': 10,
@@ -1567,7 +1630,6 @@
             'target-arrow-color': 'data(arrowcolor)',
             'line-dash-pattern': [6, 3],
             'line-style': 'data(style)',
-            /* 'labelpos': 'r' */
           }
         }
       ],
@@ -1602,6 +1664,36 @@
     } );
   };
 
+  function initGraphSwitches() {
+
+    let zoom_switch = document.getElementById("switch-1")
+      
+    zoom_switch.addEventListener('input', function () {
+      let toggle = document.getElementById("switch-1").checked
+      cy.userZoomingEnabled(toggle )
+      }, false);
+
+
+      let size_switch = document.getElementById("switch-size")
+      
+      size_switch.addEventListener('input', function () {
+        graphsizer();
+        }, false);
+    
+
+        let changes_switch = document.getElementById("switch-changes")
+      
+      changes_switch.addEventListener('input', function () {
+        if (typeof cy !== 'undefined') {
+            // the variable is defined
+            //alert("destroying!")
+            cy.destroy()
+        }
+        graphCreate2();
+      }, false);
+    
+   }
+
 
   document.getElementById("precommit").onclick = start_precommit;
   document.getElementById("commit").onclick = start_commit;
@@ -1611,7 +1703,7 @@
 
 
 </script>
-
+<body onload="initGraphSwitches();"  onresize="resizer();"></body>
 
 <!-- <div id="cy"></div> -->
 

@@ -1,0 +1,41 @@
+<templateFileSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.openehr.org/v1">
+   <cid>1175.132.9208</cid>
+   <versionAsset>1</versionAsset>
+   <templateName>LAB Cytogenetic Analysis Order</templateName>
+   <templateId>5fb76f09-b7d4-4ed6-a1ca-199d81fd2496</templateId>
+   <rootArchetypeId>openEHR-EHR-INSTRUCTION.service_request.v1</rootArchetypeId>
+   <creationTime>14-Dec-2018</creationTime>
+   <modificationTime>14-Dec-2018</modificationTime>
+   <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.9208_1</directLink>
+   <logMessage>Initial upload</logMessage>
+   <ckmResource>
+      <cid>1175.108.281</cid>
+      <versionAsset>4</versionAsset>
+      <resourceMainId>openEHR-EHR-INSTRUCTION.service_request.v1</resourceMainId>
+      <resourceMainDisplayName>Service request</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2018-04-20T11:07:41-0600</creationTime>
+      <modificationTime>2018-10-02T10:59:50-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.281_4</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.108.306</cid>
+      <versionAsset>3</versionAsset>
+      <resourceMainId>openEHR-EHR-CLUSTER.adhoc_cluster_heading.v1</resourceMainId>
+      <resourceMainDisplayName>Adhoc Cluster Heading</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2018-06-08T13:37:54-0600</creationTime>
+      <modificationTime>2018-06-08T14:30:34-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.306_3</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.108.275</cid>
+      <versionAsset>3</versionAsset>
+      <resourceMainId>openEHR-EHR-CLUSTER.service_request_information.v1</resourceMainId>
+      <resourceMainDisplayName>Service request information</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2018-03-23T14:21:30-0600</creationTime>
+      <modificationTime>2018-04-20T15:34:51-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.275_3</directLink>
+   </ckmResource>
+</templateFileSet>

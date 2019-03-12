@@ -1,0 +1,41 @@
+<templateFileSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.openehr.org/v1">
+   <cid>1175.132.12808</cid>
+   <versionAsset>6</versionAsset>
+   <templateName>p</templateName>
+   <templateId>8e3c3a79-53d2-4611-9cc9-b84aaa6e6c2e</templateId>
+   <rootArchetypeId>openEHR-EHR-SECTION.adhoc.v1</rootArchetypeId>
+   <creationTime>08-Jan-2019</creationTime>
+   <modificationTime>10-Jan-2019</modificationTime>
+   <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.12808_6</directLink>
+   <logMessage>testing commit process</logMessage>
+   <ckmResource>
+      <cid>1175.132.12803</cid>
+      <versionAsset>9</versionAsset>
+      <resourceMainId>70ff4159-0f6c-4064-bac4-ee91a978612e</resourceMainId>
+      <resourceMainDisplayName>o</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2019-01-08T10:51:06-0700</creationTime>
+      <modificationTime>2019-01-10T08:30:29-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.12803_9</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.132.12800</cid>
+      <versionAsset>11</versionAsset>
+      <resourceMainId>e9bd5fdb-d3a3-43be-aa87-d851e505f072</resourceMainId>
+      <resourceMainDisplayName>k</resourceMainDisplayName>
+      <resourceType>TEMPLATE</resourceType>
+      <creationTime>2019-01-08T10:38:32-0700</creationTime>
+      <modificationTime>2019-01-10T08:30:26-0700</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showTemplate_1175.132.12800_11</directLink>
+   </ckmResource>
+   <ckmResource>
+      <cid>1175.108.90</cid>
+      <versionAsset>3</versionAsset>
+      <resourceMainId>openEHR-EHR-SECTION.adhoc.v1</resourceMainId>
+      <resourceMainDisplayName>Ad hoc heading</resourceMainDisplayName>
+      <resourceType>ARCHETYPE</resourceType>
+      <creationTime>2017-04-12T20:15:16-0600</creationTime>
+      <modificationTime>2018-05-24T09:42:13-0600</modificationTime>
+      <directLink>https://ahsckm.ca/ckm/#showArchetype_1175.108.90_3</directLink>
+   </ckmResource>
+</templateFileSet>

@@ -23,7 +23,6 @@ import (
 	"github.com/Tkanos/gonfig"
 	"github.com/beevik/etree"
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/segmentio/ksuid"
 )
 
 type commitReport struct {
@@ -71,6 +70,8 @@ type nodeDefinition struct {
 	NodeType           string   // for new assets committed to ckm (set in client -> commit)
 	NodeProjectCID     string   // for new assets committed to ckm (set in client -> commit)
 	NodeIsLocal        int      // [0,1] - ckm/mirror, local
+	NodeRootEdited     int      // [0,1] - no, yes
+	NodeRootNewText    string   // if root node edited, this will contain the updated text
 }
 
 type sessionData struct {
@@ -89,9 +90,10 @@ type sessionData struct {
 	ProcessingStage  int    // [0,1,2,3,4] not started, finished precommit, finished precommit, started commit, finished commit
 	IsError          bool
 	NewAssetMetadata string // passed from client
-	//ckmToken         string // passed from client, used to identify user to CKM/Repository
-	authUser     string
-	authPassword string
+
+	authUser       string
+	authPassword   string
+	sessionlogfile *os.File // per-session logging target
 }
 
 var gSessionDataList []*sessionData // global array of session data, shared across threads but only one will write to it..... i think....
@@ -114,12 +116,6 @@ type status struct {
 	IsError         bool
 }
 
-// Note: Don't store your key in your source code. Pass it via an
-// environmental variable, or flag (or both), and don't accidentally commit it
-// alongside your code. Ensure your key is sufficiently random - i.e. use Go's
-// crypto/rand or securecookie.GenerateRandomKey(32) and persist the result.
-//var store = sessions.NewCookieStore([]byte("essionkey"))
-
 func buildStatusPage(data sessionData) string {
 
 	return data.StatusText
@@ -133,6 +129,33 @@ func getSessionData(sessionID string) *sessionData {
 		}
 	}
 	return nil
+
+}
+
+func loggingEnd(data *sessionData) {
+
+	var f = data.sessionlogfile
+	defer f.Close()
+}
+
+func loggingInit(data *sessionData) {
+
+	f, err := os.OpenFile(data.ChangesetFolder+"/"+data.sessionConfig.WorkingFolderPath+"/"+data.sessionID+".log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	data.sessionlogfile = f
+}
+
+func loggingWrite(data *sessionData, message string) {
+
+	log.Println(message)
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	var f = data.sessionlogfile
+	w := bufio.NewWriter(f)
+
+	w.WriteString(timestamp + ": " + message + "\n\n")
+	w.Flush()
 
 }
 
@@ -161,9 +184,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		statusSessionID := params[1] // sessionID
 		thisSessionData := getSessionData(statusSessionID)
 		thisSessionData.ProcessingStage = 1 // started precommit
-
+		loggingWrite(thisSessionData, "-----> starting 'precommit' process....")
 		//backup(thisSessionData.ChangesetFolder, WorkingFolderPath, )
-		backupTicket(*thisSessionData)
+		backupTicket(thisSessionData)
 
 		go precommitProcessing(thisSessionData.sessionConfig.MirrorCkmPath, thisSessionData)
 		// hash existing assets and identify changed assets
@@ -175,6 +198,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		// get all related assets that might be missing
 
 		// build precommit report.
+
 		fmt.Fprintln(w, sendStatusToBrowser(statusSessionID))
 		return
 	}
@@ -187,8 +211,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			metadataNewAssets := params[2]
 			thisSessionData.NewAssetMetadata = metadataNewAssets
 		}
-
-		// TODO enable client edit of change message
+		loggingWrite(thisSessionData, "-----> starting 'commit' process....")
+		// TODO: enable client edit of change message
 
 		/* 		if len(params) > 3 {
 		   			committext := params[3]
@@ -198,13 +222,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		thisSessionData.ProcessingStage = 3 // started commit
 		go commitProcessing(thisSessionData.ChangesetFolder, thisSessionData.sessionConfig.MirrorCkmPath, thisSessionData)
 		fmt.Fprintln(w, sendStatusToBrowser(statusSessionID))
+		//loggingEnd(thisSessionData)
 		return
 	}
 
 	if param0 == "projects" {
 		//fmt.Fprintln(w, sendStatusToBrowser(statusSessionID))
-
-		status, projects := sendProjectsToBrowser()
+		statusSessionID := params[1] // sessionID
+		thisSessionData := getSessionData(statusSessionID)
+		status, projects := sendProjectsToBrowser(thisSessionData)
 		if status {
 			fmt.Fprintln(w, projects)
 		}
@@ -238,6 +264,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				//printMap(*thisSessionData)
 				//fmt.Fprintln(w, sendWUVToBrowser(thisSessionData.sessionID))
 				fmt.Fprintln(w, sendReportToBrowser(thisSessionData.sessionID))
+				loggingEnd(thisSessionData)
 			} else {
 				setSessionFailure("ticket-view-report-json: couldn't get SessionData (check session id is passed in on uri)", thisSessionData)
 			}
@@ -251,18 +278,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	thisSessionData.sessionConfig = configuration{}
 	err := gonfig.GetConf("config.json", &thisSessionData.sessionConfig)
 	if err != nil {
-		panic(err)
+		panic(err) // TODO:
 	}
 	thisSessionData.WuaNodes = make([]nodeDefinition, 0)
 	thisSessionData.relationshipData = make(map[string]int) // where-used map
-	thisSessionData.sessionID = ksuid.New().String()
+	//thisSessionData.sessionID = ksuid.New().String()
+	thisSessionData.sessionID = strconv.FormatInt(int64(time.Now().Unix()), 10)
 	thisSessionData.ProcessingStage = 0
 	thisSessionData.IsError = false
 	thisSessionData.relationsetXML = []string{} // used to store the relationships between files
 	thisSessionData.nodeOrderList = []string{}  // used to store the order of the commit (filename)
 	gSessionDataList = append(gSessionDataList, &thisSessionData)
 
-	log.Printf("ckmpath = " + (string)(thisSessionData.sessionConfig.MirrorCkmPath))
+	//loggingWrite(&thisSessionData, "ckmpath = " + (string)(thisSessionData.sessionConfig.MirrorCkmPath))
 
 	switch {
 
@@ -274,7 +302,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		loggingInit(&thisSessionData)
+
 		template, err := readLines(thisSessionData.sessionConfig.HTMLStatusTemplate)
+		loggingWrite(&thisSessionData, "------> starting 'init' preprocess....")
 
 		if len(params) < 5 {
 			setSessionFailure("Exiting due to lack of parameters passed in (check change detail * auth token)...", &thisSessionData)
@@ -285,15 +316,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			if len(params) > 2 {
 				str := params[2]
-				log.Println("base64 change detail = " + thisSessionData.ChangeDetail)
+				//loggingWrite(&thisSessionData, "base64 change detail = "+thisSessionData.ChangeDetail)
 				data, err := base64.StdEncoding.DecodeString(str)
 				if err != nil {
-					fmt.Println("error:", err)
+					loggingWrite(&thisSessionData, "error:"+err.Error())
 					return
 				}
-				fmt.Printf("%q\n", data)
+
 				thisSessionData.ChangeDetail = string(data)
-				log.Println("change detail = " + thisSessionData.ChangeDetail)
+				loggingWrite(&thisSessionData, "change detail = "+thisSessionData.ChangeDetail)
 			}
 
 			if len(params) > 4 {
@@ -302,22 +333,23 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 				data, err := base64.StdEncoding.DecodeString(sPW)
 				if err != nil {
-					fmt.Println("pw decode error:", err)
+					loggingWrite(&thisSessionData, "pw decode error:"+err.Error())
 					return
 				}
-				fmt.Printf("%q\n", data)
+
 				thisSessionData.authPassword = string(data)
 
 				data, err = base64.StdEncoding.DecodeString(sUser)
 				if err != nil {
-					fmt.Println("error:", err)
+
+					loggingWrite(&thisSessionData, "error:"+err.Error())
 					return
 				}
-				fmt.Printf("%q\n", data)
+				loggingWrite(&thisSessionData, "user = "+string(data))
 				thisSessionData.authUser = string(data)
 
 				/* 				thisSessionData.ckmToken = str
-				   				log.Println("ckm token = " + thisSessionData.ckmToken)
+				   				loggingWrite(data, "ckm token = " + thisSessionData.ckmToken)
 				*/
 			}
 
@@ -356,7 +388,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		   			found := false
 
 		   			for _, file := range files {
-		   				log.Println(file)
+		   				loggingWrite(data, file)
 		   				if strings.Contains(file, node.NodeName) {
 		   					found = true
 		   					break
@@ -374,11 +406,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		   				if templateexists {
 
-		   					log.Printf("id: " + templateid + " cid: " + cid)
+		   					loggingWrite(data, "id: " + templateid + " cid: " + cid)
 		   					// get template filepack url
 
 		   					filepack := ckmGetTemplateFilepackURL(cid, &thisSessionData)
-		   					log.Printf("filepack = " + filepack)
+		   					loggingWrite(data, "filepack = " + filepack)
 		   					// retrieve filepack
 		   					filepackname := TicketWorkingFolderPath + "/" + cid + ".zip"
 		   					err := ckmDownloadFile(filepackname, filepack)
@@ -393,7 +425,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		   						panic(err)
 		   					}
 		   				} else {
-		   					log.Println("parseParentsTree : template doesn't exist : " + templateid)
+		   					loggingWrite(data, "parseParentsTree : template doesn't exist : " + templateid)
 		   				}
 		   			}
 
@@ -401,11 +433,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		   		status := ""
 
 		   		status = moveFiles(thisSessionData.ChangesetFolder, "templates", thisSessionData.sessionConfig.WorkingFolderPath)
-		   		log.Printf(status)
+		   		loggingWrite(data, status)
 		   		fmt.Fprintf(w, "<h3>grabbed"+status+"</h3>")
 
 		   		status = moveFiles(thisSessionData.ChangesetFolder, "archetypes", thisSessionData.sessionConfig.WorkingFolderPath)
-		   		log.Printf(status)
+		   		loggingWrite(data, status)
 		   		fmt.Fprintf(w, "<h3>grabbed"+status+"</h3>") */
 
 		// before downloading, back it up
@@ -413,10 +445,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	case param0 == "get-map":
 
 		thisSessionData.ChangesetFolder = thisSessionData.sessionConfig.ChangesetPath + "/" + params[1]
+
 		if checkEnvironment(thisSessionData) == false {
 			setSessionFailure("Exiting due to environment/config issues...", &thisSessionData)
 			return
 		}
+
+		loggingInit(&thisSessionData)
+		loggingWrite(&thisSessionData, "starting 'get-map' process....")
 		template, err := readLines(thisSessionData.sessionConfig.HTMLStatusTemplate)
 		//template, err := readLines("WURtemplate.html")
 
@@ -441,22 +477,24 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 
 	default:
-		log.Printf("unknown operation type: " + param0)
-		log.Printf("exiting...")
+		log.Println("unknown operation type: " + param0)
+		log.Println("exiting...")
 		return
 	}
 
 }
 func setSessionFailure(status string, data *sessionData) {
-	log.Println("---------------------------> setSessionFailure : " + status)
+	loggingWrite(data, "---------------------------> setSessionFailure : "+status)
 	data.StatusText = status
 	data.IsError = true
 }
 func updateSessionStatus(status string, data *sessionData) {
-	log.Println(status)
+	loggingWrite(data, status)
+
 	data.StatusText = status
 }
-func getNodeTypeAndProject(node nodeDefinition, metadata string) (status bool, assettype, project string) {
+
+func getNodeTypeAndProject(node nodeDefinition, metadata string, data *sessionData) (status bool, assettype, project string) {
 	status = false
 
 	splits := strings.Split(strings.ToLower(metadata), "%5e")
@@ -464,7 +502,7 @@ func getNodeTypeAndProject(node nodeDefinition, metadata string) (status bool, a
 
 		for _, def := range splits {
 			nodedef := strings.Split(def, "~")
-			log.Println("found : " + nodedef[0])
+			loggingWrite(data, "found : "+nodedef[0])
 			if nodedef[0] == node.NodeID {
 				assettype = nodedef[1]
 				project = nodedef[2]
@@ -475,8 +513,8 @@ func getNodeTypeAndProject(node nodeDefinition, metadata string) (status bool, a
 
 	assettype = strings.ToUpper(strings.Replace(assettype, "%20", "_", 1))
 
-	log.Println("asset type = " + assettype)
-	log.Println("project cid = " + project)
+	loggingWrite(data, "asset type = "+assettype)
+	loggingWrite(data, "project cid = "+project)
 
 	return status, assettype, project
 }
@@ -496,9 +534,11 @@ func commitProcessing(changesetFolder string, mirrorpath string, data *sessionDa
 				// commit this node
 				updateSessionStatus("Working to commit this: "+node.NodeName, data)
 
-				if node.NodeValidated < 0 {
+				insertTraceability(&node, data)
+				insertUpdatedRootNodes(&node, data)
 
-					if node.NodeChanged != -1 { // don't bother validating as there's no local copy. We'll get the asset down from CKM and (re)upload in the commit.
+				if node.NodeValidated < 0 {
+					if node.NodeIsLocal == 1 { // don't bother validating as there's no local copy. We'll get the asset down from CKM and (re)upload in the commit.
 						if !ckmValidateTemplate(&data.WuaNodes[idx], data) {
 							data.WuaNodes[idx].NodeValidated = 0
 							setSessionFailure("commitProcessing : ERROR validate template failed for "+data.WuaNodes[idx].NodeName, data)
@@ -509,11 +549,9 @@ func commitProcessing(changesetFolder string, mirrorpath string, data *sessionDa
 					}
 				}
 
-				traceability(&node, data)
-
 				if node.NodeChanged == 2 {
 					// new ndoe
-					found, assettype, cid := getNodeTypeAndProject(node, data.NewAssetMetadata)
+					found, assettype, cid := getNodeTypeAndProject(node, data.NewAssetMetadata, data)
 					problems = !found
 
 					if !problems {
@@ -523,31 +561,34 @@ func commitProcessing(changesetFolder string, mirrorpath string, data *sessionDa
 						if !ckmCommitNewTemplate(&data.WuaNodes[idx], data) {
 							problems = true
 						}
-						log.Println("New: " + node.NodeName)
+						loggingWrite(data, "New: "+node.NodeName)
 					}
 				} else {
 					// existing node
 					if !ckmCommitRevisedTemplate(&data.WuaNodes[idx], data) {
 						problems = true
 					}
-					log.Println("update: " + node.NodeName)
+					loggingWrite(data, "update: "+node.NodeName)
 				}
 
 				if !problems {
-					err := ckmGetTemplateOET(node, node.NodeLocation)
-					if err != nil {
-						setSessionFailure("ERROR: failed to get copy of committed template from CKM", data)
-						problems = true
-						return problems
+
+					if node.NodeIsLocal > 0 { // grab a fresh copy from CKM to replace the local one (which was just committed)
+						// this is done because local copies can have different linewrapping (unix vs windows), which causes hash differences between the "same"
+						// versions in ckm vs local.
+						err := ckmGetTemplateOET(node, node.NodeLocation, data)
+						if err != nil {
+							setSessionFailure("ERROR: failed to get copy of committed template from CKM", data)
+							problems = true
+							return problems
+						}
 					}
 				} else {
 					setSessionFailure("ERROR : something went wrong in commit", data)
 					return problems
 				}
-
 				data.WuaNodes[idx].NodeIsCommitted = 1
 				commitidx++
-
 				found = true
 			}
 		}
@@ -557,6 +598,7 @@ func commitProcessing(changesetFolder string, mirrorpath string, data *sessionDa
 	data.ProcessingStage = 4 // finished commit
 	updateSessionStatus("*** Done! ***", data)
 	data.HTMLGraph = generateMap2(*data, "graphtemplate.html")
+	loggingEnd(data)
 	return problems
 }
 
@@ -572,9 +614,9 @@ func precommitProcessing( /* changesetFolder string, */ mirrorpath string, data 
 
 	walktree(data)
 	setCommitOrder(data)
-	log.Println("*** Final node order list ***")
-	log.Println(data.nodeOrderList)
-	log.Println("*** ********************* ***")
+	loggingWrite(data, "*** Final node order list ***")
+	loggingWrite(data, strings.Join(data.nodeOrderList, " "))
+	loggingWrite(data, "*** ********************* ***")
 	data.ProcessingStage = 2
 	return
 }
@@ -587,16 +629,16 @@ func walktree(data *sessionData) {
 
 			treeorder := []string{}
 
-			log.Println("precommitProcessing: processTreeTopFirst( " + data.WuaNodes[i].NodeName + ")")
+			loggingWrite(data, "precommitProcessing: processTreeTopFirst( "+data.WuaNodes[i].NodeName+")")
 			if processTreeTopFirst(&data.WuaNodes[i], true, &treeorder, data, true) { // dry run flag set
 				if data.WuaNodes[i].NodeCommitIntended < 1 {
 					data.WuaNodes[i].NodeCommitIntended = 2
 				}
 			}
 			mergeTraverseList(treeorder, data)
-			log.Println("*** node order list after " + data.WuaNodes[i].NodeName + " ***")
-			log.Println(data.nodeOrderList)
-			log.Println("*** ********************* ***")
+			loggingWrite(data, "*** node order list after "+data.WuaNodes[i].NodeName+" ***")
+			loggingWrite(data, strings.Join(data.nodeOrderList, " "))
+			loggingWrite(data, "*** ********************* ***")
 		}
 	}
 }
@@ -621,8 +663,8 @@ func setCommitOrder(data *sessionData) {
 // of nodes to commit, keeping the same relative order
 func mergeTraverseList(treeorder []string, data *sessionData) {
 
-	log.Println("mergeTraverseList: list to merge = ")
-	log.Println(treeorder)
+	loggingWrite(data, "mergeTraverseList: list to merge = ")
+	loggingWrite(data, strings.Join(treeorder, " "))
 
 	// merge tree order into session commit order
 	last := len(treeorder) - 1
@@ -637,28 +679,9 @@ func mergeTraverseList(treeorder []string, data *sessionData) {
 			}
 		}
 
-		// if it doesnt exist, insert it after its predecessor (which should already exist by now)
+		// if it doesnt exist, append it
 		if !nodeExists {
-			/*			insertpos := 0
-						 			if i > 0 { // node has a predecessor
-										prenode := treeorder[(last - i + 1)]
-
-										for prepos, name := range data.nodeOrderList {
-											if name == prenode {
-												insertpos = prepos + 1
-												break
-											}
-										}
-									}
-									// insert node into session at insertpos
-									data.nodeOrderList = append(data.nodeOrderList, "")
-									log.Println("mergeTraverseList: inserting " + node + " at " + strconv.Itoa(insertpos))
-									log.Println( data.nodeOrderList)
-									copy(data.nodeOrderList[(insertpos+1):], data.nodeOrderList[insertpos:])
-									data.nodeOrderList[insertpos] = node
-									log.Println( data.nodeOrderList )
-			*/
-			data.nodeOrderList = append(data.nodeOrderList, node) // TODO - .... (update: seems to work ok?)
+			data.nodeOrderList = append(data.nodeOrderList, node) // .... (update: seems to work ok?)
 		}
 
 	}
@@ -675,7 +698,7 @@ func checkEnvironment(data sessionData) bool { //config configuration, ticketdir
 	return true
 }
 
-func moveFiles(changesetFolder, assetType, WorkingFolderPath string) string {
+func moveFiles(changesetFolder, assetType, WorkingFolderPath string, data *sessionData) string {
 
 	cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", changesetFolder+"/"+WorkingFolderPath+"/unzipped/"+assetType, changesetFolder)
 	var outbuf, errbuf bytes.Buffer
@@ -684,7 +707,7 @@ func moveFiles(changesetFolder, assetType, WorkingFolderPath string) string {
 
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("moveFiles finished with error: %v", err)
+		loggingWrite(data, "moveFiles finished with error: "+err.Error())
 	}
 
 	stdout := outbuf.String()
@@ -694,10 +717,10 @@ func moveFiles(changesetFolder, assetType, WorkingFolderPath string) string {
 func ckmGetTemplateFilepackURL(cid string, data *sessionData) (filesetURL string) {
 
 	if contentdata, err := ckmGetContentPlain("https://ahsckm.ca/ckm/rest/v1/templates/"+cid+"/file-set-url", data); err != nil {
-		log.Printf("Failed to get XML: %v", err)
+		loggingWrite(data, "Failed to get XML: "+err.Error())
 	} else {
 		//check(err)
-		log.Println("Received XML:" + string(contentdata))
+		loggingWrite(data, "Received XML:"+string(contentdata))
 		return string(contentdata)
 	}
 	return ""
@@ -705,10 +728,10 @@ func ckmGetTemplateFilepackURL(cid string, data *sessionData) (filesetURL string
 
 func cacheGetCidFromID(id string, data *sessionData) (status bool, cid string) {
 
-	// TODO implement local cache
+	// TODO: implement local cache
 	//	return true, "fake"
 	status, cid = ckmGetCidFromID(id, data)
-	log.Println("ckmGetCidFromID(" + id + ") = " + cid)
+	loggingWrite(data, "ckmGetCidFromID("+id+") = "+cid)
 	return status, cid
 }
 
@@ -720,7 +743,7 @@ func ckmGetCidFromID(id string, data *sessionData) (status bool, cid string) {
 		return false, ""
 	}
 	req.Header.Set("Accept", "text/plain")
-	req.SetBasicAuth(data.authUser, data.authPassword)
+	//req.SetBasicAuth(data.authUser, data.authPassword)
 
 	client := retryablehttp.NewClient()
 	client.CheckRetry = defaultRetryPolicy
@@ -733,7 +756,7 @@ func ckmGetCidFromID(id string, data *sessionData) (status bool, cid string) {
 
 	if resp.StatusCode != 200 || resp.StatusCode == 404 { // not success
 		if resp.StatusCode != 404 {
-			//log.Println("ERROR: ckmGetCidFromID response statuscode = " + strconv.FormatInt(int64(resp.StatusCode), 10))
+			//loggingWrite(data, "ERROR: ckmGetCidFromID response statuscode = " + strconv.FormatInt(int64(resp.StatusCode), 10))
 			setSessionFailure("ERROR: ckmGetCidFromID response statuscode = "+strconv.FormatInt(int64(resp.StatusCode), 10), data)
 		}
 		return false, ""
@@ -748,55 +771,7 @@ func ckmGetCidFromID(id string, data *sessionData) (status bool, cid string) {
 	return true, string(bodydata)
 }
 
-/*
-func parseParentsTree(ParentTree []string, TicketWorkingFolderPath string, data *sessionData) {
-
-	stringByte := strings.Join(ParentTree, "\x20") // x20 = space and x00 = null
-	root, err := xmltree.Parse([]byte(stringByte))
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, el := range root.Search("", "id") {
-
-		templateid := (string)(el.Content)
-		// get cid
-
-		templateexists, cid := ckmGetCidFromID(templateid, data)
-
-		if templateexists {
-
-			log.Printf("id: " + templateid + " cid: " + cid)
-			// get template filepack url
-
-			filepack := ckmGetTemplateFilepackURL(cid, data)
-			log.Printf("filepack = " + filepack)
-			// retrieve filepack
-			filepackname := TicketWorkingFolderPath + "/" + cid + ".zip"
-			err := ckmDownloadFile(filepackname, filepack)
-			if err != nil {
-				panic(err)
-			}
-
-			// unpack filepack
-
-			err = unzip(filepackname, TicketWorkingFolderPath+"/unzipped")
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			log.Println("parseParentsTree : template doesn't exist : " + templateid)
-		}
-	}
-
-} */
-
-/* func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-*/
-func backup(changesetFolder, WorkingFolderPath string, relation nodeDefinition) string {
+func backup(changesetFolder, WorkingFolderPath string, relation nodeDefinition, data *sessionData) string {
 
 	cmd := exec.Command("rsync", "-av", "--ignore-existing", "--remove-source-files", changesetFolder+"/"+WorkingFolderPath+"/backup/", relation.NodeLocation)
 	var outbuf, errbuf bytes.Buffer
@@ -805,7 +780,7 @@ func backup(changesetFolder, WorkingFolderPath string, relation nodeDefinition) 
 
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("backup finished with error: %v", err)
+		loggingWrite(data, "backup finished with error: "+err.Error())
 	}
 
 	stdout := outbuf.String()
@@ -849,8 +824,7 @@ func ckmGetContentPlain(url string, data *sessionData) ([]byte, error) {
 		return nil, fmt.Errorf("ckmGetContentPlain: http.NewRequest() failed:  %v", err)
 	}
 	req.Header.Set("Accept", "text/plain")
-	//req.Header.Set("Authorization", "Basic "+token)
-	//req.Header.Set("JSESSIONID", token)
+
 	req.SetBasicAuth(data.authUser, data.authPassword)
 
 	client := retryablehttp.NewClient()
@@ -886,7 +860,7 @@ func ckmGetContentXML(url string, data *sessionData) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ckmGetContentXML:  http.DefaultClient.Do() failed: %v", err)
 	}
-	// TODO check statuscode and implement setsessionfail
+	// TODO: check statuscode and implement setsessionfail
 	defer resp.Body.Close()
 	bodydata, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -894,32 +868,6 @@ func ckmGetContentXML(url string, data *sessionData) ([]byte, error) {
 	}
 	return bodydata, nil
 }
-
-/* func loadTestData(path string, data *sessionData) []string {
-
-	var files []string
-
-	root := path
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-
-		if strings.ToLower(filepath.Ext(info.Name())) == ".xml" {
-			files = append(files, path)
-		}
-		return nil
-	})
-	if err != nil {
-		panic(err)
-	}
-	for _, file := range files {
-		log.Printf("testdata: " + file)
-		testdata, err := readLines(file)
-		if err == nil {
-			mapWhereUsedXML(testdata, data)
-		}
-	}
-
-	return nil
-} */
 
 func unzip(src, dest string) error {
 	r, err := zip.OpenReader(src)
@@ -980,11 +928,6 @@ func unzip(src, dest string) error {
 	return nil
 }
 
-func panic(err error) {
-	fmt.Println(err.Error())
-
-}
-
 func main() {
 
 	http.HandleFunc("/", handler)
@@ -1001,20 +944,20 @@ func main() {
 
 }
 
-func findTemplateID(path string) string {
+func findTemplateID(path string, data *sessionData) string {
 	// return the unique identifier for the template specified in the path param
 
 	var templateID string
 	lines, err := readLines(path)
 	if err != nil {
-		log.Println("ERROR findTemplateID : " + err.Error())
+		loggingWrite(data, "ERROR findTemplateID : "+err.Error())
 		return templateID
 
 	}
 	content := strings.Join(lines, " ")
 	splits := strings.Split(strings.ToLower(content), "<id>")
 	if len(splits) > 1 {
-		templateID = (splits[1])[0:36] // assumes id format is fixed.... naughty naughty
+		templateID = (splits[1])[0:36] // HACK: assumes id format is fixed....
 	}
 
 	return templateID
@@ -1025,20 +968,19 @@ func findTemplateID(path string) string {
 func findParentTemplates(id string, file string, ckmMirror string /* ticketDir string,  */, data *sessionData) bool {
 
 	ticketDir := "./" + data.ChangesetFolder + "/"
-	//	ckmMirror = "./"+ckmMirror+"/"
 
 	if id == "" {
-		log.Printf("findParentTemplates failure....no id passed in")
+		loggingWrite(data, "findParentTemplates failure....no id passed in")
 		return false
 	}
 
-	log.Printf("findParentTemplates( " + id + " / " + file)
+	loggingWrite(data, "findParentTemplates( "+id+" / "+file)
 
 	var foundfiles = grepDir("template_id=\""+id, ckmMirror)
 	var foundlocalfiles = grepDir("template_id=\""+id, ticketDir)
 	results := strings.Split(foundlocalfiles+"\n"+foundfiles, "\n")
 
-	var foundversions = grepDir("{~AHSID~"+id, ckmMirror) // TODO move traceability token to .config
+	var foundversions = grepDir("{~AHSID~"+id, ckmMirror) // TODO:: move traceability token to .config
 	var foundlocalversions = grepDir("{~AHSID~"+id, ticketDir)
 	versions := strings.Split(foundlocalversions+"\n"+foundversions, "\n")
 
@@ -1053,8 +995,8 @@ func findParentTemplates(id string, file string, ckmMirror string /* ticketDir s
 		parent = strings.TrimSpace(parent)
 
 		if parent != "" {
-			log.Println("findParentTemplates parent - " + parent)
-			parentID := findTemplateID(parent)
+			loggingWrite(data, "findParentTemplates parent - "+parent)
+			parentID := findTemplateID(parent, data)
 			trimmedparent := filepath.Base(parent)
 
 			findParentTemplates(parentID, trimmedparent, ckmMirror /* ticketDir,  */, data)
@@ -1077,13 +1019,10 @@ func findParentTemplates(id string, file string, ckmMirror string /* ticketDir s
 		if strings.Contains(parent, file) {
 			continue
 		}
-		/* 		if parent == file {
-		   			continue
-		   		}
-		*/
+
 		if parent != "" {
-			log.Println("findParentTemplates version - " + parent)
-			parentID := findTemplateID(parent)
+			loggingWrite(data, "findParentTemplates version - "+parent)
+			parentID := findTemplateID(parent, data)
 			trimmedparent := filepath.Base(parent)
 
 			findParentTemplates(parentID, trimmedparent, ckmMirror /* ticketDir, */, data)
@@ -1101,20 +1040,20 @@ func findParentTemplates(id string, file string, ckmMirror string /* ticketDir s
 	return false
 }
 
-func grepDir(pattern string, ckmMirror string) string {
-	cmd := exec.Command("grep", "-r", pattern, ckmMirror)
+func grepDir(pattern string, dir string) string {
+	//cmd := exec.Command("grep", "-r --exclude-dir=\"downloads\"", pattern, dir)
+	cmd := exec.Command("grep", "-r", "--exclude-dir=downloads", pattern, dir)
+	// grep -R menu ./ -i --exclude-dir="downloads"
 	var outbuf, errbuf bytes.Buffer
 	cmd.Stdout = &outbuf
 	cmd.Stderr = &errbuf
 	cmd.Run()
-	/* 	if err != nil {
-	   		log.Printf("grepDir finished with error: %v", err)
-	   	}
-	*/stdout := outbuf.String()
+
+	stdout := outbuf.String()
 	return stdout
 }
 
-func grepFile(file string, pattern string) string {
+func grepFile(file string, pattern string, data *sessionData) string {
 
 	cmd := exec.Command("grep", pattern, file)
 
@@ -1124,7 +1063,7 @@ func grepFile(file string, pattern string) string {
 
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("grepFile finished with error: %v", err)
+		loggingWrite(data, "grepFile finished with error: "+err.Error())
 	}
 	stdout := outbuf.String()
 	return stdout
@@ -1134,9 +1073,9 @@ func printSession(data sessionData) string {
 
 	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		fmt.Println("error:", err)
+		loggingWrite(&data, "printSession error:"+err.Error())
 	}
-	fmt.Print(string(b))
+	loggingWrite(&data, string(b))
 
 	return string(b)
 
@@ -1146,149 +1085,15 @@ func printMap(data sessionData) string {
 
 	b, err := json.MarshalIndent(data.WuaNodes, "", "  ")
 	if err != nil {
-		fmt.Println("error:", err)
+
+		loggingWrite(&data, "printMap error:"+err.Error())
 	}
-	fmt.Print(string(b))
+	loggingWrite(&data, string(b))
 
 	return string(b)
 
 }
 
-// navigates through xml tree recursively and appends child->parent relationships to map
-/* func mapTemplate(el *etree.Element, data *sessionData) bool {
-
-	var slParents []*etree.Element
-	var slVersions []*etree.Element
-	var alreadyExists = false
-	var foundrelation = -1
-	var relation nodeDefinition
-
-	if el == nil {
-		return false
-	}
-
-	// TODO: multiple 'contained' templates
-	eTemplateFilename := el.SelectElement("filename")
-	eTemplateID := el.SelectElement("id")
-
-	if (eTemplateFilename == nil) || (eTemplateID == nil) {
-		return false
-	}
-
-	sCurrentTemplateFilename := eTemplateFilename.Text()
-	sCurrentTemplateID := eTemplateID.Text()
-
-	// add to unique list of known templates
-	data.relationshipData[sCurrentTemplateFilename] = 0
-
-	eContainedIn := el.SelectElement("contained-in")
-
-	if eContainedIn != nil {
-		slParents = eContainedIn.SelectElements("template")
-	}
-
-	// find the child
-	for idx, r := range data.WuaNodes {
-		if r.NodeID == sCurrentTemplateID {
-			alreadyExists = true
-			foundrelation = idx
-			break
-		}
-	}
-
-	if !alreadyExists { // create node if not found
-		//relation.uid = ksuid.New().String()
-		relation.NodeName = sCurrentTemplateFilename
-		relation.NodeID = sCurrentTemplateID
-		relation.NodeChanged = -1        // // not yet processed by precommit
-		relation.NodeCommitOrder = -1    // not yet processed by precommit
-		relation.NodeCommitIntended = -1 // not yet processed by precommit
-		relation.NodeIsCommitted = -1    // not yet processed by commit
-		relation.NodeValidated = -1      // not yet processed by precommit
-
-		data.WuaNodes = append(data.WuaNodes, relation)
-
-		foundrelation = len(data.WuaNodes) - 1
-	} else {
-		relation = data.WuaNodes[foundrelation]
-	}
-
-	for _, eParentTemplate := range slParents { // add all the parent relationships to the node
-		if eParentTemplate != nil {
-			var sParentFilename = ""
-			var parentAlreadyMapped = false
-
-			eParentFilename := eParentTemplate.SelectElement("filename")
-			if eParentFilename != nil {
-				sParentFilename = eParentFilename.Text()
-			}
-			if sParentFilename != "" {
-				for _, parent := range data.WuaNodes[foundrelation].NodeParentList {
-					if parent == sParentFilename {
-						parentAlreadyMapped = true
-						break
-					}
-				}
-				if !parentAlreadyMapped {
-					data.WuaNodes[foundrelation].NodeParentList = append(data.WuaNodes[foundrelation].NodeParentList, sParentFilename)
-				}
-				mapTemplate(eParentTemplate, data)
-			}
-		}
-	}
-
-	eReleasedIn := el.SelectElement("released-in")
-
-	if eReleasedIn != nil {
-		slVersions = eReleasedIn.SelectElements("template")
-	}
-
-	for _, eVersion := range slVersions { // add all the released version relationships to the node
-		if eVersion != nil {
-			var sVersionFilename = ""
-			var versionAlreadyMapped = false
-
-			eVersionFilename := eVersion.SelectElement("filename")
-			if eVersionFilename != nil {
-				sVersionFilename = eVersionFilename.Text()
-			}
-			if sVersionFilename != "" {
-				for _, version := range data.WuaNodes[foundrelation].NodeReleasedList {
-					if version == sVersionFilename {
-						versionAlreadyMapped = true
-						break
-					}
-				}
-				if !versionAlreadyMapped {
-					data.WuaNodes[foundrelation].NodeReleasedList = append(data.WuaNodes[foundrelation].NodeReleasedList, sVersionFilename)
-				}
-				mapTemplate(eVersion, data)
-			}
-		}
-	}
-
-	return true
-}
-*/
-/* func mapWhereUsedXML(ParentTree []string, data *sessionData) {
-	// TODO: multiple root templates
-	doc := etree.NewDocument()
-	sXML := strings.Join(ParentTree, "\x20")
-	sXML = strings.Replace(sXML, "&", "&amp;", 1)
-
-	if err := doc.ReadFromString(sXML); err != nil {
-		panic(err)
-	}
-
-	templates := doc.SelectElements("template")
-
-	for _, template := range templates {
-		if template != nil {
-			mapTemplate(template, data)
-		}
-	}
-}
-*/
 // readLines reads a whole file into memory
 // and returns a slice of its lines.
 func readLines(path string) ([]string, error) {
@@ -1341,9 +1146,14 @@ func generateMap2(data sessionData, templatefile string) string {
 	return generatedmap
 }
 
-func getLocalTemplateList(ticketPath string) []string {
+func getLocalTemplateList(ticketPath string, data *sessionData) []string {
 
 	var files []string
+
+	if _, err := os.Stat(ticketPath); os.IsNotExist(err) {
+		setSessionFailure("getLocalTemplateList: "+ticketPath+" does not exist!", data)
+		return nil
+	}
 
 	err := filepath.Walk(ticketPath, func(path string, info os.FileInfo, err error) error {
 
@@ -1356,7 +1166,7 @@ func getLocalTemplateList(ticketPath string) []string {
 		return nil
 	})
 	if err != nil {
-		panic(err) // TODO remove panics
+		panic(err) // TODO: remove panics
 
 	}
 
@@ -1407,7 +1217,7 @@ func addParentToNode(node *nodeDefinition, sParentFilename string, data *session
 	return false
 }
 
-func initNode(node *nodeDefinition, sCurrentTemplateFilename, sCurrentTemplateID, sCurrentFilePath string, nLocal int, data *sessionData) (isNew bool, idx int) {
+func initNode(node *nodeDefinition, sCurrentTemplateFilename, sCurrentTemplateID, sCurrentFilePath string, nLocal int, data *sessionData) (isNew bool) {
 
 	node.NodeName = sCurrentTemplateFilename
 	node.NodeID = sCurrentTemplateID
@@ -1419,36 +1229,54 @@ func initNode(node *nodeDefinition, sCurrentTemplateFilename, sCurrentTemplateID
 	node.NodeValidated = -1      // not yet processed by precommit
 	node.NodeIsLocal = nLocal
 
-	idx = templateInSessionNodes(node.NodeID, data)
+	idx := templateInSessionNodes(node.NodeID, data)
 
 	if idx > -1 {
 		// node already exists
-		return false, idx
+
+		// local copies should trump mirror copies that are already in the list
+		if data.WuaNodes[idx].NodeLocation != node.NodeLocation {
+			if strings.Contains(data.WuaNodes[idx].NodeLocation, data.sessionConfig.MirrorCkmPath) {
+				// this new node should replace the mirror copy.
+				data.WuaNodes[idx].NodeLocation = sCurrentFilePath
+				data.WuaNodes[idx].NodeID = sCurrentTemplateID
+				data.WuaNodes[idx].NodeID = sCurrentTemplateID
+				data.WuaNodes[idx].NodeChanged = -1        // // not yet processed by precommit
+				data.WuaNodes[idx].NodeCommitOrder = -1    // not yet processed by precommit
+				data.WuaNodes[idx].NodeCommitIntended = -1 // not yet processed by precommit
+				data.WuaNodes[idx].NodeIsCommitted = -1    // not yet processed by commit
+				data.WuaNodes[idx].NodeValidated = -1      // not yet processed by precommit
+
+				data.WuaNodes[idx].NodeIsLocal = nLocal
+
+				return true
+			}
+		}
+
+		return false
 	}
 
 	// if node is new, add it to session list
 	data.WuaNodes = append(data.WuaNodes, *node)
 	idx = len(data.WuaNodes) - 1
 
-	//traceability(node, data)
-
-	return true, idx
+	return true
 }
 
 func templateToNode(node *nodeDefinition, data *sessionData) bool {
 
 	// pass in the node, find and add the parents to the node. For each parent, create a node and call templateToNode()
 
-	ticketDir := "./" + data.ChangesetFolder + "/"
+	ticketDir := data.ChangesetFolder + "/"
 
 	// find parents
-	log.Printf("templateToNode( " + node.NodeName + " / " + node.NodeID)
+	loggingWrite(data, "templateToNode( "+node.NodeName+" / "+node.NodeID)
 
 	var foundfiles = grepDir("template_id=\""+node.NodeID, data.sessionConfig.MirrorCkmPath)
 	var foundlocalfiles = grepDir("template_id=\""+node.NodeID, ticketDir)
 	results := strings.Split(foundlocalfiles+"\n"+foundfiles, "\n")
 
-	var foundversions = grepDir("{~AHSID~"+node.NodeID, data.sessionConfig.MirrorCkmPath) // TODO move traceability token to .config
+	var foundversions = grepDir("{~AHSID~"+node.NodeID, data.sessionConfig.MirrorCkmPath) // TODO: move traceability token to .config
 	var foundlocalversions = grepDir("{~AHSID~"+node.NodeID, ticketDir)
 	versions := strings.Split(foundlocalversions+"\n"+foundversions, "\n")
 
@@ -1465,24 +1293,29 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 		parent = parts[0]
 		nLocal := 1
 
-		if strings.Contains(parent, data.sessionConfig.MirrorCkmPath) { 
+		if strings.Contains(parent, data.sessionConfig.MirrorCkmPath) {
 			nLocal = 0 // if it is in the ckm mirror, it's not local
 		}
-
 
 		parent = strings.TrimSpace(parent)
 
 		if parent != "" {
-			//log.Println("templateToNode parent - " + parent)
-			parentID := findTemplateID(parent)
+			//loggingWrite(data, "templateToNode parent - " + parent)
+			parentID := findTemplateID(parent, data)
 			trimmedparent := filepath.Base(parent)
 
 			//node.NodeParentList = append(node.NodeParentList, trimmedparent)
+
+			if node.NodeName == trimmedparent {
+				setSessionFailure("templateToNode(): Detected circular relationship in template structure (node = "+node.NodeName+", parent = "+trimmedparent, data)
+				return false
+			}
+
 			addParentToNode(node, trimmedparent, data)
 
 			// create a new node / relation
 			var parentNode nodeDefinition
-			isNew, _ := initNode(&parentNode, trimmedparent, parentID, parent, nLocal, data)
+			isNew := initNode(&parentNode, trimmedparent, parentID, parent, nLocal, data)
 			if isNew {
 				templateToNode(&parentNode, data)
 			}
@@ -1500,22 +1333,20 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 		parent = parts[0]
 		parent = strings.TrimSpace(parent)
 
-
 		// remove the source template from the results.
 		if strings.Contains(parent, node.NodeName) {
 			continue
 		}
-		
-		nLocal := 0 
 
-		if strings.Contains(parent, data.sessionConfig.MirrorCkmPath) { 
-			nLocal = 1
+		nLocal := 1
+
+		if strings.Contains(parent, data.sessionConfig.MirrorCkmPath) {
+			nLocal = 0
 		}
 
-
 		if parent != "" {
-			log.Println("templateToNode version - " + parent)
-			parentID := findTemplateID(parent)
+			loggingWrite(data, "templateToNode version - "+parent)
+			parentID := findTemplateID(parent, data)
 			trimmedparent := filepath.Base(parent)
 
 			//node.NodeReleasedList = append(node.NodeReleasedList, trimmedparent)
@@ -1523,7 +1354,7 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 
 			// create a new node / relation
 			var parentNode nodeDefinition
-			isNew, _ := initNode(&parentNode, trimmedparent, parentID, parent, nLocal, data)
+			isNew := initNode(&parentNode, trimmedparent, parentID, parent, nLocal, data)
 			if isNew {
 				templateToNode(&parentNode, data)
 			}
@@ -1537,20 +1368,20 @@ func templateToNode(node *nodeDefinition, data *sessionData) bool {
 func mapTicketTemplates2(mirrorPath string, data *sessionData) {
 
 	var files []string
-	files = getLocalTemplateList(data.ChangesetFolder)
+	files = getLocalTemplateList(data.ChangesetFolder, data)
 	if files != nil {
 		nLocal := 1 // all local files
-		
+
 		for _, file := range files {
-			log.Printf("mapTicketTemplates2: " + file)
+			loggingWrite(data, "mapTicketTemplates2: "+file)
 			updateSessionStatus("Mapping Asset : "+file, data)
 
-			templateID := findTemplateID(file)
+			templateID := findTemplateID(file, data)
 
 			// create node
 			var node nodeDefinition
 			trimmedfile := filepath.Base(file)
-			isNew, _ := initNode(&node, trimmedfile, templateID, file, nLocal, data)
+			isNew := initNode(&node, trimmedfile, templateID, file, nLocal, data)
 			if isNew {
 				templateToNode(&node, data)
 			}
@@ -1569,35 +1400,40 @@ func getHashAndChangedStatus3(data *sessionData, quick bool) {
 		}
 
 		// if file is local
-		if data.WuaNodes[i].NodeLocation != "" {
-			hash := hashTemplate(data.WuaNodes[i].NodeLocation) // generate the hash for the local file
-			log.Println(data.WuaNodes[i].NodeName + " : " + hash)
+		//if data.WuaNodes[i].NodeLocation != "" {
+		if data.WuaNodes[i].NodeIsLocal > 0 {
+			hash := hashTemplate(data.WuaNodes[i].NodeLocation, data) // generate the hash for the local file
+			loggingWrite(data, data.WuaNodes[i].NodeName+" : "+hash)
 			data.WuaNodes[i].NodeHash = hash
 		}
 
 		ckmHash := ""
-		templateexists := false
+		templateExistsInCKM := false
 		cid := ""
 
 		if !quick {
 
-			templateexists, cid = cacheGetCidFromID(data.WuaNodes[i].NodeID, data)
+			templateExistsInCKM, cid = cacheGetCidFromID(data.WuaNodes[i].NodeID, data)
 		} else {
-			templateexists = true
+			templateExistsInCKM = true
 		}
 
-		if templateexists {
+		if templateExistsInCKM {
 			data.WuaNodes[i].NodeCID = cid
 
-			ckmHash = cacheGetHash(data.WuaNodes[i], data)
+			if data.WuaNodes[i].NodeIsLocal > 0 {
+				ckmHash = cacheGetHash(data.WuaNodes[i], data)
 
-			switch {
-			case (ckmHash != data.WuaNodes[i].NodeHash):
-				data.WuaNodes[i].NodeChanged = 1
-			case (ckmHash == data.WuaNodes[i].NodeHash):
-				data.WuaNodes[i].NodeChanged = 0
-			default:
-				data.WuaNodes[i].NodeChanged = -1
+				switch {
+				case (ckmHash != data.WuaNodes[i].NodeHash):
+					data.WuaNodes[i].NodeChanged = 1
+					data.WuaNodes[i].NodeRootEdited, data.WuaNodes[i].NodeRootNewText = hasRootNodeBeenChanged(data.WuaNodes[i], data)
+				case (ckmHash == data.WuaNodes[i].NodeHash):
+					data.WuaNodes[i].NodeChanged = 0
+				default:
+					data.WuaNodes[i].NodeChanged = -1
+				}
+
 			}
 		} else {
 			data.WuaNodes[i].NodeChanged = 2 // template doesn't exist in CKM, see ckmCommitNewTemplate()
@@ -1607,65 +1443,10 @@ func getHashAndChangedStatus3(data *sessionData, quick bool) {
 
 }
 
-/* func getHashAndChangedStatus2(data *sessionData, quick bool) {
-	var files []string
-
-	files = getLocalTemplateList(data.ChangesetFolder)
-	for _, file := range files { // for all the local files
-
-		hash := hashTemplate(file) // generate the hash for the local file
-		log.Println(file + " : " + hash)
-		templatename := filepath.Base(file)
-
-		if quick {
-			updateSessionStatus("Quickly processing status for asset : "+file, data)
-		} else {
-			updateSessionStatus("Processing status for asset : "+file, data)
-		}
-
-		// store hash in where-used array
-		for i := 0; i < len(data.WuaNodes); i++ {
-			if data.WuaNodes[i].NodeName == templatename {
-				data.WuaNodes[i].NodeHash = hash
-				data.WuaNodes[i].NodeLocation = file
-
-				ckmHash := ""
-				templateexists := false
-				cid := ""
-
-				if !quick {
-
-					templateexists, cid = cacheGetCidFromID(data.WuaNodes[i].NodeID, data)
-				} else {
-					templateexists = true
-				}
-
-				if templateexists {
-					data.WuaNodes[i].NodeCID = cid
-
-					ckmHash = cacheGetHash(data.WuaNodes[i], data)
-
-					switch {
-					case (ckmHash != data.WuaNodes[i].NodeHash):
-						data.WuaNodes[i].NodeChanged = 1
-					case (ckmHash == data.WuaNodes[i].NodeHash):
-						data.WuaNodes[i].NodeChanged = 0
-					default:
-						data.WuaNodes[i].NodeChanged = -1
-					}
-				} else {
-					data.WuaNodes[i].NodeChanged = 2 // template doesn't exist in CKM, see ckmCommitNewTemplate()
-				}
-
-			}
-		}
-	}
-}
- */
 // returns md5 hash for file, using (linux) standard utility (md5sum)
-func hashTemplate(file string) string {
+func hashTemplate(file string, data *sessionData) string {
 
-	log.Printf("hashTemplate : " + file)
+	loggingWrite(data, "hashTemplate : "+file)
 	cmd := exec.Command("md5sum", file)
 
 	var outbuf, errbuf bytes.Buffer
@@ -1674,7 +1455,7 @@ func hashTemplate(file string) string {
 
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("hashTemplate finished with error: %v", err)
+		loggingWrite(data, "hashTemplate finished with error: "+err.Error())
 	}
 	stdout := outbuf.String()
 
@@ -1696,8 +1477,8 @@ func findTemplateInMirror(node nodeDefinition, data *sessionData) (isFound bool,
 		foundfile = parts[0]
 		foundfile = strings.TrimSpace(foundfile)
 		if foundfile != "" {
-			log.Println("findTemplateInMirror foundfile - " + foundfile)
-			parentID := findTemplateID(foundfile)
+			loggingWrite(data, "findTemplateInMirror foundfile - "+foundfile)
+			parentID := findTemplateID(foundfile, data)
 			if parentID == node.NodeID {
 				return true, foundfile
 			}
@@ -1706,23 +1487,25 @@ func findTemplateInMirror(node nodeDefinition, data *sessionData) (isFound bool,
 	return false, ""
 }
 
+// get the hash of the file that is in CKM (or the CKM Mirror)
 func cacheGetHash(node nodeDefinition, data *sessionData) string {
 
 	// find file in mirror
 	inMirror, path := findTemplateInMirror(node, data)
 
 	if inMirror {
-		return hashTemplate(path) // generate the hash for the local file
-	} else {
-		return ckmGetHash(node.NodeCID, data)
+		return hashTemplate(path, data) // generate the hash for the local mirror file
 	}
+
+	return ckmGetHash(node.NodeCID, data)
+
 }
 
 func ckmGetHash(cid string, data *sessionData) string {
 	if contentdata, err := ckmGetContentXML("https://ahsckm.ca/ckm/rest/v1/templates/"+cid+"/hash", data); err != nil {
-		log.Printf("Failed to get XML: %v", err)
+		loggingWrite(data, "Failed to get XML: "+err.Error())
 	} else {
-		log.Println("Received XML:" + string(contentdata))
+		loggingWrite(data, "Received XML:"+string(contentdata))
 		return string(contentdata)
 	}
 
@@ -1735,7 +1518,7 @@ func ckmValidateTemplate(node *nodeDefinition, data *sessionData) bool {
 	initialfail := false
 
 	if err != nil {
-		log.Println("ckmValidateTemplate: couldn't readLines for node :" + node.NodeName)
+		loggingWrite(data, "ckmValidateTemplate: couldn't readLines for node :"+node.NodeName)
 		return false
 	}
 
@@ -1743,7 +1526,7 @@ func ckmValidateTemplate(node *nodeDefinition, data *sessionData) bool {
 	req, err := retryablehttp.NewRequest("POST", "https://ahsckm.ca/ckm/rest/v1/templates/validation-report", body)
 
 	if err != nil {
-		log.Println("ckmValidateTemplate: NewRequest() failed :" + node.NodeName)
+		loggingWrite(data, "ckmValidateTemplate: NewRequest() failed :"+node.NodeName)
 		return false
 	}
 
@@ -1757,13 +1540,13 @@ func ckmValidateTemplate(node *nodeDefinition, data *sessionData) bool {
 	client.CheckRetry = defaultRetryPolicy
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("ckmValidateTemplate: client.Do(req) failed :" + node.NodeName)
+		loggingWrite(data, "ckmValidateTemplate: client.Do(req) failed :"+node.NodeName)
 		return false
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 { // not success
-		log.Println("ERROR: validation-report response statuscode = " + strconv.FormatInt(int64(resp.StatusCode), 10))
+		loggingWrite(data, "ERROR: validation-report response statuscode = "+strconv.FormatInt(int64(resp.StatusCode), 10))
 		initialfail = true
 
 	}
@@ -1772,7 +1555,7 @@ func ckmValidateTemplate(node *nodeDefinition, data *sessionData) bool {
 
 	bodydata, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("ckmValidateTemplate:  ioutil.ReadAll(resp.Body) failed :" + node.NodeName)
+		loggingWrite(data, "ckmValidateTemplate:  ioutil.ReadAll(resp.Body) failed :"+node.NodeName)
 		return false
 	}
 
@@ -1781,16 +1564,16 @@ func ckmValidateTemplate(node *nodeDefinition, data *sessionData) bool {
 	if err == nil {
 		if len(report) > 0 {
 			if report[0].ValidationSeverity != "" {
-				log.Println("ERROR: validation-report returned a problem : " + report[0].ErrorText + ", " + report[0].ValidationSeverity)
+				loggingWrite(data, "ERROR: validation-report returned a problem : "+report[0].ErrorText+", "+report[0].ValidationSeverity)
 				return false
 			}
 		}
 	} else {
-		log.Println("ckmValidateTemplate: json.Unmarshal(bodydata, &report) failed :" + node.NodeName)
+		loggingWrite(data, "ckmValidateTemplate: json.Unmarshal(bodydata, &report) failed :"+node.NodeName)
 		return false
 	}
 
-	log.Println("validated : " + node.NodeLocation)
+	loggingWrite(data, "validated : "+node.NodeLocation)
 
 	return true && !initialfail
 }
@@ -1834,8 +1617,8 @@ func ckmCommitNewTemplate(node *nodeDefinition, data *sessionData) bool {
 	if resp.StatusCode != 201 { // not success
 
 		setSessionFailure("ckmCommitNewTemplate: ERROR response statuscode = "+strconv.FormatInt(int64(resp.StatusCode), 10), data)
-		log.Println(" theRequest = " + theRequest)
-		log.Println(" theBody = " + strings.Join(templatesource, "\x20"))
+		loggingWrite(data, " theRequest = "+theRequest)
+		loggingWrite(data, " theBody = "+strings.Join(templatesource, "\x20"))
 		return false
 	}
 
@@ -1860,7 +1643,7 @@ func ckmCommitNewTemplate(node *nodeDefinition, data *sessionData) bool {
 	}
 
 	node.NodeCID = report.Cid
-	log.Println("ckmCommitNewTemplate : " + node.NodeName)
+	loggingWrite(data, "ckmCommitNewTemplate : "+node.NodeName)
 	return true
 }
 
@@ -1893,9 +1676,9 @@ func ckmGetTemplateTemporarily(node *nodeDefinition, data *sessionData) (success
 	path = data.ChangesetFolder + "/" + data.sessionConfig.WorkingFolderPath + "/" + node.NodeName
 	if templateexists {
 		node.NodeCID = cid
-		err := ckmGetTemplateOET(*node, path)
+		err := ckmGetTemplateOET(*node, path, data)
 		if err == nil {
-			log.Println("ckmGetTemplateTemporarily: " + path)
+			loggingWrite(data, "ckmGetTemplateTemporarily: "+path)
 			return true, path
 		}
 		{
@@ -1907,7 +1690,7 @@ func ckmGetTemplateTemporarily(node *nodeDefinition, data *sessionData) (success
 	return false, ""
 }
 
-// TODO : capture new resource info returned from ckm (for the report...)
+// TODO: : capture new resource info returned from ckm (for the report...)
 func ckmCommitRevisedTemplate(node *nodeDefinition, data *sessionData) bool {
 
 	logmessage := url.QueryEscape(data.ChangeDetail)
@@ -1918,7 +1701,8 @@ func ckmCommitRevisedTemplate(node *nodeDefinition, data *sessionData) bool {
 	}
 
 	// if template is not local, we need to download it from ckm to reupload...
-	if node.NodeChanged == -1 {
+	//if node.NodeChanged == -1 {
+	if node.NodeIsLocal < 0 {
 		success, path := ckmGetTemplateTemporarily(node, data)
 		if success {
 			templatelocation = path
@@ -1961,7 +1745,7 @@ func ckmCommitRevisedTemplate(node *nodeDefinition, data *sessionData) bool {
 		setSessionFailure("ERROR: ckmCommitRevisedTemplate response statuscode = "+strconv.FormatInt(int64(resp.StatusCode), 10), data)
 		return false
 	}
-	log.Println("ckmCommitRevisedTemplate : " + node.NodeName)
+	loggingWrite(data, "ckmCommitRevisedTemplate : "+node.NodeName)
 	// check local vs ckm
 	// if ckm has later version, fail
 
@@ -1975,7 +1759,7 @@ func processTreeTopFirst(relation *nodeDefinition, isTop bool, nodeOrderList *[]
 
 	if relation.NodeChanged > 0 {
 		relation.NodeCommitIntended = 1
-		log.Println(relation.NodeName + " has changed, so we intent to commit it [1]")
+		loggingWrite(data, relation.NodeName+" has changed, so we intent to commit it [1]")
 		// validation moved to commit phase, as templates with new embedded templates cannot be validated.
 		bumpparent = true
 	}
@@ -1990,7 +1774,7 @@ func processTreeTopFirst(relation *nodeDefinition, isTop bool, nodeOrderList *[]
 				if processTreeTopFirst(thechildnode, false, nodeOrderList, data, dryrun) {
 					bumpparent = true
 					// relation's decendents have been changed, so a version bump is needed
-					log.Println(thechildnode.NodeName + " or its decendant has changed, so " + relation.NodeName + " needs a bump")
+					loggingWrite(data, thechildnode.NodeName+" or its decendant has changed, so "+relation.NodeName+" needs a bump")
 
 					if relation.NodeCommitIntended < 1 {
 						// validation moved to commit phase, as templates with new embedded templates cannot be validated.
@@ -2008,11 +1792,10 @@ func processTreeTopFirst(relation *nodeDefinition, isTop bool, nodeOrderList *[]
 
 }
 
-func ckmGetTemplateOET(node nodeDefinition, targetfile string) error { // TODO check return code / 404 issue
+func ckmGetTemplateOET(node nodeDefinition, targetfile string, data *sessionData) error { // TODO: check return code / 404 issue
 
-	log.Println("ckmGetTemplateOET: " + targetfile)
+	loggingWrite(data, "ckmGetTemplateOET: "+targetfile)
 	// Get the data
-	
 
 	client := retryablehttp.NewClient()
 	client.CheckRetry = defaultRetryPolicy
@@ -2046,14 +1829,18 @@ func sendWUVToBrowser(statusSessionID string) string {
 	var edges string
 	var nodecolor string
 
-	files := getLocalTemplateList(data.ChangesetFolder)
+	files := getLocalTemplateList(data.ChangesetFolder, data)
+
+	if files == nil {
+		return ""
+	}
 
 	for s := range data.WuaNodes {
 
 		found := false
 
 		for _, file := range files {
-			log.Println(file)
+			loggingWrite(data, file)
 			if strings.Contains(file, data.WuaNodes[s].NodeName) {
 				found = true
 				break
@@ -2085,7 +1872,7 @@ func sendWUVToBrowser(statusSessionID string) string {
 
 	}
 
-	log.Println("sendGraphDataToBrowser: " + "[ [" + nodes + "],[" + edges + "] ]")
+	loggingWrite(data, "sendGraphDataToBrowser: "+"[ ["+nodes+"],["+edges+"] ]")
 
 	nodes = strings.TrimSuffix(nodes, ",")
 	edges = strings.TrimSuffix(edges, ",")
@@ -2100,7 +1887,7 @@ func sendReportToBrowser(statusSessionID string) string {
 	return ""
 }
 
-func sendProjectsToBrowser() (status bool, projects string) {
+func sendProjectsToBrowser(data *sessionData) (status bool, projects string) {
 
 	projectjson := ""
 
@@ -2122,20 +1909,69 @@ func sendProjectsToBrowser() (status bool, projects string) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 { // not success
-		log.Println("ERROR: ckm/rest/v1/projects response statuscode = " + strconv.FormatInt(int64(resp.StatusCode), 10))
+		loggingWrite(data, "ERROR: ckm/rest/v1/projects response statuscode = "+strconv.FormatInt(int64(resp.StatusCode), 10))
 		return false, ""
 	}
 
 	// need to read the PROJECT report....
 
-	data, err := ioutil.ReadAll(resp.Body)
+	reportdata, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return false, ""
 	}
 
-	projectjson = string(data)
+	projectjson = string(reportdata)
 
 	return true, projectjson
+}
+
+func getRootNodeText(path string, data *sessionData) string {
+
+	rootnodetext := ""
+
+	doc := etree.NewDocument()
+	if err := doc.ReadFromFile(path); err != nil {
+		setSessionFailure("getRootNodeText: "+err.Error()+": failed to read contents ("+path+")", data)
+		return ""
+	}
+
+	var elTemplate *etree.Element
+	//var theBaseAnnotations *etree.Element
+
+	// get template structure
+	elTemplate = doc.SelectElement("template")
+	if elTemplate != nil {
+		elDefinition := elTemplate.SelectElement("definition")
+
+		if elDefinition != nil {
+			rootnodetext = elDefinition.SelectAttrValue("name", "")
+		}
+	}
+
+	return rootnodetext
+}
+
+func hasRootNodeBeenChanged(node nodeDefinition, data *sessionData) (state int, newtext string) {
+
+	// find asset in mirror
+
+	isFound, path := findTemplateInMirror(node, data)
+
+	if isFound {
+
+		existingtext := getRootNodeText(path, data)
+		newtext := getRootNodeText(node.NodeLocation, data)
+		/*
+			if existingtext == "" || newtext == "" {
+				setSessionFailure("hasRootNodeBeenChanged: problems finding rootnode text for "+node.NodeName+" (existing = "+existingtext+", new = "+newtext, data)
+			} else { */
+		if existingtext != newtext {
+			return 1, newtext
+		}
+		/* } */
+
+	}
+	return 0, ""
 }
 
 func sendStatusToBrowser(statusSessionID string) string {
@@ -2150,7 +1986,8 @@ func sendStatusToBrowser(statusSessionID string) string {
 
 		b, err := json.Marshal(objStatus)
 		if err != nil {
-			fmt.Println("error:", err)
+
+			loggingWrite(data, "sendStatusToBrowser error:"+err.Error())
 		}
 
 		result := string(b)
@@ -2170,11 +2007,9 @@ func Contains(a []string, x string) bool {
 	return false
 }
 
-func backupTicket(data sessionData) string {
+func backupTicket(data *sessionData) string {
 
-	now := time.Now()
-	secs := now.Unix()
-	zipfile := data.ChangesetFolder + "/" + data.sessionConfig.WorkingFolderPath + "/ticketsnapshot" + strconv.FormatInt(int64(secs), 10) + ".zip"
+	zipfile := data.ChangesetFolder + "/" + data.sessionConfig.WorkingFolderPath + "/" + data.sessionID + "_snapshot.zip"
 
 	cmd := exec.Command("zip", "-r", zipfile, data.ChangesetFolder, "--exclude", "*.zip")
 	var outbuf, errbuf bytes.Buffer
@@ -2183,37 +2018,90 @@ func backupTicket(data sessionData) string {
 
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("BackupTicket finished with error: %v", err)
+		loggingWrite(data, "BackupTicket finished with error: "+err.Error())
 	}
 
 	stdout := outbuf.String()
 	return stdout
 }
 
-func traceability(node *nodeDefinition, data *sessionData) bool {
+// insertUpdatedRootNodes checks whether this node contains any tempaltes which have had
+// their rootnode name/text edited and if so, amends the node to reflect the new edited text.
+func insertUpdatedRootNodes(node *nodeDefinition, data *sessionData) bool {
 
-	// check pre-existing
-	//  Search for {~AHSID
-	//  If present quit, else continue
+	//  - find definition element
+	// - find all items in definition with template id == subject template
+	// - for each match, change or add the name attribute to match the subject
 
-	//var found string
-
-/* 	found = grepFile(node.NodeLocation, "{~AHSID")
-
-	if len(found) > 1 {
-		log.Println("traceability: " + node.NodeName + " already contains AHSID.")
-		return true // don't need to modify the template, all is good...
-	} */
+	path := node.NodeLocation
+	Updated := false
 
 	doc := etree.NewDocument()
-	if err := doc.ReadFromFile(node.NodeLocation); err != nil {
-		setSessionFailure("traceability: "+err.Error()+": "+node.NodeName+" failed to read contents ("+node.NodeLocation+")", data)
+	if err := doc.ReadFromFile(path); err != nil {
+		setSessionFailure("insertUpdatedRootNodes: "+err.Error()+": failed to read contents ("+path+")", data)
 		return false
 	}
 
 	var elTemplate *etree.Element
-	var theBaseAnnotations *etree.Element 
 
+	// get template structure
+	elTemplate = doc.SelectElement("template")
+	if elTemplate != nil {
+		elDefinition := elTemplate.SelectElement("definition")
+
+		if elDefinition != nil {
+
+			elDefinitionItemCollection := elDefinition.SelectElements("Item")
+
+			for _, anItem := range elDefinitionItemCollection {
+				embeddedTemplateId := anItem.SelectAttrValue("template_id", "")
+
+				// check if this template has an updated node text
+				for _, aNode := range data.WuaNodes {
+					if aNode.NodeID == embeddedTemplateId && aNode.NodeRootEdited != 0 {
+						// if so, update the subject node with the new text.
+						nameAttr := anItem.SelectAttr("name")
+						if nameAttr == nil { // will be nil if the element has never been renamed
+							// need to create the name attr
+							anItem.CreateAttr("name", aNode.NodeRootNewText)
+						} else {
+							nameAttr.Value = aNode.NodeRootNewText
+						}
+						Updated = true
+					}
+				}
+			}
+		}
+	}
+
+	if Updated {
+		err := doc.WriteToFile(node.NodeLocation)
+		if err != nil {
+			setSessionFailure("insertUpdatedRootNodes: failed to write out updated template "+node.NodeName, data)
+			return false
+		}
+		updateSessionStatus("insertUpdatedRootNodes: added to "+node.NodeName, data)
+	}
+
+	return true
+}
+
+// insertTraceability adds an annotation with traceability information to a given node
+func insertTraceability(node *nodeDefinition, data *sessionData) bool {
+
+	// don't process files that aren't local (i.e. don't muck about with the mirror files)
+	if node.NodeIsLocal == 0 {
+		return true
+	}
+
+	doc := etree.NewDocument()
+	if err := doc.ReadFromFile(node.NodeLocation); err != nil {
+		setSessionFailure("insertTraceability: "+err.Error()+": "+node.NodeName+" failed to read contents ("+node.NodeLocation+")", data)
+		return false
+	}
+
+	var elTemplate *etree.Element
+	var theBaseAnnotations *etree.Element
 
 	// get template structure
 	elTemplate = doc.SelectElement("template")
@@ -2225,31 +2113,30 @@ func traceability(node *nodeDefinition, data *sessionData) bool {
 			idxDefinition := elDefinition.Index()
 
 			baseArchetype := elDefinition.SelectAttrValue("archetype_id", "")
-			if( baseArchetype != "" ){
-				log.Println("traceability: " + node.NodeName + " contains " + baseArchetype + " structure.")
+			if baseArchetype != "" {
+				loggingWrite(data, "insertTraceability: "+node.NodeName+" contains "+baseArchetype+" structure.")
 
 				// does the template have annotations on the base node?
 
 				elAnnotationsCollection := elTemplate.SelectElements("annotations")
-				if( elAnnotationsCollection != nil ) {
-					for _, anAnnotationSet := range(elAnnotationsCollection) { // there may be multiple annotation elements with different xpaths
+				if elAnnotationsCollection != nil {
+					for _, anAnnotationSet := range elAnnotationsCollection { // there may be multiple annotation elements with different xpaths
 						pathAnnoation := anAnnotationSet.SelectAttr("path")
-						if pathAnnoation.Value == "[" + baseArchetype + "]" { // we're looking for the one for the main/base archetype
+						if pathAnnoation.Value == "["+baseArchetype+"]" { // we're looking for the one for the main/base archetype
 							// found it.
 							theBaseAnnotations = anAnnotationSet
 						}
 					}
-				} 
-
-				if( theBaseAnnotations == nil ) {
-					theBaseAnnotations = etree.NewElement("annotations")
-					theBaseAnnotations.CreateAttr( "path", "[" + baseArchetype + "]")	
 				}
 
-				elTemplate.InsertChildAt(idxDefinition, theBaseAnnotations)					
+				if theBaseAnnotations == nil {
+					theBaseAnnotations = etree.NewElement("annotations")
+					theBaseAnnotations.CreateAttr("path", "["+baseArchetype+"]")
+					elTemplate.InsertChildAt(idxDefinition, theBaseAnnotations)
+				}
 
 				elBaseAnnotationItems := theBaseAnnotations.SelectElement("items")
-				if( elBaseAnnotationItems == nil ) {
+				if elBaseAnnotationItems == nil {
 					// create the annotation collection
 					elBaseAnnotationItems = theBaseAnnotations.CreateElement("items")
 
@@ -2257,48 +2144,37 @@ func traceability(node *nodeDefinition, data *sessionData) bool {
 
 				// check all the item/keys
 				elBaseAnnotationItemCollection := elBaseAnnotationItems.SelectElements("item")
-				for _, anAnnotationPair  := range( elBaseAnnotationItemCollection ) {
-					if strings.Contains( anAnnotationPair.SelectElement("value").Text(), "{~AHSID~" ) {
+				for _, anAnnotationPair := range elBaseAnnotationItemCollection {
+					if strings.Contains(anAnnotationPair.SelectElement("value").Text(), "{~AHSID~") {
 						// already existing.
-						updateSessionStatus("traceability: already existing in " + node.NodeName, data)						
+						updateSessionStatus("traceability: already existing in "+node.NodeName, data)
 						return true
 					}
 				}
 
 				elAnnotationItem := elBaseAnnotationItems.CreateElement("item")
 				elAnnotationItem.CreateElement("key").SetText("Technical.ﻩ Technical Traceability")
-				elAnnotationItem.CreateElement("value").SetText("{~AHSID~" + node.NodeID + "~NAME~" + node.NodeName +"}")				
-			
+				elAnnotationItem.CreateElement("value").SetText("{~AHSID~" + node.NodeID + "~NAME~" + node.NodeName + "}")
+
 				err := doc.WriteToFile(node.NodeLocation)
-				if (err != nil) {
-					setSessionFailure( "traceability: failed to write out updated template " + node.NodeName, data)
+				if err != nil {
+					setSessionFailure("insertTraceability: failed to write out updated template "+node.NodeName, data)
 					return false
 				}
-				updateSessionStatus("traceability: added to " + node.NodeName, data)
+				updateSessionStatus("insertTraceability: added to "+node.NodeName, data)
 				return true
 			}
 		} else {
-			setSessionFailure("traceability: elDefinition := elTemplate.SelectElement() failed", data)
+			setSessionFailure("insertTraceability: elDefinition := elTemplate.SelectElement() failed", data)
 			return false
-	
+
 		}
-		
 
 	} else {
-		setSessionFailure("traceability: 1elTemplate = doc.SelectElement() failed", data)
+		setSessionFailure("insertTraceability: 1elTemplate = doc.SelectElement() failed", data)
 		return false
 
 	}
-
-
-
-
-	/*
-	   check annotation structure
-	     Search for
-	     <annotations path="[openEHR-EHR-SECTION.adhoc.v1]">
-	      If not present insert structure and cont, else cont
-	*/
 
 	return false
 }
